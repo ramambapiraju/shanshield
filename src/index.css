@@ -10,49 +10,49 @@
     --background: 0 0% 100%;
     --foreground: 150 25% 15%;
 
-    /* Card surfaces - Soft Gray */
-    --card: 150 10% 98%;
-    --card-foreground: 150 25% 15%;
+    /* Card surfaces - Clean White with subtle warmth */
+    --card: 0 0% 99%;
+    --card-foreground: 150 30% 12%;
 
     /* Popover */
     --popover: 0 0% 100%;
     --popover-foreground: 150 25% 15%;
 
-    /* Primary - Trust Green */
-    --primary: 152 69% 35%;
+    /* Primary - Deep Trust Green */
+    --primary: 152 72% 28%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Light Green Tint */
-    --secondary: 150 20% 95%;
-    --secondary-foreground: 150 25% 20%;
+    /* Secondary - Soft Green Tint */
+    --secondary: 150 25% 94%;
+    --secondary-foreground: 150 35% 18%;
 
-    /* Muted */
-    --muted: 150 10% 94%;
-    --muted-foreground: 150 15% 45%;
+    /* Muted - Better contrast */
+    --muted: 150 12% 92%;
+    --muted-foreground: 150 20% 35%;
 
-    /* Accent - Deep Forest Green */
-    --accent: 158 64% 28%;
+    /* Accent - Rich Forest Green */
+    --accent: 158 68% 22%;
     --accent-foreground: 0 0% 100%;
 
     /* Destructive - Alert Red */
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders */
-    --border: 150 15% 88%;
-    --input: 150 15% 88%;
-    --ring: 152 69% 35%;
+    /* Borders - Stronger contrast */
+    --border: 150 20% 82%;
+    --input: 150 20% 82%;
+    --ring: 152 72% 28%;
 
     --radius: 0.5rem;
 
-    /* Custom colors */
-    --threat-red: 0 72% 51%;
-    --warning-amber: 38 92% 50%;
-    --success-green: 152 69% 35%;
-    --cyber-cyan: 152 69% 35%;
-    --electric-blue: 158 64% 28%;
-    --deep-navy: 150 25% 15%;
-    --graphite: 150 10% 25%;
+    /* Custom colors - Higher contrast */
+    --threat-red: 0 78% 45%;
+    --warning-amber: 38 95% 45%;
+    --success-green: 152 72% 28%;
+    --cyber-cyan: 152 72% 28%;
+    --electric-blue: 158 68% 22%;
+    --deep-navy: 150 35% 10%;
+    --graphite: 150 15% 20%;
 
     /* Gradients - Green themed */
     --gradient-cyber: linear-gradient(135deg, hsl(152 69% 35% / 0.1), hsl(158 64% 28% / 0.1));
