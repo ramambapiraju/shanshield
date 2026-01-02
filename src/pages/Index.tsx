@@ -155,8 +155,26 @@ const Index = () => {
         </div>
       </main>
 
+      {/* About Section */}
+      <section className="relative border-t border-border/50 bg-card/30 backdrop-blur-xl mt-12">
+        <div className="container mx-auto px-6 py-8">
+          <div className="text-center space-y-4">
+            <h2 className="font-display text-xl font-bold text-gradient-cyber tracking-wider">ABOUT THE DEVELOPER</h2>
+            <p className="text-lg font-display text-foreground tracking-wide">
+              Shanmuka Sai Varma
+            </p>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full">
+              <span className="text-sm text-primary font-medium">🏆 Winner — ASME IMECE 2025 Innovation Pitchathon</span>
+            </div>
+            <p className="text-xs text-muted-foreground max-w-md mx-auto">
+              American Society of Mechanical Engineers International Mechanical Engineering Congress & Exposition
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer className="relative border-t border-border/50 bg-card/30 backdrop-blur-xl mt-12">
+      <footer className="relative border-t border-border/50 bg-card/30 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span className="font-display tracking-wider">SHANSHIELD v1.0</span>
