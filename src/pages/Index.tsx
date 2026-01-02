@@ -34,13 +34,13 @@ const Index = () => {
       {/* Header */}
       <header className="relative border-b border-border/50 bg-card/30 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Shield className="w-8 h-8 text-primary" />
+          <div className="flex items-center gap-4">
+            <Shield className="w-12 h-12 text-primary drop-shadow-glow" />
             <div>
-              <span className="font-display text-lg font-bold text-gradient-cyber tracking-wider block">
+              <span className="font-display text-3xl md:text-4xl font-black text-gradient-cyber tracking-widest block">
                 SHANSHIELD
               </span>
-              <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
+              <span className="text-xs text-muted-foreground uppercase tracking-widest">
                 Agentic AI Defense System
               </span>
             </div>
