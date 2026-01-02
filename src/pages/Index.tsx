@@ -109,6 +109,19 @@ const Index = () => {
             {/* Results */}
             {analysisComplete && result && (
               <>
+                {/* Forensic Report at Top */}
+                <ForensicReport
+                  mediaHash={result.mediaHash}
+                  verdict={result.verdict}
+                  confidence={result.confidence}
+                  detectionMethods={result.detectionMethods}
+                  timestamp={new Date()}
+                  deviceId="SHAN-001-FIELD"
+                  fileName={files[0].file.name}
+                  fileSize={files[0].file.size}
+                  processingTime={result.processingTime}
+                />
+                
                 <AnalysisResults
                   verdict={result.verdict}
                   confidence={result.confidence}
@@ -123,18 +136,6 @@ const Index = () => {
                   timelineMarkers={result.timelineMarkers}
                   audioSegments={result.audioSegments}
                   reasoning={result.reasoning}
-                />
-                
-                <ForensicReport
-                  mediaHash={result.mediaHash}
-                  verdict={result.verdict}
-                  confidence={result.confidence}
-                  detectionMethods={result.detectionMethods}
-                  timestamp={new Date()}
-                  deviceId="SHAN-001-FIELD"
-                  fileName={files[0].file.name}
-                  fileSize={files[0].file.size}
-                  processingTime={result.processingTime}
                 />
               </>
             )}
