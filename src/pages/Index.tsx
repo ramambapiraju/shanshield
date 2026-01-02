@@ -33,6 +33,15 @@ const Index = () => {
 
       {/* Header */}
       <header className="relative border-b border-border/50 bg-card/30 backdrop-blur-xl">
+        {/* Developer Credit Bar */}
+        <div className="bg-primary/5 border-b border-primary/20 py-1.5">
+          <div className="container mx-auto px-6 flex items-center justify-center gap-3 text-xs">
+            <span className="text-muted-foreground">Developed by</span>
+            <span className="font-display text-primary font-semibold tracking-wide">Shanmuka Sai Varma</span>
+            <span className="text-muted-foreground/50">•</span>
+            <span className="text-primary/80">🏆 ASME IMECE 2025 Innovation Pitchathon Winner</span>
+          </div>
+        </div>
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Shield className="w-12 h-12 text-primary drop-shadow-glow" />
