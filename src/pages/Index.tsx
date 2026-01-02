@@ -160,7 +160,7 @@ const Index = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span className="font-display tracking-wider">SHANSHIELD v1.0</span>
-            <span className="uppercase tracking-widest">IIT Delhi ERAKSHA Hackathon 2024</span>
+            <span className="uppercase tracking-widest">IIT Delhi ERAKSHA Hackathon 2026</span>
             <span className="font-display tracking-wider">CLASSIFIED // FOR OFFICIAL USE</span>
           </div>
         </div>
