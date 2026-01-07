@@ -10,7 +10,8 @@ import {
   CheckCircle,
   VideoIcon,
   StopCircle,
-  AlertCircle
+  AlertCircle,
+  SwitchCamera
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -64,13 +65,31 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
   const [isRecording, setIsRecording] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Check for multiple cameras on mount
+  useEffect(() => {
+    const checkCameras = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        setHasMultipleCameras(videoDevices.length > 1);
+      } catch (err) {
+        console.log("Could not enumerate devices:", err);
+      }
+    };
+    checkCameras();
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -148,17 +167,23 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
     onFilesSelected(updated);
   };
 
-  const startCamera = async () => {
+  const startCamera = async (mode: 'user' | 'environment' = facingMode) => {
     setCameraError(null);
+    setCameraReady(false);
+    
+    // Stop existing stream if any
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+    
     try {
-      // Check if getUserMedia is supported
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("Camera not supported in this browser");
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
-          facingMode: "environment",
+          facingMode: mode,
           width: { ideal: 1920 },
           height: { ideal: 1080 }
         },
@@ -169,10 +194,19 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = () => {
+          if (videoRef.current) {
+            videoRef.current.play().then(() => {
+              setCameraReady(true);
+            });
+          }
+        };
       }
       
       setCameraActive(true);
+      setFacingMode(mode);
       toast.success("Camera activated", {
         description: "Ready to capture frames or record video"
       });
@@ -186,28 +220,61 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
     }
   };
 
+  const switchCamera = async () => {
+    if (isRecording) {
+      toast.error("Cannot switch camera while recording");
+      return;
+    }
+    const newMode = facingMode === 'user' ? 'environment' : 'user';
+    await startCamera(newMode);
+    toast.success(`Switched to ${newMode === 'user' ? 'front' : 'back'} camera`);
+  };
+
   const captureFromCamera = () => {
-    if (videoRef.current && videoRef.current.videoWidth > 0) {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      const ctx = canvas.getContext('2d');
-      
-      if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0);
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const file = new File([blob], `capture-${Date.now()}.jpg`, { type: 'image/jpeg' });
-            processFiles([file]);
-            toast.success("Frame captured!", {
-              description: "Image added to analysis queue"
-            });
-          }
-        }, 'image/jpeg', 0.95);
-      }
-    } else {
+    if (!cameraReady || !videoRef.current) {
       toast.error("Camera not ready", {
         description: "Please wait for the camera to initialize"
+      });
+      return;
+    }
+
+    const video = videoRef.current;
+    
+    // Ensure video has dimensions
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      toast.error("Camera not ready", {
+        description: "Video stream not available yet"
+      });
+      return;
+    }
+
+    // Use canvas ref or create one
+    const canvas = canvasRef.current || document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      // Draw the current video frame
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Convert to blob
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], `capture-${Date.now()}.jpg`, { type: 'image/jpeg' });
+          processFiles([file]);
+          toast.success("Frame captured!", {
+            description: "Image added to analysis queue"
+          });
+        } else {
+          toast.error("Capture failed", {
+            description: "Could not capture frame"
+          });
+        }
+      }, 'image/jpeg', 0.95);
+    } else {
+      toast.error("Capture failed", {
+        description: "Canvas context not available"
       });
     }
   };
@@ -289,6 +356,7 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
     }
     
     setCameraActive(false);
+    setCameraReady(false);
     setCameraError(null);
   };
 
@@ -371,34 +439,11 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
               Live Capture
             </span>
           </div>
-          {cameraActive ? (
-            <div className="flex gap-2 flex-wrap justify-end">
-              {!isRecording ? (
-                <>
-                  <Button size="sm" variant="default" onClick={captureFromCamera}>
-                    <Camera className="w-4 h-4 mr-1" />
-                    Capture
-                  </Button>
-                  <Button size="sm" variant="secondary" onClick={startRecording}>
-                    <VideoIcon className="w-4 h-4 mr-1" />
-                    Record
-                  </Button>
-                </>
-              ) : (
-                <Button size="sm" variant="destructive" onClick={stopRecording}>
-                  <StopCircle className="w-4 h-4 mr-1" />
-                  Stop ({formatTime(recordingTime)})
-                </Button>
-              )}
-              <Button size="sm" variant="outline" onClick={stopCamera} disabled={isRecording}>
-                Stop Camera
-              </Button>
-            </div>
-          ) : (
+          {!cameraActive && (
             <Button 
               size="sm" 
               variant="outline" 
-              onClick={startCamera}
+              onClick={() => startCamera()}
               disabled={isAnalyzing}
               className="border-accent/50 hover:border-accent hover:bg-accent/10"
             >
@@ -416,32 +461,107 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
         )}
         
         {cameraActive && (
-          <div className="relative aspect-video bg-background rounded-lg overflow-hidden border border-border/50">
-            <video 
-              ref={videoRef} 
-              autoPlay 
-              playsInline 
-              muted 
-              className="w-full h-full object-cover"
-            />
-            <div className={cn(
-              "absolute top-2 left-2 flex items-center gap-2 px-2 py-1 rounded text-xs font-medium",
-              isRecording ? "bg-destructive" : "bg-destructive/80"
-            )}>
+          <div className="space-y-3">
+            {/* Live Preview - Always visible when camera is on */}
+            <div className="relative aspect-video bg-background rounded-lg overflow-hidden border border-border/50">
+              <video 
+                ref={videoRef} 
+                autoPlay 
+                playsInline 
+                muted 
+                className="w-full h-full object-cover"
+              />
+              {/* Hidden canvas for capture */}
+              <canvas ref={canvasRef} className="hidden" />
+              
+              {/* Status indicator */}
               <div className={cn(
-                "w-2 h-2 bg-white rounded-full",
-                isRecording ? "animate-pulse" : ""
-              )} />
-              {isRecording ? `REC ${formatTime(recordingTime)}` : "LIVE"}
-            </div>
-            {isRecording && (
-              <div className="absolute bottom-2 left-2 right-2 bg-destructive/20 rounded-full h-1">
-                <div 
-                  className="h-full bg-destructive rounded-full animate-pulse"
-                  style={{ width: `${Math.min((recordingTime / 60) * 100, 100)}%` }}
-                />
+                "absolute top-2 left-2 flex items-center gap-2 px-2 py-1 rounded text-xs font-medium text-white",
+                isRecording ? "bg-destructive" : "bg-green-600"
+              )}>
+                <div className={cn(
+                  "w-2 h-2 bg-white rounded-full",
+                  isRecording || !cameraReady ? "animate-pulse" : ""
+                )} />
+                {!cameraReady ? "LOADING..." : isRecording ? `REC ${formatTime(recordingTime)}` : "LIVE"}
               </div>
-            )}
+              
+              {/* Camera info */}
+              <div className="absolute top-2 right-2 px-2 py-1 rounded text-xs bg-black/50 text-white">
+                {facingMode === 'user' ? 'Front' : 'Back'} Camera
+              </div>
+              
+              {/* Recording progress bar */}
+              {isRecording && (
+                <div className="absolute bottom-2 left-2 right-2 bg-destructive/20 rounded-full h-1">
+                  <div 
+                    className="h-full bg-destructive rounded-full animate-pulse"
+                    style={{ width: `${Math.min((recordingTime / 60) * 100, 100)}%` }}
+                  />
+                </div>
+              )}
+            </div>
+            
+            {/* Camera Controls */}
+            <div className="flex flex-wrap gap-2 justify-center">
+              {!isRecording ? (
+                <>
+                  <Button 
+                    size="sm" 
+                    variant="default" 
+                    onClick={captureFromCamera}
+                    disabled={!cameraReady}
+                    className="flex-1 min-w-[100px]"
+                  >
+                    <Camera className="w-4 h-4 mr-1" />
+                    Capture Photo
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="secondary" 
+                    onClick={startRecording}
+                    disabled={!cameraReady}
+                    className="flex-1 min-w-[100px]"
+                  >
+                    <VideoIcon className="w-4 h-4 mr-1" />
+                    Start Recording
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  size="sm" 
+                  variant="destructive" 
+                  onClick={stopRecording}
+                  className="flex-1"
+                >
+                  <StopCircle className="w-4 h-4 mr-1" />
+                  Stop Recording ({formatTime(recordingTime)})
+                </Button>
+              )}
+              
+              {/* Switch Camera - Only show on devices with multiple cameras */}
+              {hasMultipleCameras && (
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={switchCamera}
+                  disabled={isRecording || !cameraReady}
+                  title="Switch Camera"
+                >
+                  <SwitchCamera className="w-4 h-4" />
+                </Button>
+              )}
+              
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={stopCamera} 
+                disabled={isRecording}
+              >
+                <X className="w-4 h-4 mr-1" />
+                Stop
+              </Button>
+            </div>
           </div>
         )}
       </div>
