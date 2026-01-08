@@ -119,7 +119,7 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
   };
 
   const processFiles = useCallback((files: FileList | File[]) => {
-    const newFiles: UploadedFile[] = Array.from(files).map(file => {
+    const newFiles: UploadedFile[] = Array.from(files).map((file) => {
       const type = getMediaType(file);
       const uploadedFile: UploadedFile = {
         file,
@@ -134,9 +134,12 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
       return uploadedFile;
     });
 
-    setUploadedFiles(prev => [...prev, ...newFiles]);
-    onFilesSelected([...uploadedFiles, ...newFiles]);
-  }, [uploadedFiles, onFilesSelected]);
+    setUploadedFiles((prev) => {
+      const updated = [...prev, ...newFiles];
+      onFilesSelected(updated);
+      return updated;
+    });
+  }, [onFilesSelected]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -170,43 +173,87 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
   const startCamera = async (mode: 'user' | 'environment' = facingMode) => {
     setCameraError(null);
     setCameraReady(false);
-    
+
     // Stop existing stream if any
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
     }
-    
+
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("Camera not supported in this browser");
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
+      const constraintsBase: MediaStreamConstraints = {
+        video: {
           facingMode: mode,
           width: { ideal: 1920 },
           height: { ideal: 1080 }
-        },
-        audio: true 
-      });
-      
-      streamRef.current = stream;
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        
-        // Wait for video to be ready
-        videoRef.current.onloadedmetadata = () => {
-          if (videoRef.current) {
-            videoRef.current.play().then(() => {
-              setCameraReady(true);
-            });
-          }
-        };
+        }
+      };
+
+      // First try with audio (best for recording). If mic permission is denied, fall back to video-only.
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ ...constraintsBase, audio: true });
+      } catch (err) {
+        stream = await navigator.mediaDevices.getUserMedia({ ...constraintsBase, audio: false });
       }
-      
+
+      streamRef.current = stream;
       setCameraActive(true);
       setFacingMode(mode);
+
+      // Re-check camera count after permissions are granted
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter((device) => device.kind === 'videoinput');
+        setHasMultipleCameras(videoDevices.length > 1);
+      } catch {
+        // ignore
+      }
+
+      const video = videoRef.current;
+      if (video) {
+        video.srcObject = stream;
+
+        const safePlay = () => {
+          const p = video.play();
+          // Some mobile browsers require a user gesture; we'll retry on tap.
+          if (p && typeof (p as Promise<void>).catch === 'function') {
+            (p as Promise<void>).catch(() => {});
+          }
+        };
+
+        const markReadyIfPossible = () => {
+          if (video.videoWidth > 0 && video.videoHeight > 0) {
+            setCameraReady(true);
+          }
+        };
+
+        video.onloadedmetadata = () => {
+          markReadyIfPossible();
+          safePlay();
+        };
+        video.oncanplay = () => {
+          markReadyIfPossible();
+        };
+
+        // Try to start playback immediately (still inside the click handler)
+        safePlay();
+
+        // Fallback: poll for dimensions for a short time
+        const start = performance.now();
+        const poll = () => {
+          markReadyIfPossible();
+          if ((video.videoWidth === 0 || video.videoHeight === 0) && performance.now() - start < 3000) {
+            requestAnimationFrame(poll);
+          }
+        };
+        requestAnimationFrame(poll);
+      }
+
       toast.success("Camera activated", {
         description: "Ready to capture frames or record video"
       });
@@ -217,6 +264,8 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
       toast.error("Camera Error", {
         description: errorMessage
       });
+      setCameraActive(false);
+      setCameraReady(false);
     }
   };
 
@@ -280,18 +329,41 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
   };
 
   const startRecording = () => {
-    if (!streamRef.current) return;
+    const stream = streamRef.current;
+    if (!stream) {
+      toast.error("Camera not active", { description: "Start the camera first" });
+      return;
+    }
+
+    if (typeof MediaRecorder === "undefined") {
+      toast.error("Recording not supported", {
+        description: "This browser/device does not support video recording"
+      });
+      return;
+    }
 
     recordedChunksRef.current = [];
     setRecordingTime(0);
 
+    const startedAt = Date.now();
+
+    // Prefer MP4 on Safari, WebM on Chromium.
+    const mimeCandidates = [
+      'video/mp4;codecs="avc1.42E01E,mp4a.40.2"',
+      'video/mp4',
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp9',
+      'video/webm;codecs=vp8,opus',
+      'video/webm'
+    ];
+
+    const selectedMime = mimeCandidates.find((t) => MediaRecorder.isTypeSupported(t));
+
     try {
-      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') 
-        ? 'video/webm;codecs=vp9' 
-        : 'video/webm';
-      
-      const mediaRecorder = new MediaRecorder(streamRef.current, { mimeType });
-      
+      const mediaRecorder = selectedMime
+        ? new MediaRecorder(stream, { mimeType: selectedMime })
+        : new MediaRecorder(stream);
+
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           recordedChunksRef.current.push(event.data);
@@ -299,22 +371,27 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-        const file = new File([blob], `recording-${Date.now()}.webm`, { type: 'video/webm' });
+        const durationSeconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+        const mime = selectedMime || mediaRecorder.mimeType || 'video/webm';
+        const ext = mime.includes('mp4') ? 'mp4' : 'webm';
+
+        const blob = new Blob(recordedChunksRef.current, { type: mime });
+        const file = new File([blob], `recording-${Date.now()}.${ext}`, { type: mime });
+
         processFiles([file]);
         toast.success("Video recorded!", {
-          description: `${recordingTime}s video added to analysis queue`
+          description: `${durationSeconds}s video added to analysis queue`
         });
         setRecordingTime(0);
       };
 
-      mediaRecorder.start(100);
+      mediaRecorder.start(250);
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
 
       // Start recording timer
       recordingIntervalRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        setRecordingTime((prev) => prev + 1);
       }, 1000);
 
       toast.info("Recording started", {
@@ -465,10 +542,14 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
             {/* Live Preview - Always visible when camera is on */}
             <div className="relative aspect-video bg-background rounded-lg overflow-hidden border border-border/50">
               <video 
-                ref={videoRef} 
+                ref={videoRef}
                 autoPlay 
                 playsInline 
                 muted 
+                onClick={() => {
+                  const v = videoRef.current;
+                  if (v) v.play().catch(() => {});
+                }}
                 className="w-full h-full object-cover"
               />
               {/* Hidden canvas for capture */}
