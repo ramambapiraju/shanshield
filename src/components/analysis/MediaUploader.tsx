@@ -68,6 +68,7 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -100,6 +101,58 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
       }
     };
   }, []);
+
+  // Attach stream to video after the <video> element mounts
+  useEffect(() => {
+    if (!cameraStream) return;
+
+    let cancelled = false;
+
+    const attach = () => {
+      if (cancelled) return;
+
+      const video = videoRef.current;
+      if (!video) {
+        requestAnimationFrame(attach);
+        return;
+      }
+
+      video.srcObject = cameraStream;
+
+      const markReadyIfPossible = () => {
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+          setCameraReady(true);
+        }
+      };
+
+      video.onloadedmetadata = () => {
+        markReadyIfPossible();
+        video.play().catch(() => {});
+      };
+
+      video.oncanplay = () => {
+        markReadyIfPossible();
+      };
+
+      video.play().catch(() => {});
+
+      const start = performance.now();
+      const poll = () => {
+        if (cancelled) return;
+        markReadyIfPossible();
+        if ((video.videoWidth === 0 || video.videoHeight === 0) && performance.now() - start < 3000) {
+          requestAnimationFrame(poll);
+        }
+      };
+      requestAnimationFrame(poll);
+    };
+
+    attach();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cameraStream]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -179,6 +232,7 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+    setCameraStream(null);
 
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -202,8 +256,9 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
       }
 
       streamRef.current = stream;
-      setCameraActive(true);
       setFacingMode(mode);
+      setCameraActive(true);
+      setCameraStream(stream);
 
       // Re-check camera count after permissions are granted
       try {
@@ -214,56 +269,35 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
         // ignore
       }
 
-      const video = videoRef.current;
-      if (video) {
-        video.srcObject = stream;
-
-        const safePlay = () => {
-          const p = video.play();
-          // Some mobile browsers require a user gesture; we'll retry on tap.
-          if (p && typeof (p as Promise<void>).catch === 'function') {
-            (p as Promise<void>).catch(() => {});
-          }
-        };
-
-        const markReadyIfPossible = () => {
-          if (video.videoWidth > 0 && video.videoHeight > 0) {
-            setCameraReady(true);
-          }
-        };
-
-        video.onloadedmetadata = () => {
-          markReadyIfPossible();
-          safePlay();
-        };
-        video.oncanplay = () => {
-          markReadyIfPossible();
-        };
-
-        // Try to start playback immediately (still inside the click handler)
-        safePlay();
-
-        // Fallback: poll for dimensions for a short time
-        const start = performance.now();
-        const poll = () => {
-          markReadyIfPossible();
-          if ((video.videoWidth === 0 || video.videoHeight === 0) && performance.now() - start < 3000) {
-            requestAnimationFrame(poll);
-          }
-        };
-        requestAnimationFrame(poll);
-      }
-
       toast.success("Camera activated", {
         description: "Ready to capture frames or record video"
       });
     } catch (err) {
       console.error("Camera access denied:", err);
-      const errorMessage = err instanceof Error ? err.message : "Camera access denied";
+
+      let errorMessage = err instanceof Error ? err.message : "Camera access denied";
+      const errName = err instanceof DOMException ? err.name : undefined;
+
+      if (errName === "NotAllowedError" || errName === "SecurityError") {
+        const inIframe = (() => {
+          try {
+            return window.self !== window.top;
+          } catch {
+            return true;
+          }
+        })();
+
+        if (inIframe) {
+          errorMessage = `${errorMessage} (Camera is often blocked inside embedded previews; open in a new tab.)`;
+        }
+      }
+
       setCameraError(errorMessage);
       toast.error("Camera Error", {
         description: errorMessage
       });
+
+      setCameraStream(null);
       setCameraActive(false);
       setCameraReady(false);
     }
@@ -422,16 +456,18 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
     if (isRecording) {
       stopRecording();
     }
-    
+
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
-    
+
+    setCameraStream(null);
+
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
-    
+
     setCameraActive(false);
     setCameraReady(false);
     setCameraError(null);
