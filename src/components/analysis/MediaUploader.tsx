@@ -247,12 +247,37 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
         }
       };
 
-      // First try with audio (best for recording). If mic permission is denied, fall back to video-only.
+      // Request BOTH video AND audio permissions explicitly
       let stream: MediaStream;
+      let hasAudio = false;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ ...constraintsBase, audio: true });
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: {
+            facingMode: mode,
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          }, 
+          audio: true 
+        });
+        hasAudio = true;
       } catch (err) {
-        stream = await navigator.mediaDevices.getUserMedia({ ...constraintsBase, audio: false });
+        // If audio is denied, fall back to video-only
+        console.log("Microphone permission denied, falling back to video-only:", err);
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: {
+            facingMode: mode,
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          }, 
+          audio: false 
+        });
+      }
+      
+      // Notify user about audio status
+      if (!hasAudio) {
+        toast.warning("Microphone not available", {
+          description: "Recording will be video-only. Allow microphone permission for audio."
+        });
       }
 
       streamRef.current = stream;

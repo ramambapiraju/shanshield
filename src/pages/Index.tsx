@@ -1,4 +1,5 @@
-import { Shield, Play, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import { Shield, Play, RotateCcw, Presentation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ErakshaBadge from "@/components/ErakshaBadge";
 import MediaUploader from "@/components/analysis/MediaUploader";
@@ -14,6 +15,7 @@ import PresentationMode from "@/components/PresentationMode";
 import { useAnalysis } from "@/hooks/useAnalysis";
 
 const Index = () => {
+  const [showPresentation, setShowPresentation] = useState(false);
   const {
     files,
     isAnalyzing,
@@ -32,7 +34,7 @@ const Index = () => {
     <div className="min-h-screen bg-background cyber-grid relative overflow-hidden">
       <JudgeModePanel />
       <HackathonScript />
-      <PresentationMode />
+      <PresentationMode isOpen={showPresentation} onClose={() => setShowPresentation(false)} />
       <div className="fixed inset-0 bg-radial-glow pointer-events-none" />
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
@@ -60,7 +62,17 @@ const Index = () => {
               </span>
             </div>
           </div>
-          <ErakshaBadge />
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={() => setShowPresentation(true)}
+              variant="outline"
+              className="gap-2 border-primary/50 hover:border-primary hover:bg-primary/10"
+            >
+              <Presentation className="w-4 h-4" />
+              <span className="hidden sm:inline">Present</span>
+            </Button>
+            <ErakshaBadge />
+          </div>
         </div>
       </header>
 
