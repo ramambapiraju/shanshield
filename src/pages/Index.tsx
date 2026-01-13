@@ -10,6 +10,7 @@ import FieldModeToggle from "@/components/analysis/FieldModeToggle";
 import SecurityIndicators from "@/components/analysis/SecurityIndicators";
 import JudgeModePanel from "@/components/JudgeModePanel";
 import HackathonScript from "@/components/HackathonScript";
+import PresentationMode from "@/components/PresentationMode";
 import { useAnalysis } from "@/hooks/useAnalysis";
 
 const Index = () => {
@@ -31,6 +32,7 @@ const Index = () => {
     <div className="min-h-screen bg-background cyber-grid relative overflow-hidden">
       <JudgeModePanel />
       <HackathonScript />
+      <PresentationMode />
       <div className="fixed inset-0 bg-radial-glow pointer-events-none" />
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
