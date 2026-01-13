@@ -42,12 +42,32 @@ interface SlideData {
   content: React.ReactNode;
 }
 
-const PresentationMode = () => {
-  const [isVisible, setIsVisible] = useState(false);
+interface PresentationModeProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
+  const [isVisible, setIsVisible] = useState(isOpen ?? false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Sync with prop
+  useEffect(() => {
+    if (isOpen !== undefined) {
+      setIsVisible(isOpen);
+    }
+  }, [isOpen]);
+
+  const handleClose = useCallback(() => {
+    setIsVisible(false);
+    onClose?.();
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    }
+  }, [onClose]);
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -61,16 +81,17 @@ const PresentationMode = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // F5 to toggle presentation mode
-      if (e.key === "F5") {
+      // F5 or Cmd+Shift+P (Mac-friendly) to toggle presentation mode
+      if (e.key === "F5" || ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "p")) {
         e.preventDefault();
-        setIsVisible((prev) => !prev);
+        if (isVisible) {
+          handleClose();
+        } else {
+          setIsVisible(true);
+        }
       }
       if (e.key === "Escape" && isVisible) {
-        setIsVisible(false);
-        if (document.fullscreenElement) {
-          document.exitFullscreen();
-        }
+        handleClose();
       }
       if (isVisible) {
         if (e.key === "ArrowRight" || e.key === " ") {
@@ -97,7 +118,7 @@ const PresentationMode = () => {
       window.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
     };
-  }, [isVisible, toggleFullscreen]);
+  }, [isVisible, toggleFullscreen, handleClose]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -981,7 +1002,7 @@ const PresentationMode = () => {
             {isFullscreen ? "Exit" : "Fullscreen"}
           </Button>
 
-          <Button size="sm" variant="ghost" onClick={() => setIsVisible(false)}>
+          <Button size="sm" variant="ghost" onClick={handleClose}>
             <X className="w-5 h-5" />
           </Button>
         </div>
