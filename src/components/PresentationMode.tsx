@@ -158,13 +158,9 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
               Multi-Agent Forensic Intelligence for Deepfake Detection
             </p>
           </div>
-          <div className="grid grid-cols-4 gap-8 mt-12">
+          <div className="grid grid-cols-3 gap-8 mt-12">
             <div className="text-center">
-              <div className="text-4xl font-bold text-primary">94.7%</div>
-              <div className="text-sm text-muted-foreground">Detection Accuracy</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-primary">1.8s</div>
+              <div className="text-4xl font-bold text-primary">6.5s</div>
               <div className="text-sm text-muted-foreground">Avg Analysis Time</div>
             </div>
             <div className="text-center">
@@ -883,6 +879,20 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
               </div>
             </div>
           </div>
+
+          <div className="p-4 bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/40 rounded-xl mt-4">
+            <div className="flex items-center gap-3">
+              <Atom className="w-8 h-8 text-primary" />
+              <div>
+                <h4 className="font-bold text-foreground">Personal Quantum Commitment</h4>
+                <p className="text-muted-foreground">
+                  Currently pursuing <strong className="text-primary">Quantum Fundamentals & Advanced Algorithms</strong> course 
+                  at <strong className="text-accent">Amaravati Quantum Valley</strong>, offered by 
+                  <strong className="text-primary"> WiSER, Andhra Pradesh Government</strong> & <strong className="text-accent">QubiTech</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )
     },
@@ -900,13 +910,9 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             "Truth Shouldn't Be Optional"
           </h2>
 
-          <div className="grid grid-cols-4 gap-6 w-full max-w-4xl">
+          <div className="grid grid-cols-3 gap-6 w-full max-w-3xl">
             <div className="text-center p-6 bg-primary/10 border border-primary/30 rounded-xl">
-              <div className="text-4xl font-bold text-primary">94.7%</div>
-              <div className="text-muted-foreground">Detection Accuracy</div>
-            </div>
-            <div className="text-center p-6 bg-primary/10 border border-primary/30 rounded-xl">
-              <div className="text-4xl font-bold text-primary">1.8s</div>
+              <div className="text-4xl font-bold text-primary">6.5s</div>
               <div className="text-muted-foreground">Avg Analysis</div>
             </div>
             <div className="text-center p-6 bg-primary/10 border border-primary/30 rounded-xl">
