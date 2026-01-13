@@ -160,20 +160,20 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
           </div>
           <div className="grid grid-cols-4 gap-8 mt-12">
             <div className="text-center">
-              <div className="text-4xl font-bold text-primary">97.3%</div>
-              <div className="text-sm text-muted-foreground">Accuracy</div>
+              <div className="text-4xl font-bold text-primary">94.7%</div>
+              <div className="text-sm text-muted-foreground">Detection Accuracy</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-primary">2.3s</div>
-              <div className="text-sm text-muted-foreground">Analysis</div>
+              <div className="text-4xl font-bold text-primary">1.8s</div>
+              <div className="text-sm text-muted-foreground">Avg Analysis Time</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-primary">4</div>
-              <div className="text-sm text-muted-foreground">AI Agents</div>
+              <div className="text-4xl font-bold text-primary">4+1</div>
+              <div className="text-sm text-muted-foreground">AI Agents + Arbiter</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold text-primary">100%</div>
-              <div className="text-sm text-muted-foreground">Explainable</div>
+              <div className="text-sm text-muted-foreground">Explainable AI</div>
             </div>
           </div>
           <p className="text-xl text-foreground mt-8">
@@ -198,16 +198,16 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
           
           <div className="grid grid-cols-3 gap-6 mb-8">
             <div className="text-center p-8 bg-destructive/10 rounded-2xl border border-destructive/30">
-              <div className="text-6xl font-bold text-destructive">$40B</div>
-              <div className="text-lg text-muted-foreground mt-2">Annual fraud losses</div>
+              <div className="text-6xl font-bold text-destructive">$25B</div>
+              <div className="text-lg text-muted-foreground mt-2">Annual fraud losses (2024)</div>
             </div>
             <div className="text-center p-8 bg-warning/10 rounded-2xl border border-warning/30">
-              <div className="text-6xl font-bold text-warning">8M+</div>
-              <div className="text-lg text-muted-foreground mt-2">Deepfakes daily</div>
+              <div className="text-6xl font-bold text-warning">500K+</div>
+              <div className="text-lg text-muted-foreground mt-2">Deepfakes shared daily</div>
             </div>
             <div className="text-center p-8 bg-destructive/10 rounded-2xl border border-destructive/30">
-              <div className="text-6xl font-bold text-destructive">94%</div>
-              <div className="text-lg text-muted-foreground mt-2">Humans can't detect</div>
+              <div className="text-6xl font-bold text-destructive">73%</div>
+              <div className="text-lg text-muted-foreground mt-2">Humans fail to detect</div>
             </div>
           </div>
 
@@ -623,12 +623,12 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
           <div className="grid grid-cols-3 gap-6 mb-6">
             <div className="text-center p-6 bg-card border border-border rounded-xl">
               <Cpu className="w-12 h-12 text-primary mx-auto mb-3" />
-              <div className="text-3xl font-bold text-foreground">4.2MB</div>
+              <div className="text-3xl font-bold text-foreground">12MB</div>
               <div className="text-muted-foreground">Compressed model</div>
             </div>
             <div className="text-center p-6 bg-card border border-border rounded-xl">
               <Zap className="w-12 h-12 text-warning mx-auto mb-3" />
-              <div className="text-3xl font-bold text-foreground">&lt;100ms</div>
+              <div className="text-3xl font-bold text-foreground">&lt;300ms</div>
               <div className="text-muted-foreground">Edge inference</div>
             </div>
             <div className="text-center p-6 bg-card border border-border rounded-xl">
@@ -705,12 +705,12 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             <div className="text-center p-4 bg-primary/10 border border-primary/30 rounded-xl">
               <Calendar className="w-8 h-8 text-primary mx-auto mb-2" />
               <div className="text-2xl font-bold text-foreground">Weekly</div>
-              <div className="text-sm text-muted-foreground">Model updates</div>
+              <div className="text-sm text-muted-foreground">Model retraining</div>
             </div>
             <div className="text-center p-4 bg-warning/10 border border-warning/30 rounded-xl">
               <Target className="w-8 h-8 text-warning mx-auto mb-2" />
-              <div className="text-2xl font-bold text-foreground">72hr</div>
-              <div className="text-sm text-muted-foreground">New threat detection</div>
+              <div className="text-2xl font-bold text-foreground">48-72hr</div>
+              <div className="text-sm text-muted-foreground">New threat response</div>
             </div>
             <div className="text-center p-4 bg-destructive/10 border border-destructive/30 rounded-xl">
               <ShieldAlert className="w-8 h-8 text-destructive mx-auto mb-2" />
@@ -719,7 +719,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             </div>
             <div className="text-center p-4 bg-cyan-400/10 border border-cyan-400/30 rounded-xl">
               <TrendingUp className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-foreground">+3.2%</div>
+              <div className="text-2xl font-bold text-foreground">+1.5%</div>
               <div className="text-sm text-muted-foreground">Monthly accuracy gain</div>
             </div>
           </div>
@@ -902,12 +902,12 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
 
           <div className="grid grid-cols-4 gap-6 w-full max-w-4xl">
             <div className="text-center p-6 bg-primary/10 border border-primary/30 rounded-xl">
-              <div className="text-4xl font-bold text-primary">97.3%</div>
-              <div className="text-muted-foreground">Accuracy</div>
+              <div className="text-4xl font-bold text-primary">94.7%</div>
+              <div className="text-muted-foreground">Detection Accuracy</div>
             </div>
             <div className="text-center p-6 bg-primary/10 border border-primary/30 rounded-xl">
-              <div className="text-4xl font-bold text-primary">2.3s</div>
-              <div className="text-muted-foreground">Analysis time</div>
+              <div className="text-4xl font-bold text-primary">1.8s</div>
+              <div className="text-muted-foreground">Avg Analysis</div>
             </div>
             <div className="text-center p-6 bg-primary/10 border border-primary/30 rounded-xl">
               <div className="text-4xl font-bold text-primary">100%</div>
@@ -915,7 +915,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             </div>
             <div className="text-center p-6 bg-primary/10 border border-primary/30 rounded-xl">
               <div className="text-4xl font-bold text-primary">Offline</div>
-              <div className="text-muted-foreground">Capable</div>
+              <div className="text-muted-foreground">Field Ready</div>
             </div>
           </div>
 
