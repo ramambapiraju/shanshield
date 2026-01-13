@@ -9,6 +9,7 @@ import ForensicReport from "@/components/analysis/ForensicReport";
 import FieldModeToggle from "@/components/analysis/FieldModeToggle";
 import SecurityIndicators from "@/components/analysis/SecurityIndicators";
 import JudgeModePanel from "@/components/JudgeModePanel";
+import HackathonScript from "@/components/HackathonScript";
 import { useAnalysis } from "@/hooks/useAnalysis";
 
 const Index = () => {
@@ -29,6 +30,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background cyber-grid relative overflow-hidden">
       <JudgeModePanel />
+      <HackathonScript />
       <div className="fixed inset-0 bg-radial-glow pointer-events-none" />
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
@@ -188,7 +190,7 @@ const Index = () => {
       <footer className="relative border-t border-border/50 bg-card/30 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span className="font-display tracking-wider">SHANSHIELD v1.0</span>
+            <span className="font-display tracking-wider">SHANSHIELD v4.2.0</span>
             <span className="uppercase tracking-widest">IIT Delhi ERAKSHA Hackathon 2026</span>
             <span className="font-display tracking-wider">CLASSIFIED // FOR OFFICIAL USE</span>
           </div>

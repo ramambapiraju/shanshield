@@ -245,12 +245,13 @@ const generateAnalysisResult = (file: UploadedFile, isFieldMode: boolean): Analy
   }
 
   const detectionMethods = [
-    "CNN Face Detector",
-    "Vision Transformer",
-    "Temporal Analysis",
-    "Audio Spectrogram",
-    "Compression Analysis",
-    ...(isFieldMode ? ["Edge Inference", "Low-Power Mode"] : ["Cloud Model", "Full Resolution"])
+    "EfficientNet-V3 Visual",
+    "RawNet3 Audio Forensics",
+    "rPPG Biological Signal",
+    "C2PA Provenance Verify",
+    "Temporal Flicker Analysis",
+    "Diffusion Artifact Detector",
+    ...(isFieldMode ? ["WebGPU Edge Inference", "INT8 Quantized Model"] : ["Full Cloud Ensemble", "4K Resolution Analysis"])
   ];
 
   const processingTime = isFieldMode 
