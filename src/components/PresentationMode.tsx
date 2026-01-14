@@ -337,7 +337,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             <div className="p-6 bg-card border border-border rounded-xl space-y-4">
               <h3 className="text-2xl font-bold text-primary flex items-center gap-2">
                 <Layers className="w-6 h-6" />
-                EfficientNet-V3 Architecture
+                EfficientNetV2-L Architecture
               </h3>
               <div className="space-y-2 text-muted-foreground">
                 <p className="text-lg">Compound scaling: width × depth × resolution</p>
