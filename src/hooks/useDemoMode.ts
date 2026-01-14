@@ -1,5 +1,10 @@
 import { useState, useCallback, useRef } from "react";
 import type { VerdictType } from "@/components/analysis/AnalysisResults";
+import { analyzeImage, AnalysisFindings } from "@/lib/imageAnalyzer";
+
+// Import real demo images
+import deepfakeImage from "@/assets/demo-deepfake.jpg";
+import authenticImage from "@/assets/demo-authentic.jpg";
 
 interface AnalysisIndicator {
   name: string;
@@ -54,58 +59,132 @@ interface UploadedFile {
 
 type DemoScenario = 'deepfake' | 'authentic';
 
-// Demo scenarios with preset results
-const demoScenarios: Record<DemoScenario, {
-  name: string;
-  verdict: VerdictType;
-  confidence: number;
-  indicators: AnalysisIndicator[];
-  notDetected: string[];
-  reasoning: string[];
-}> = {
-  deepfake: {
-    name: "Deepfake_Sample_Face.jpg",
-    verdict: 'deepfake',
-    confidence: 94,
-    indicators: [
-      { name: "GAN Artifacts", detected: true, confidence: 96, description: "Detected characteristic GAN fingerprints in frequency domain" },
-      { name: "Facial Inconsistency", detected: true, confidence: 92, description: "Unnatural facial geometry and asymmetry patterns" },
-      { name: "Edge Anomalies", detected: true, confidence: 88, description: "Irregular edge patterns around face boundary regions" },
-      { name: "Texture Irregularity", detected: true, confidence: 85, description: "LBP analysis shows unnatural texture patterns" },
-      { name: "Compression Artifacts", detected: true, confidence: 78, description: "Double JPEG compression detected with mismatched quantization" },
-    ],
-    notDetected: ["Metadata Tampering"],
-    reasoning: [
-      "Multi-agent forensic analysis initiated on Deepfake_Sample_Face.jpg",
-      "Visual Agent: GAN fingerprints detected via DCT frequency analysis",
-      "Temporal Agent: Static image - frame consistency N/A",
-      "Audio Agent: No audio track present",
-      "Metadata Agent: EXIF data shows signs of editing software",
-      "Arbiter Agent: Cross-validation confirms manipulation",
-      "HIGH CONFIDENCE DEEPFAKE - Multiple forensic indicators triggered",
-      "FINAL VERDICT: DEEPFAKE (94% confidence)"
-    ]
-  },
-  authentic: {
-    name: "Authentic_Photo.jpg",
-    verdict: 'authentic',
-    confidence: 97,
-    indicators: [
-      { name: "Natural Noise Pattern", detected: true, confidence: 95, description: "Sensor noise consistent with genuine camera capture" },
-      { name: "Original Metadata", detected: true, confidence: 98, description: "Complete EXIF data chain with valid camera signature" },
-    ],
-    notDetected: ["GAN Artifacts", "Facial Inconsistency", "Edge Anomalies", "Texture Irregularity", "Compression Artifacts"],
-    reasoning: [
-      "Multi-agent forensic analysis initiated on Authentic_Photo.jpg",
-      "Visual Agent: No GAN fingerprints detected in frequency domain",
-      "Temporal Agent: Static image - frame consistency N/A",
-      "Audio Agent: No audio track present",
-      "Metadata Agent: Complete EXIF chain verified - Canon EOS R5",
-      "Arbiter Agent: All agents report authentic signatures",
-      "HIGH CONFIDENCE AUTHENTIC - No manipulation indicators",
-      "FINAL VERDICT: AUTHENTIC (97% confidence)"
-    ]
+// Convert analysis findings to full result
+const convertFindingsToResult = (
+  findings: AnalysisFindings, 
+  fileName: string,
+  processingTime: number
+): AnalysisResult => {
+  const isDeepfake = findings.score >= 50;
+  const verdict: VerdictType = isDeepfake ? 'deepfake' : 'authentic';
+  
+  // Generate indicators from findings
+  const indicators: AnalysisIndicator[] = [
+    {
+      name: "Noise Pattern Analysis",
+      detected: findings.details.noiseAnalysis.score > 50,
+      confidence: Math.round(findings.details.noiseAnalysis.score),
+      description: findings.details.noiseAnalysis.description
+    },
+    {
+      name: "Edge Consistency",
+      detected: findings.details.edgeAnalysis.score > 50,
+      confidence: Math.round(findings.details.edgeAnalysis.score),
+      description: findings.details.edgeAnalysis.description
+    },
+    {
+      name: "Color Distribution",
+      detected: findings.details.colorAnalysis.score > 50,
+      confidence: Math.round(findings.details.colorAnalysis.score),
+      description: findings.details.colorAnalysis.description
+    },
+    {
+      name: "Compression Artifacts",
+      detected: findings.details.compressionAnalysis.score > 50,
+      confidence: Math.round(findings.details.compressionAnalysis.score),
+      description: findings.details.compressionAnalysis.description
+    },
+    {
+      name: "Facial Symmetry",
+      detected: findings.details.symmetryAnalysis.score > 50,
+      confidence: Math.round(findings.details.symmetryAnalysis.score),
+      description: findings.details.symmetryAnalysis.description
+    },
+    {
+      name: "Texture Consistency",
+      detected: findings.details.textureAnalysis.score > 50,
+      confidence: Math.round(findings.details.textureAnalysis.score),
+      description: findings.details.textureAnalysis.description
+    }
+  ];
+
+  const notDetected = indicators.filter(i => !i.detected).map(i => i.name);
+  
+  // Generate hash
+  const hashBase = `analysis-${fileName}-${Date.now()}`;
+  let mediaHash = '';
+  for (let i = 0; i < 64; i++) {
+    mediaHash += ((hashBase.charCodeAt(i % hashBase.length) * (i + 1)) % 16).toString(16);
   }
+
+  // Generate reasoning based on real analysis
+  const reasoning: string[] = [
+    `Multi-agent forensic analysis initiated on ${fileName}`,
+    `Visual Agent: ${findings.details.noiseAnalysis.description}`,
+    `Edge Agent: ${findings.details.edgeAnalysis.description}`,
+    `Color Agent: ${findings.details.colorAnalysis.description}`,
+    `Compression Agent: ${findings.details.compressionAnalysis.description}`,
+    `Symmetry Agent: ${findings.details.symmetryAnalysis.description}`,
+    `Texture Agent: ${findings.details.textureAnalysis.description}`,
+    isDeepfake 
+      ? `⚠️ MANIPULATION DETECTED - Overall score: ${findings.score}%`
+      : `✓ AUTHENTIC - Overall score: ${findings.score}%`,
+    `FINAL VERDICT: ${verdict.toUpperCase()} (${Math.abs(isDeepfake ? findings.score : 100 - findings.score)}% confidence)`
+  ];
+
+  // Generate heatmap based on actual findings
+  const heatmapRegions: HeatmapRegion[] = [
+    { 
+      x: 25, y: 20, width: 25, height: 30, 
+      intensity: findings.details.noiseAnalysis.score, 
+      label: findings.details.noiseAnalysis.score > 50 ? "Noise Anomaly" : "Normal Noise" 
+    },
+    { 
+      x: 55, y: 25, width: 20, height: 25, 
+      intensity: findings.details.symmetryAnalysis.score, 
+      label: findings.details.symmetryAnalysis.score > 50 ? "Symmetry Issue" : "Normal Symmetry" 
+    },
+    { 
+      x: 35, y: 55, width: 30, height: 20, 
+      intensity: findings.details.textureAnalysis.score, 
+      label: findings.details.textureAnalysis.score > 50 ? "Texture Anomaly" : "Normal Texture" 
+    },
+  ];
+
+  const timelineMarkers: TimelineMarker[] = [
+    { 
+      timestamp: 1, 
+      type: findings.details.noiseAnalysis.score > 50 ? 'anomaly' : 'info', 
+      label: "Noise Analysis", 
+      description: findings.details.noiseAnalysis.description 
+    },
+    { 
+      timestamp: 2, 
+      type: findings.details.edgeAnalysis.score > 50 ? 'warning' : 'info', 
+      label: "Edge Detection", 
+      description: findings.details.edgeAnalysis.description 
+    },
+    { 
+      timestamp: 3, 
+      type: findings.details.textureAnalysis.score > 50 ? 'anomaly' : 'info', 
+      label: "Texture Analysis", 
+      description: findings.details.textureAnalysis.description 
+    },
+  ];
+
+  return {
+    verdict,
+    confidence: Math.round(isDeepfake ? findings.score : 100 - findings.score),
+    indicators: indicators.filter(i => i.detected),
+    notDetected,
+    processingTime,
+    heatmapRegions,
+    timelineMarkers,
+    audioSegments: [],
+    reasoning,
+    mediaHash,
+    detectionMethods: ["Pixel Noise Analysis", "Sobel Edge Detection", "Color Histogram", "JPEG Artifact Detection", "Symmetry Check", "LBP Texture"]
+  };
 };
 
 export const useDemoMode = () => {
@@ -116,83 +195,72 @@ export const useDemoMode = () => {
   const [demoComplete, setDemoComplete] = useState(false);
   const [demoResult, setDemoResult] = useState<AnalysisResult | null>(null);
   const [currentDemoLabel, setCurrentDemoLabel] = useState<string>("");
-  const demoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const analysisStartTime = useRef<number>(0);
 
-  const scenarios: DemoScenario[] = ['deepfake', 'authentic'];
+  const scenarios: { type: DemoScenario; imageUrl: string; fileName: string }[] = [
+    { type: 'deepfake', imageUrl: deepfakeImage, fileName: "AI_Generated_Face.jpg" },
+    { type: 'authentic', imageUrl: authenticImage, fileName: "Authentic_Photo.jpg" }
+  ];
 
-  const generateDemoResult = useCallback((scenario: DemoScenario): AnalysisResult => {
-    const config = demoScenarios[scenario];
-    const hashBase = `demo-${scenario}-${Date.now()}`;
-    let mediaHash = '';
-    for (let i = 0; i < 64; i++) {
-      mediaHash += ((hashBase.charCodeAt(i % hashBase.length) * (i + 1)) % 16).toString(16);
-    }
-
-    return {
-      verdict: config.verdict,
-      confidence: config.confidence,
-      indicators: config.indicators,
-      notDetected: config.notDetected,
-      processingTime: 4.8 + Math.random() * 0.4, // ~5s
-      heatmapRegions: [
-        { x: 25, y: 20, width: 25, height: 30, intensity: scenario === 'deepfake' ? 85 : 15, label: scenario === 'deepfake' ? "Face: Anomaly" : "Face: Normal" },
-        { x: 55, y: 25, width: 20, height: 25, intensity: scenario === 'deepfake' ? 72 : 12, label: scenario === 'deepfake' ? "Eyes: Suspicious" : "Eyes: Normal" },
-        { x: 35, y: 55, width: 30, height: 20, intensity: scenario === 'deepfake' ? 68 : 8, label: scenario === 'deepfake' ? "Mouth: Irregular" : "Mouth: Normal" },
-      ],
-      timelineMarkers: [
-        { timestamp: 1, type: scenario === 'deepfake' ? 'anomaly' : 'info', label: "Visual Analysis", description: scenario === 'deepfake' ? "GAN artifacts detected" : "No anomalies" },
-        { timestamp: 2, type: scenario === 'deepfake' ? 'warning' : 'info', label: "Edge Detection", description: scenario === 'deepfake' ? "Irregular boundaries" : "Natural edges" },
-        { timestamp: 3, type: scenario === 'deepfake' ? 'anomaly' : 'info', label: "Texture Analysis", description: scenario === 'deepfake' ? "Unnatural patterns" : "Consistent texture" },
-      ],
-      audioSegments: [],
-      reasoning: config.reasoning,
-      mediaHash,
-      detectionMethods: ["Pixel Noise Analysis", "Sobel Edge Detection", "Color Histogram", "JPEG Artifact Detection", "Symmetry Check", "LBP Texture"]
-    };
+  // Fetch image as File object from imported URL
+  const fetchImageAsFile = useCallback(async (url: string, fileName: string): Promise<File> => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new File([blob], fileName, { type: 'image/jpeg' });
   }, []);
+
+  const runDemoScenario = useCallback(async (index: number) => {
+    const scenario = scenarios[index];
+    
+    setCurrentDemoLabel(scenario.type === 'deepfake' ? '🔴 DEEPFAKE SAMPLE' : '🟢 AUTHENTIC SAMPLE');
+    setIsDemoAnalyzing(true);
+    setDemoComplete(false);
+    setDemoResult(null);
+    analysisStartTime.current = performance.now();
+    
+    try {
+      // Fetch the real image file
+      const file = await fetchImageAsFile(scenario.imageUrl, scenario.fileName);
+      
+      // Create file entry with real preview
+      const mockFile: UploadedFile = {
+        file,
+        type: 'image',
+        preview: scenario.imageUrl,
+        id: `demo-${scenario.type}-${Date.now()}`
+      };
+      
+      setDemoFiles([mockFile]);
+      
+      // Run REAL analysis on the image
+      const findings = await analyzeImage(file);
+      
+      // Calculate processing time
+      const processingTime = (performance.now() - analysisStartTime.current) / 1000;
+      
+      // Convert findings to full result
+      const result = convertFindingsToResult(findings, scenario.fileName, processingTime);
+      
+      setDemoResult(result);
+      setIsDemoAnalyzing(false);
+      setDemoComplete(true);
+    } catch (error) {
+      console.error("Demo analysis failed:", error);
+      setIsDemoAnalyzing(false);
+    }
+  }, [fetchImageAsFile]);
 
   const startDemoMode = useCallback(() => {
     setIsDemoMode(true);
     setDemoScenarioIndex(0);
     runDemoScenario(0);
-  }, []);
+  }, [runDemoScenario]);
 
-  const runDemoScenario = useCallback((index: number) => {
-    const scenario = scenarios[index];
-    const config = demoScenarios[scenario];
-    
-    setCurrentDemoLabel(scenario === 'deepfake' ? '🔴 DEEPFAKE SAMPLE' : '🟢 AUTHENTIC SAMPLE');
-    
-    // Create mock file
-    const mockFile: UploadedFile = {
-      file: new File(["demo"], config.name, { type: "image/jpeg" }),
-      type: 'image',
-      preview: scenario === 'deepfake' 
-        ? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23dc2626' width='400' height='300'/%3E%3Ctext x='200' y='150' text-anchor='middle' fill='white' font-size='24' font-family='sans-serif'%3EDEEPFAKE SAMPLE%3C/text%3E%3C/svg%3E"
-        : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%2222c55e' width='400' height='300'/%3E%3Ctext x='200' y='150' text-anchor='middle' fill='white' font-size='24' font-family='sans-serif'%3EAUTHENTIC SAMPLE%3C/text%3E%3C/svg%3E",
-      id: `demo-${scenario}-${Date.now()}`
-    };
-    
-    setDemoFiles([mockFile]);
-    setIsDemoAnalyzing(true);
-    setDemoComplete(false);
-    setDemoResult(null);
-
-    // Simulate analysis time (~5 seconds)
-    demoTimeoutRef.current = setTimeout(() => {
-      const result = generateDemoResult(scenario);
-      setDemoResult(result);
-      setIsDemoAnalyzing(false);
-      setDemoComplete(true);
-
-      // After showing result for 4 seconds, move to next scenario
-      demoTimeoutRef.current = setTimeout(() => {
-        const nextIndex = (index + 1) % scenarios.length;
-        setDemoScenarioIndex(nextIndex);
-        runDemoScenario(nextIndex);
-      }, 4000);
-    }, 5000);
-  }, [generateDemoResult]);
+  const nextDemoScenario = useCallback(() => {
+    const nextIndex = (demoScenarioIndex + 1) % scenarios.length;
+    setDemoScenarioIndex(nextIndex);
+    runDemoScenario(nextIndex);
+  }, [demoScenarioIndex, runDemoScenario]);
 
   const stopDemoMode = useCallback(() => {
     setIsDemoMode(false);
@@ -201,10 +269,7 @@ export const useDemoMode = () => {
     setDemoResult(null);
     setDemoFiles([]);
     setCurrentDemoLabel("");
-    if (demoTimeoutRef.current) {
-      clearTimeout(demoTimeoutRef.current);
-      demoTimeoutRef.current = null;
-    }
+    setDemoScenarioIndex(0);
   }, []);
 
   return {
@@ -214,7 +279,10 @@ export const useDemoMode = () => {
     demoComplete,
     demoResult,
     currentDemoLabel,
+    demoScenarioIndex,
+    totalScenarios: scenarios.length,
     startDemoMode,
+    nextDemoScenario,
     stopDemoMode
   };
 };
