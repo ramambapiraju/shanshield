@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Shield, Play, RotateCcw, Presentation } from "lucide-react";
+import { Shield, Play, RotateCcw, Presentation, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ErakshaBadge from "@/components/ErakshaBadge";
 import MediaUploader from "@/components/analysis/MediaUploader";
@@ -12,10 +12,12 @@ import SecurityIndicators from "@/components/analysis/SecurityIndicators";
 import JudgeModePanel from "@/components/JudgeModePanel";
 import PresentationMode from "@/components/PresentationMode";
 import TechShowcase from "@/components/TechShowcase";
+import TechnicalSummaryPDF from "@/components/TechnicalSummaryPDF";
 import { useAnalysis } from "@/hooks/useAnalysis";
 
 const Index = () => {
   const [showPresentation, setShowPresentation] = useState(false);
+  const [showTechSummary, setShowTechSummary] = useState(false);
 
   // Ctrl+P keyboard shortcut to toggle presentation
   useEffect(() => {
@@ -46,6 +48,7 @@ const Index = () => {
     <div className="min-h-screen bg-background cyber-grid relative overflow-hidden">
       <JudgeModePanel />
       <PresentationMode isOpen={showPresentation} onClose={() => setShowPresentation(false)} />
+      <TechnicalSummaryPDF isOpen={showTechSummary} onClose={() => setShowTechSummary(false)} />
       <div className="fixed inset-0 bg-radial-glow pointer-events-none" />
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
@@ -212,6 +215,15 @@ const Index = () => {
             <span className="font-display tracking-wider">SHANSHIELD v4.2.0</span>
             <div className="flex items-center gap-3">
               <span className="uppercase tracking-widest">IIT Delhi ERAKSHA Hackathon 2026</span>
+              <Button 
+                onClick={() => setShowTechSummary(true)}
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs gap-1 text-muted-foreground hover:text-primary"
+              >
+                <FileText className="w-3 h-3" />
+                Tech PDF
+              </Button>
               <Button 
                 onClick={() => setShowPresentation(true)}
                 variant="ghost"
