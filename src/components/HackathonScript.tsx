@@ -250,7 +250,7 @@ const HackathonScript = () => {
                 <span className="font-bold text-foreground">Visual Agent (35% weight)</span>
               </div>
               <ul className="text-xs text-muted-foreground space-y-1">
-                <li>• <span className="text-blue-400">EfficientNet-V3</span> with 87M parameters</li>
+                <li>• <span className="text-blue-400">EfficientNetV2-L</span> with 118M parameters</li>
                 <li>• Frequency-aware attention for diffusion noise</li>
                 <li>• GAN artifact detection in Fourier domain</li>
                 <li>• Generator fingerprinting: Sora, Runway, DALL-E 4</li>
@@ -346,7 +346,7 @@ const HackathonScript = () => {
               <div className="text-xs text-muted-foreground space-y-2">
                 <p>"Our backbone uses compound scaling — width, depth, and resolution scaled together:"</p>
                 <div className="p-2 bg-background/50 rounded font-mono">
-                  <div>• Backbone: 87M parameters</div>
+                  <div>• Backbone: 118M parameters (EfficientNetV2-L)</div>
                   <div>• Input: 380×380 RGB + FFT channels</div>
                   <div>• Feature Pyramid: P3-P7 scales</div>
                   <div>• Attention: SE blocks + CBAM</div>
@@ -575,7 +575,7 @@ const HackathonScript = () => {
         "This is a MAJOR differentiator - no competitor offers this",
         "'A border agent can verify a passport video in 2 seconds, offline'",
         "Mention WebGPU: 'New browser API, 50x faster than WebGL'",
-        "Quantization: 'We compress 87M params to 4.2MB with <3% accuracy loss'",
+        "Quantization: 'We compress 118M params to 4.2MB with <3% accuracy loss'",
         "IndexedDB: 'Models persist across sessions, no re-download'"
       ]
     },
