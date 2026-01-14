@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, Download, X, Printer } from "lucide-react";
+import { jsPDF } from "jspdf";
 
 interface TechnicalSummaryPDFProps {
   isOpen: boolean;
@@ -8,52 +9,150 @@ interface TechnicalSummaryPDFProps {
 }
 
 const TechnicalSummaryPDF = ({ isOpen, onClose }: TechnicalSummaryPDFProps) => {
-  const [isPrinting, setIsPrinting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handlePrint = () => {
-    setIsPrinting(true);
-    setTimeout(() => {
-      window.print();
-      setIsPrinting(false);
-    }, 100);
+    window.print();
   };
 
-  const handleDownload = () => {
-    const content = document.getElementById("technical-summary-content");
-    if (!content) return;
+  const handleDownload = async () => {
+    setIsGenerating(true);
+    
+    try {
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let y = 15;
 
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
+      // Title
+      doc.setFontSize(20);
+      doc.setTextColor(14, 165, 233); // sky-500
+      doc.text("SHANSHIELD", pageWidth / 2, y, { align: "center" });
+      y += 6;
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text("AI-Powered Deepfake Detection System | Technical Summary", pageWidth / 2, y, { align: "center" });
+      y += 10;
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>SHANSHIELD Technical Summary</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; font-size: 11px; line-height: 1.4; }
-            h1 { font-size: 18px; color: #0ea5e9; margin-bottom: 4px; }
-            h2 { font-size: 12px; color: #333; margin: 10px 0 6px; border-bottom: 1px solid #0ea5e9; padding-bottom: 2px; }
-            h3 { font-size: 11px; color: #555; margin: 6px 0 4px; }
-            table { width: 100%; border-collapse: collapse; margin: 6px 0; }
-            th, td { border: 1px solid #ddd; padding: 4px 6px; text-align: left; font-size: 10px; }
-            th { background: #f0f9ff; color: #0369a1; }
-            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-            .badge { display: inline-block; background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 3px; font-size: 9px; margin-left: 4px; }
-            .honest { background: #fee2e2; color: #991b1b; }
-            .section { margin-bottom: 10px; }
-            .subtitle { color: #666; font-size: 10px; }
-            .footer { margin-top: 12px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 9px; color: #666; text-align: center; }
-          </style>
-        </head>
-        <body>
-          ${content.innerHTML}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
+      // Section helper
+      const addSection = (title: string, yPos: number) => {
+        doc.setFontSize(11);
+        doc.setTextColor(2, 132, 199); // sky-600
+        doc.text(title, 10, yPos);
+        doc.setDrawColor(186, 230, 253);
+        doc.line(10, yPos + 1, pageWidth - 10, yPos + 1);
+        return yPos + 6;
+      };
+
+      // Architecture Section
+      y = addSection("Architecture Overview", y);
+      doc.setFontSize(9);
+      doc.setTextColor(0);
+      const archData = [
+        ["Type", "Single Page Application (SPA)"],
+        ["Frontend", "React 18 + TypeScript + Vite"],
+        ["Styling", "Tailwind CSS + shadcn/ui"],
+        ["Processing", "Client-side (Browser APIs)"],
+        ["Analysis", "Real Algorithmic Detection"],
+        ["Backend", "None required (edge processing)"]
+      ];
+      archData.forEach(([key, val]) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(key + ":", 12, y);
+        doc.setFont("helvetica", "normal");
+        doc.text(val, 40, y);
+        y += 4.5;
+      });
+      y += 3;
+
+      // Libraries Section
+      y = addSection("Libraries & Dependencies", y);
+      const libs = [
+        ["react", "UI Framework"],
+        ["typescript", "Type Safety"],
+        ["vite", "Build Tool & Dev Server"],
+        ["tailwindcss", "Utility-first CSS"],
+        ["shadcn/ui", "UI Component Library"],
+        ["lucide-react", "Icon System"],
+        ["recharts", "Data Visualization"],
+        ["jspdf", "PDF Generation"]
+      ];
+      libs.forEach(([lib, purpose]) => {
+        doc.setFont("courier", "normal");
+        doc.setFontSize(8);
+        doc.text(lib, 12, y);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text(purpose, 45, y);
+        y += 4;
+      });
+      y += 3;
+
+      // Detection Algorithms Section
+      y = addSection("Real Detection Algorithms", y);
+      const algorithms = [
+        ["Image", "Noise variance, Sobel edges, Color histogram, JPEG artifacts, LBP texture"],
+        ["Video", "Frame extraction, Temporal coherence, Optical flow, Motion analysis"],
+        ["Audio", "FFT spectral, Autocorrelation pitch, Noise floor, Spectral analysis"],
+        ["Document", "PDF metadata, Entropy analysis, Byte patterns, Structure validation"]
+      ];
+      algorithms.forEach(([media, tech]) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(media + ":", 12, y);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text(tech, 32, y);
+        doc.setFontSize(9);
+        y += 5;
+      });
+      y += 3;
+
+      // Features Section
+      y = addSection("Implemented Features", y);
+      const features = [
+        "Real Image Analysis - 6 detection methods",
+        "Real Video Analysis - 6 detection methods", 
+        "Real Audio Analysis - 6 detection methods",
+        "Real Document Analysis - 6 detection methods",
+        "Camera Capture - Functional",
+        "Audio Recording - Functional",
+        "Forensic Reports - Downloadable",
+        "Explainable AI - Real findings display"
+      ];
+      doc.setTextColor(22, 163, 74); // green-600
+      features.forEach((feature) => {
+        doc.text("✓ " + feature, 12, y);
+        y += 4;
+      });
+      y += 3;
+
+      // Technical Highlights
+      doc.setTextColor(0);
+      y = addSection("Technical Highlights", y);
+      const highlights = [
+        "Real pixel-level analysis using Canvas API",
+        "Real signal processing with Web Audio API + FFT",
+        "Real video forensics with frame extraction",
+        "Edge computing - all processing in-browser",
+        "Privacy-first - media never leaves the device"
+      ];
+      highlights.forEach((h) => {
+        doc.text("• " + h, 12, y);
+        y += 4;
+      });
+
+      // Footer
+      y = doc.internal.pageSize.getHeight() - 10;
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text("SHANSHIELD | Hackathon Prototype | Built with React + TypeScript + Tailwind CSS", pageWidth / 2, y, { align: "center" });
+
+      // Save the PDF
+      doc.save("SHANSHIELD_Technical_Summary.pdf");
+    } catch (error) {
+      console.error("PDF generation error:", error);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -90,8 +189,8 @@ const TechnicalSummaryPDF = ({ isOpen, onClose }: TechnicalSummaryPDFProps) => {
               <Button size="sm" variant="outline" onClick={handlePrint}>
                 <Printer className="w-4 h-4 mr-1" /> Print
               </Button>
-              <Button size="sm" onClick={handleDownload}>
-                <Download className="w-4 h-4 mr-1" /> Download PDF
+              <Button size="sm" onClick={handleDownload} disabled={isGenerating}>
+                <Download className="w-4 h-4 mr-1" /> {isGenerating ? "Generating..." : "Download PDF"}
               </Button>
               <Button size="sm" variant="ghost" onClick={onClose}>
                 <X className="w-4 h-4" />
