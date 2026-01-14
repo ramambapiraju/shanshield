@@ -986,23 +986,6 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Timer */}
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-background rounded-lg border border-border">
-            <span className={cn(
-              "font-mono text-lg font-bold",
-              elapsedTime > 600 ? "text-destructive" : elapsedTime > 540 ? "text-warning" : "text-foreground"
-            )}>
-              {formatTime(elapsedTime)}
-            </span>
-            <span className="text-muted-foreground text-sm">/ 10:00</span>
-            <Button size="sm" variant="ghost" onClick={() => setIsTimerRunning(!isTimerRunning)}>
-              {isTimerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => setElapsedTime(0)}>
-              <RotateCcw className="w-4 h-4" />
-            </Button>
-          </div>
-
           <Button size="sm" variant="outline" onClick={toggleFullscreen}>
             <Maximize2 className="w-4 h-4 mr-1" />
             {isFullscreen ? "Exit" : "Fullscreen"}

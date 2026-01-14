@@ -70,6 +70,13 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   
+  // Live Audio States
+  const [audioActive, setAudioActive] = useState(false);
+  const [isAudioRecording, setIsAudioRecording] = useState(false);
+  const [audioRecordingTime, setAudioRecordingTime] = useState(0);
+  const [audioError, setAudioError] = useState<string | null>(null);
+  const [audioLevel, setAudioLevel] = useState(0);
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -77,6 +84,15 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Audio refs
+  const audioStreamRef = useRef<MediaStream | null>(null);
+  const audioRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const audioIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   // Check for multiple cameras on mount
   useEffect(() => {
@@ -96,8 +112,15 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
   useEffect(() => {
     return () => {
       stopCamera();
+      stopAudioCapture();
       if (recordingIntervalRef.current) {
         clearInterval(recordingIntervalRef.current);
+      }
+      if (audioIntervalRef.current) {
+        clearInterval(audioIntervalRef.current);
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, []);
@@ -498,6 +521,167 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
     setCameraError(null);
   };
 
+  // ============ LIVE AUDIO CAPTURE ============
+  const startAudioCapture = async () => {
+    setAudioError(null);
+    
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Microphone not supported in this browser");
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+
+      audioStreamRef.current = stream;
+      setAudioActive(true);
+
+      // Set up audio visualization
+      const audioContext = new AudioContext();
+      const analyser = audioContext.createAnalyser();
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      analyser.fftSize = 256;
+      
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+
+      // Start level monitoring
+      const updateLevel = () => {
+        if (analyserRef.current) {
+          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+          analyserRef.current.getByteFrequencyData(dataArray);
+          const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+          setAudioLevel(avg / 255 * 100);
+        }
+        if (audioActive || audioStreamRef.current) {
+          animationFrameRef.current = requestAnimationFrame(updateLevel);
+        }
+      };
+      updateLevel();
+
+      toast.success("Microphone activated", {
+        description: "Ready to record audio"
+      });
+    } catch (err) {
+      console.error("Microphone access denied:", err);
+      let errorMessage = err instanceof Error ? err.message : "Microphone access denied";
+      setAudioError(errorMessage);
+      toast.error("Microphone Error", { description: errorMessage });
+      setAudioActive(false);
+    }
+  };
+
+  const startAudioRecording = () => {
+    const stream = audioStreamRef.current;
+    if (!stream) {
+      toast.error("Microphone not active", { description: "Start the microphone first" });
+      return;
+    }
+
+    if (typeof MediaRecorder === "undefined") {
+      toast.error("Recording not supported");
+      return;
+    }
+
+    audioChunksRef.current = [];
+    setAudioRecordingTime(0);
+    const startedAt = Date.now();
+
+    const mimeCandidates = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+      'audio/ogg'
+    ];
+
+    const selectedMime = mimeCandidates.find((t) => MediaRecorder.isTypeSupported(t));
+
+    try {
+      const recorder = selectedMime
+        ? new MediaRecorder(stream, { mimeType: selectedMime })
+        : new MediaRecorder(stream);
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        const durationSeconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+        const mime = selectedMime || recorder.mimeType || 'audio/webm';
+        const ext = mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm';
+
+        const blob = new Blob(audioChunksRef.current, { type: mime });
+        const file = new File([blob], `audio-${Date.now()}.${ext}`, { type: mime });
+
+        processFiles([file]);
+        toast.success("Audio recorded!", {
+          description: `${durationSeconds}s audio added to analysis queue`
+        });
+        setAudioRecordingTime(0);
+      };
+
+      recorder.start(250);
+      audioRecorderRef.current = recorder;
+      setIsAudioRecording(true);
+
+      audioIntervalRef.current = setInterval(() => {
+        setAudioRecordingTime((prev) => prev + 1);
+      }, 1000);
+
+      toast.info("Recording audio...", { description: "Click Stop to finish" });
+    } catch (err) {
+      console.error("Audio recording error:", err);
+      toast.error("Recording failed");
+    }
+  };
+
+  const stopAudioRecording = () => {
+    if (audioRecorderRef.current && isAudioRecording) {
+      audioRecorderRef.current.stop();
+      audioRecorderRef.current = null;
+      setIsAudioRecording(false);
+
+      if (audioIntervalRef.current) {
+        clearInterval(audioIntervalRef.current);
+        audioIntervalRef.current = null;
+      }
+    }
+  };
+
+  const stopAudioCapture = () => {
+    if (isAudioRecording) {
+      stopAudioRecording();
+    }
+
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+
+    if (audioStreamRef.current) {
+      audioStreamRef.current.getTracks().forEach((track) => track.stop());
+      audioStreamRef.current = null;
+    }
+
+    analyserRef.current = null;
+    setAudioActive(false);
+    setAudioLevel(0);
+    setAudioError(null);
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -702,6 +886,111 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
               >
                 <X className="w-4 h-4 mr-1" />
                 Stop
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Live Audio Capture */}
+      <div className="bg-card/50 border border-purple-500/30 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Mic className="w-4 h-4 text-purple-400" />
+            <span className="text-xs font-display tracking-wider text-foreground uppercase">
+              Live Audio
+            </span>
+          </div>
+          {!audioActive && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={startAudioCapture}
+              disabled={isAnalyzing}
+              className="border-purple-500/50 hover:border-purple-500 hover:bg-purple-500/10"
+            >
+              <Mic className="w-4 h-4 mr-2" />
+              Start Mic
+            </Button>
+          )}
+        </div>
+        
+        {audioError && (
+          <div className="flex items-center gap-2 text-destructive text-xs mb-3 bg-destructive/10 p-2 rounded">
+            <AlertCircle className="w-4 h-4" />
+            {audioError}
+          </div>
+        )}
+        
+        {audioActive && (
+          <div className="space-y-3">
+            {/* Audio Level Visualizer */}
+            <div className="relative h-16 bg-background rounded-lg overflow-hidden border border-border/50 flex items-center justify-center">
+              <div className="flex items-end justify-center gap-1 h-12">
+                {Array.from({ length: 20 }).map((_, i) => {
+                  const barHeight = Math.min(100, audioLevel + Math.random() * 20);
+                  const isActive = barHeight > (i * 5);
+                  return (
+                    <div
+                      key={i}
+                      className={cn(
+                        "w-2 rounded-full transition-all duration-75",
+                        isActive ? "bg-purple-400" : "bg-muted/30"
+                      )}
+                      style={{ 
+                        height: `${isActive ? Math.max(4, barHeight - i * 3) : 4}%`,
+                        opacity: isActive ? 1 : 0.3
+                      }}
+                    />
+                  );
+                })}
+              </div>
+              
+              {/* Status indicator */}
+              <div className={cn(
+                "absolute top-2 left-2 flex items-center gap-2 px-2 py-1 rounded text-xs font-medium text-white",
+                isAudioRecording ? "bg-destructive" : "bg-purple-600"
+              )}>
+                <div className={cn(
+                  "w-2 h-2 bg-white rounded-full",
+                  isAudioRecording ? "animate-pulse" : ""
+                )} />
+                {isAudioRecording ? `REC ${formatTime(audioRecordingTime)}` : "LISTENING"}
+              </div>
+            </div>
+            
+            {/* Audio Controls */}
+            <div className="flex flex-wrap gap-2 justify-center">
+              {!isAudioRecording ? (
+                <Button 
+                  size="sm" 
+                  variant="default" 
+                  onClick={startAudioRecording}
+                  className="flex-1 min-w-[120px] bg-purple-600 hover:bg-purple-700"
+                >
+                  <Mic className="w-4 h-4 mr-1" />
+                  Start Recording
+                </Button>
+              ) : (
+                <Button 
+                  size="sm" 
+                  variant="destructive" 
+                  onClick={stopAudioRecording}
+                  className="flex-1"
+                >
+                  <StopCircle className="w-4 h-4 mr-1" />
+                  Stop Recording ({formatTime(audioRecordingTime)})
+                </Button>
+              )}
+              
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={stopAudioCapture} 
+                disabled={isAudioRecording}
+              >
+                <X className="w-4 h-4 mr-1" />
+                Stop Mic
               </Button>
             </div>
           </div>
