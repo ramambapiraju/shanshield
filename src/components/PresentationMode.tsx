@@ -913,7 +913,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
     {
       id: "closing",
       title: "Thank You",
-      subtitle: "Questions?",
+      subtitle: "SHANSHIELD",
       duration: "30 sec",
       icon: Award,
       content: (
@@ -925,7 +925,6 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
           
           <div className="space-y-4">
             <h1 className="text-6xl font-bold text-gradient-cyber font-display">Thank You!</h1>
-            <p className="text-2xl text-muted-foreground">Questions & Discussion</p>
           </div>
 
           <div className="grid grid-cols-4 gap-6 mt-8">
