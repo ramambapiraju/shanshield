@@ -27,425 +27,400 @@ const JudgeModePanel = () => {
       id: "visual",
       label: "Visual Analysis",
       icon: Eye,
-      language: "Python 3.12",
-      framework: "TensorFlow 2.16 / DeepFace / NumPy",
-      description: "2026 State-of-the-Art: Diffusion noise detection, temporal flicker analysis, and GAN artifact identification using EfficientNet-V3 backbone",
-      code: `# ============================================================
-# VISUAL DETECTION AGENT - 2026 Best Practices
-# Purpose: Detect AI-generated faces using deep learning
-# Key Tech: EfficientNet-V3, Diffusion Artifact Detection
-# ============================================================
+      language: "TypeScript",
+      framework: "Canvas API / ImageData / Web Workers",
+      description: "Browser-native image forensics using Canvas API pixel analysis, statistical methods, and edge detection algorithms",
+      code: `// ============================================================
+// VISUAL DETECTION AGENT - Browser-Native Implementation
+// Purpose: Detect AI-generated images using Canvas API
+// Key Tech: Canvas API, Statistical Analysis, Edge Detection
+// ============================================================
 
-import numpy as np                    # Line 1: NumPy for numerical operations on image arrays
-from deepface import DeepFace         # Line 2: DeepFace library for face detection/extraction
-import tensorflow as tf               # Line 3: TensorFlow for running neural network models
+// This runs entirely in the browser - no server required
 
-class VisualAnalyzer:
-    """
-    Main class for visual deepfake detection.
-    Uses multiple models to analyze different aspects of an image.
-    """
-    
-    def __init__(self):
-        # Load pre-trained EfficientNet-V3 model fine-tuned for forensics
-        # This model was trained on millions of real/fake face pairs
-        self.model = tf.keras.models.load_model('efficientnet_v3_forensic.h5')
-        
-        # Specialized model for detecting diffusion-generated images
-        # Diffusion models (like Stable Diffusion) leave unique noise patterns
-        self.diffusion_detector = tf.keras.models.load_model('diffusion_artifact_detector.h5')
-    
-    def analyze(self, frame_sequence):
-        """
-        Analyze a sequence of video frames for manipulation.
-        
-        Args:
-            frame_sequence: List of consecutive frames (3-5 frames ideal)
-        
-        Returns:
-            Dictionary with detection results and confidence scores
-        """
-        
-        # STEP 1: Extract faces using RetinaFace detector
-        # RetinaFace is most accurate for manipulated faces (handles occlusions)
-        faces = DeepFace.extract_faces(
-            frame_sequence[-1],           # Use the last frame in sequence
-            enforce_detection=False,       # Don't fail if no face found
-            detector_backend='retinaface'  # Best detector for edited faces
-        )
-        
-        # STEP 2: Check for diffusion model artifacts
-        # Diffusion models create subtle "ghosting" around jawlines
-        artifact_score = self.detect_diffusion_noise(frame_sequence[-1])
-        
-        # STEP 3: Identify which AI generator created the fake
-        # Each generator (Sora, Midjourney, etc.) has unique signatures
-        engine_signature = self.identify_synthesis_engine(frame_sequence[-1])
-        
-        # STEP 4: Run main classification model
-        # Expand dimensions to create batch of 1 image
-        prediction = self.model.predict(np.expand_dims(frame_sequence[-1], axis=0))
-        
-        # STEP 5: Return comprehensive results
-        return {
-            "is_synthetic": float(prediction[0]) > 0.85,  # Threshold: 85%
-            "confidence": float(prediction[0]),            # Raw confidence 0-1
-            "artifact_density": artifact_score,            # How many artifacts found
-            "engine_signature": engine_signature,          # Which AI made this?
-            "temporal_consistency": self.check_frame_coherence(frame_sequence)
-        }
-    
-    def detect_diffusion_noise(self, frame):
-        """
-        Detect high-frequency noise patterns unique to diffusion models.
-        
-        Technical Explanation:
-        - FFT (Fast Fourier Transform) converts image to frequency domain
-        - Diffusion models leave distinctive patterns in high frequencies
-        - We analyze the magnitude spectrum for these telltale signatures
-        """
-        fft = np.fft.fft2(frame)                          # Convert to frequency domain
-        magnitude_spectrum = np.abs(np.fft.fftshift(fft)) # Center the zero-frequency
-        return self.diffusion_detector.predict(
-            magnitude_spectrum.reshape(1, -1)              # Flatten and predict
-        )[0]
-    
-    def identify_synthesis_engine(self, frame):
-        """
-        Fingerprint-based identification of AI generators.
-        Each AI tool leaves unique artifacts we can identify.
-        """
-        engines = [
-            "Stable-Diffusion-V7",  # Most common open-source generator
-            "Sora-2",               # OpenAI's video model
-            "Midjourney-V8",        # Popular art generator
-            "DALL-E-4",             # OpenAI's image model
-            "Unknown"               # Couldn't identify
-        ]
-        scores = self.model.predict(np.expand_dims(frame, axis=0), verbose=0)
-        return engines[np.argmax(scores)]  # Return highest-scoring engine`
+export async function analyzeImage(imageElement: HTMLImageElement) {
+  // STEP 1: Load image into Canvas for pixel access
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+  canvas.width = imageElement.width;
+  canvas.height = imageElement.height;
+  ctx.drawImage(imageElement, 0, 0);
+  
+  // STEP 2: Extract raw pixel data (RGBA values)
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = imageData.data; // Uint8ClampedArray
+  
+  // STEP 3: Noise Pattern Analysis
+  // AI-generated images have unnatural noise distributions
+  const noiseScore = analyzeNoisePatterns(pixels, canvas.width, canvas.height);
+  
+  // STEP 4: Edge Detection using Sobel operator
+  // Deepfakes often have blurry or inconsistent edges
+  const edgeScore = applySobelEdgeDetection(pixels, canvas.width, canvas.height);
+  
+  // STEP 5: Color Histogram Analysis
+  // Check for unnatural color distributions
+  const histogramScore = analyzeColorHistogram(pixels);
+  
+  // STEP 6: JPEG Artifact Detection
+  // Double compression leaves detectable patterns
+  const jpegScore = detectJPEGArtifacts(pixels, canvas.width, canvas.height);
+  
+  // STEP 7: Bilateral Symmetry Check
+  // Faces should have natural asymmetry
+  const symmetryScore = checkBilateralSymmetry(pixels, canvas.width, canvas.height);
+  
+  // Combine all scores with weights
+  const confidence = (
+    noiseScore * 0.25 +
+    edgeScore * 0.20 +
+    histogramScore * 0.20 +
+    jpegScore * 0.20 +
+    symmetryScore * 0.15
+  );
+  
+  return {
+    isSynthetic: confidence > 0.65,
+    confidence: confidence,
+    noiseScore,
+    edgeScore,
+    histogramScore,
+    jpegScore,
+    symmetryScore
+  };
+}
+
+function analyzeNoisePatterns(pixels: Uint8ClampedArray, width: number, height: number) {
+  // Calculate standard deviation across image regions
+  // AI images often have unnaturally uniform noise
+  let sum = 0, sumSq = 0;
+  for (let i = 0; i < pixels.length; i += 4) {
+    const gray = (pixels[i] + pixels[i+1] + pixels[i+2]) / 3;
+    sum += gray;
+    sumSq += gray * gray;
+  }
+  const n = pixels.length / 4;
+  const variance = (sumSq / n) - Math.pow(sum / n, 2);
+  return Math.min(Math.sqrt(variance) / 50, 1); // Normalize to 0-1
+}
+
+function applySobelEdgeDetection(pixels: Uint8ClampedArray, width: number, height: number) {
+  // Sobel operator for edge detection
+  // Returns edge strength score (higher = more defined edges)
+  const Gx = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
+  const Gy = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
+  // ... apply convolution and return edge magnitude
+  return 0.72; // Placeholder - actual implementation applies convolution
+}`
     },
     {
       id: "audio",
       label: "Audio Analysis",
       icon: Mic,
-      language: "Python 3.12",
-      framework: "PyTorch 2.4 / Librosa / RawNet3",
-      description: "2026 Standard: Vocoder identification using RawNet3 architecture, phase consistency analysis, and high-frequency artifact detection",
-      code: `# ============================================================
-# AUDIO DETECTION AGENT - 2026 Vocoder Identification
-# Purpose: Detect AI-generated voices and audio manipulation
-# Key Tech: RawNet3, Librosa, Spectrogram Analysis
-# ============================================================
+      language: "TypeScript",
+      framework: "Web Audio API / AnalyserNode / AudioContext",
+      description: "Browser-native audio forensics using Web Audio API for real-time FFT, spectral analysis, and anomaly detection",
+      code: `// ============================================================
+// AUDIO DETECTION AGENT - Browser-Native Implementation
+// Purpose: Detect AI-generated audio using Web Audio API
+// Key Tech: AudioContext, AnalyserNode, FFT Analysis
+// ============================================================
 
-import librosa                        # Line 1: Audio processing library (industry standard)
-import torch                          # Line 2: PyTorch for neural network inference
-import numpy as np                    # Line 3: Numerical operations
+// This runs entirely in the browser using Web Audio API
 
-class AudioAnalyzer:
-    """
-    Detects synthetic voices and audio manipulation.
-    Uses raw waveform analysis to catch subtle artifacts.
-    """
-    
-    def __init__(self):
-        # RawNet3: State-of-the-art for vocoder fingerprinting
-        # Trained on samples from: ElevenLabs-V3, OpenAI-Voice, Resemble-AI
-        # These are the most popular voice cloning tools in 2026
-        self.voice_model = torch.load('rawnet3_vocoder_detector_2026.pt')
-        self.voice_model.eval()  # Set to evaluation mode (disables dropout)
-    
-    def analyze(self, audio_path):
-        """
-        Comprehensive audio analysis for deepfake detection.
-        
-        Args:
-            audio_path: Path to audio file (WAV, MP3, etc.)
-        
-        Returns:
-            Dictionary with detection results
-        """
-        
-        # STEP 1: Load and standardize audio
-        # 16kHz is forensic standard - consistent across all analyses
-        y, sr = librosa.load(audio_path, sr=16000)  # y=waveform, sr=sample rate
-        
-        # STEP 2: High-Frequency Analysis
-        # Modern AI voices have anomalies above 6kHz (mirroring artifacts)
-        # Real human voices have natural high-frequency content
-        stft = np.abs(librosa.stft(y, n_fft=2048, hop_length=512))
-        high_freq_energy = np.mean(stft[stft.shape[0]//2:, :])  # Upper half of spectrum
-        
-        # STEP 3: Phase Consistency Analysis (2026 Critical!)
-        # AI-generated audio has "instantaneous frequency jitter"
-        # Human speech has smooth phase transitions
-        phase = np.angle(librosa.stft(y))            # Get phase information
-        phase_variance = np.var(np.diff(phase, axis=1))  # Measure phase changes
-        
-        # STEP 4: Raw Waveform Analysis using RawNet3
-        # Why raw waveform? Feature extraction (like MFCC) loses subtle artifacts
-        # RawNet3 works directly on the audio signal
-        input_tensor = torch.from_numpy(y).float().unsqueeze(0)  # Shape: [1, samples]
-        
-        with torch.no_grad():  # Disable gradient computation for speed
-            vocoder_prediction = self.voice_model(input_tensor)
-        
-        # STEP 5: Return comprehensive results
-        return {
-            "is_synthetic": bool(vocoder_prediction.item() > 0.75),
-            "confidence": float(vocoder_prediction.item()),
-            "vocoder_signature": self.detect_synthesis_artifacts(stft),
-            "temporal_coherence": self.check_long_term_rhythm(y),
-            "high_freq_anomaly": float(high_freq_energy),
-            "phase_consistency": float(1.0 - min(phase_variance, 1.0))  # Higher = more natural
-        }
-    
-    def detect_synthesis_artifacts(self, stft):
-        """
-        Identify which vocoder (voice synthesizer) created the audio.
-        Each vocoder has distinctive spectral fingerprints.
-        """
-        signatures = [
-            "HiFi-GAN-V3",   # High-fidelity neural vocoder
-            "WaveGrad-2",    # Diffusion-based vocoder
-            "VoiceCraft",    # Meta's voice cloning
-            "XTTS-V3",       # Coqui's text-to-speech
-            "Natural"        # No synthetic signature detected
-        ]
-        return signatures[np.argmax(np.mean(stft, axis=1)[:5])]
-    
-    def check_long_term_rhythm(self, y):
-        """
-        Detect unnatural prosody patterns across 10+ second segments.
-        AI voices often have robotic, consistent rhythm.
-        Real speech has natural rhythm variation.
-        """
-        tempo, beats = librosa.beat.beat_track(y=y, sr=16000)
-        # Natural speech has variable inter-beat intervals (std > 0.15)
-        return float(np.std(np.diff(beats)) < 0.15)  # True = suspicious`
+export async function analyzeAudio(audioBuffer: AudioBuffer) {
+  // Create offline audio context for analysis
+  const audioContext = new OfflineAudioContext(
+    audioBuffer.numberOfChannels,
+    audioBuffer.length,
+    audioBuffer.sampleRate
+  );
+  
+  // Create analyser node for FFT
+  const analyser = audioContext.createAnalyser();
+  analyser.fftSize = 2048;
+  
+  // Get raw audio data
+  const channelData = audioBuffer.getChannelData(0);
+  
+  // STEP 1: FFT Spectral Analysis
+  // AI-generated audio often has unnatural frequency distributions
+  const frequencyData = new Float32Array(analyser.frequencyBinCount);
+  const spectralScore = analyzeSpectralContent(frequencyData);
+  
+  // STEP 2: Autocorrelation Pitch Detection
+  // Voice clones may have unnaturally consistent pitch
+  const pitchScore = detectPitchAnomalies(channelData, audioBuffer.sampleRate);
+  
+  // STEP 3: Noise Floor Analysis
+  // Synthetic audio often has different noise characteristics
+  const noiseScore = analyzeNoiseFloor(channelData);
+  
+  // STEP 4: Quantization Detection
+  // AI vocoders leave quantization artifacts
+  const quantizationScore = detectQuantizationArtifacts(channelData);
+  
+  // STEP 5: Voice Envelope Analysis
+  // Natural speech has varying amplitude envelope
+  const envelopeScore = analyzeVoiceEnvelope(channelData, audioBuffer.sampleRate);
+  
+  // Combine scores
+  const confidence = (
+    spectralScore * 0.25 +
+    pitchScore * 0.20 +
+    noiseScore * 0.20 +
+    quantizationScore * 0.20 +
+    envelopeScore * 0.15
+  );
+  
+  return {
+    isSynthetic: confidence > 0.60,
+    confidence,
+    spectralScore,
+    pitchScore,
+    noiseScore,
+    quantizationScore,
+    envelopeScore
+  };
+}
+
+function analyzeSpectralContent(frequencyData: Float32Array) {
+  // Check frequency distribution for AI artifacts
+  // Synthetic voices often lack natural harmonics
+  let totalEnergy = 0;
+  let highFreqEnergy = 0;
+  
+  for (let i = 0; i < frequencyData.length; i++) {
+    const energy = Math.pow(10, frequencyData[i] / 20);
+    totalEnergy += energy;
+    if (i > frequencyData.length * 0.6) {
+      highFreqEnergy += energy;
+    }
+  }
+  
+  // AI often has abnormal high-frequency content
+  return highFreqEnergy / totalEnergy;
+}
+
+function detectPitchAnomalies(samples: Float32Array, sampleRate: number) {
+  // Autocorrelation-based pitch detection
+  // Look for unnaturally stable pitch (sign of synthesis)
+  // ... implementation using autocorrelation
+  return 0.65; // Placeholder
+}`
     },
     {
       id: "temporal",
       label: "Temporal Analysis",
       icon: Clock,
-      language: "Python 3.12",
-      framework: "OpenCV 4.9 / MediaPipe / NumPy",
-      description: "2026 Best Practice: rPPG heartbeat detection, landmark jitter analysis at 120Hz, and motion-to-photon latency detection",
-      code: `# ============================================================
-# TEMPORAL CONSISTENCY ANALYZER - 2026 Biological Signals
-# Purpose: Detect deepfakes using biological signal analysis
-# Key Tech: rPPG (Remote Photoplethysmography), MediaPipe
-# ============================================================
+      language: "TypeScript",
+      framework: "Canvas API / requestAnimationFrame / Video API",
+      description: "Browser-native video forensics using frame extraction, motion analysis, and temporal consistency checking",
+      code: `// ============================================================
+// TEMPORAL CONSISTENCY ANALYZER - Browser-Native Implementation
+// Purpose: Detect video manipulation through frame analysis
+// Key Tech: Canvas API, Video Element, Frame Comparison
+// ============================================================
 
-import cv2                            # OpenCV for video processing
-import numpy as np                    # Numerical operations
-from mediapipe import solutions as mp_solutions  # Google's face mesh
+// This runs entirely in the browser - no server required
 
-class TemporalAnalyzer:
-    """
-    Analyzes videos for biological signals that deepfakes cannot fake.
-    The key insight: Real humans have heartbeats visible in their skin!
-    """
+export async function analyzeVideo(videoElement: HTMLVideoElement) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+  canvas.width = videoElement.videoWidth;
+  canvas.height = videoElement.videoHeight;
+  
+  const frames: ImageData[] = [];
+  const frameCount = Math.min(30, Math.floor(videoElement.duration * 5)); // 5 fps sample
+  
+  // STEP 1: Extract frames from video
+  for (let i = 0; i < frameCount; i++) {
+    const time = (videoElement.duration / frameCount) * i;
+    videoElement.currentTime = time;
+    await new Promise(resolve => videoElement.onseeked = resolve);
     
-    def __init__(self):
-        # MediaPipe Face Mesh: Tracks 478 facial landmarks in real-time
-        # refine_landmarks=True adds iris tracking (2026 standard)
-        self.face_mesh = mp_solutions.face_mesh.FaceMesh(
-            static_image_mode=False,      # Video mode (uses temporal info)
-            max_num_faces=1,              # Process one face at a time
-            refine_landmarks=True,        # 478 landmarks including iris
-            min_detection_confidence=0.7  # Confidence threshold
-        )
+    ctx.drawImage(videoElement, 0, 0);
+    frames.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+  }
+  
+  // STEP 2: Temporal Consistency Analysis
+  // Check for frame-to-frame anomalies
+  const consistencyScore = analyzeFrameConsistency(frames);
+  
+  // STEP 3: Motion Analysis
+  // Look for unnatural motion patterns
+  const motionScore = analyzeMotionPatterns(frames);
+  
+  // STEP 4: Face Region Tracking
+  // Track face regions across frames for manipulation signs
+  const faceScore = trackFaceRegions(frames);
+  
+  // STEP 5: Compression Artifact Analysis
+  // Video re-encoding leaves detectable patterns
+  const compressionScore = analyzeCompressionArtifacts(frames);
+  
+  // Combine scores
+  const confidence = (
+    consistencyScore * 0.30 +
+    motionScore * 0.25 +
+    faceScore * 0.25 +
+    compressionScore * 0.20
+  );
+  
+  return {
+    isSynthetic: confidence > 0.60,
+    confidence,
+    consistencyScore,
+    motionScore,
+    faceScore,
+    compressionScore,
+    framesAnalyzed: frames.length
+  };
+}
+
+function analyzeFrameConsistency(frames: ImageData[]) {
+  // Compare consecutive frames for temporal anomalies
+  let totalDiff = 0;
+  
+  for (let i = 1; i < frames.length; i++) {
+    const prev = frames[i - 1].data;
+    const curr = frames[i].data;
     
-    def analyze_video(self, video_path):
-        """
-        Comprehensive temporal analysis of a video file.
-        
-        This is our SECRET WEAPON: We detect the human heartbeat!
-        Real humans have a pulse visible in their forehead skin color.
-        AI-generated videos don't have this biological signal.
-        """
-        
-        cap = cv2.VideoCapture(video_path)  # Open video file
-        fps = cap.get(cv2.CAP_PROP_FPS)     # Get frames per second
-        
-        # TEST 1: rPPG (Remote Photoplethysmography)
-        # This detects blood flow through subtle color changes in skin
-        # Frequency range: 0.8-2.0 Hz (48-120 BPM heart rate)
-        pulse_score = self.detect_rPPG_signature(video_path)
-        
-        # TEST 2: Landmark Jitter Analysis
-        # Real faces have smooth micro-movements
-        # Deepfakes have high-frequency jitter (>30Hz) from frame interpolation
-        jitter_score = self.analyze_landmark_jitter(cap, fps)
-        
-        # TEST 3: Motion-to-Photon Latency
-        # In real-time deepfakes, head movement lags behind background
-        # This detects if someone is using a live face-swap
-        flow_score = self.analyze_optical_flow(cap)
-        
-        # TEST 4: Blink Pattern Analysis (2026 addition)
-        # Humans blink 15-20 times per minute with natural timing
-        # Synthetic videos have unnatural blink patterns
-        blink_score = self.analyze_blink_patterns(cap)
-        
-        cap.release()  # Close video file
-        
-        # WEIGHTED COMBINATION for final verdict
-        # Weights are based on reliability of each signal
-        combined_score = (
-            pulse_score * 0.35 +   # Heartbeat is most reliable (35%)
-            jitter_score * 0.25 +  # Landmark jitter (25%)
-            flow_score * 0.25 +    # Optical flow (25%)
-            blink_score * 0.15     # Blink patterns (15%)
-        )
-        
-        return {
-            "heartbeat_detected": pulse_score > 0.8,     # Did we find a pulse?
-            "pulse_confidence": float(pulse_score),       # How confident?
-            "geometric_stability": float(1.0 - jitter_score),  # Lower jitter = more stable
-            "motion_consistency": float(flow_score),
-            "blink_naturalness": float(blink_score),
-            "verdict": "Synthetic" if combined_score < 0.6 else "Authentic",
-            "confidence": float(combined_score)
-        }
+    let frameDiff = 0;
+    for (let j = 0; j < prev.length; j += 4) {
+      // Calculate pixel difference
+      const rDiff = Math.abs(prev[j] - curr[j]);
+      const gDiff = Math.abs(prev[j+1] - curr[j+1]);
+      const bDiff = Math.abs(prev[j+2] - curr[j+2]);
+      frameDiff += (rDiff + gDiff + bDiff) / 3;
+    }
     
-    def detect_rPPG_signature(self, video_path):
-        """
-        Extract pulse signal from forehead region.
-        
-        Technical explanation:
-        1. Track forehead region across frames
-        2. Extract average green channel value (blood absorbs green light)
-        3. Apply Eulerian video magnification to amplify subtle changes
-        4. Use FFT to find dominant frequency (should be 0.8-2.0 Hz for humans)
-        """
-        return 0.92  # Placeholder for complex rPPG algorithm
-    
-    def analyze_landmark_jitter(self, cap, fps):
-        """
-        Detect high-frequency jitter in facial landmarks.
-        
-        Real faces: Smooth movements at natural frequencies
-        Fake faces: High-frequency jitter (>30Hz) from AI generation
-        """
-        return 0.15  # Lower is more natural`
+    totalDiff += frameDiff / (prev.length / 4);
+  }
+  
+  // Normalize and check for anomalies
+  const avgDiff = totalDiff / (frames.length - 1);
+  return Math.min(avgDiff / 30, 1); // Normalize to 0-1
+}
+
+function analyzeMotionPatterns(frames: ImageData[]) {
+  // Analyze motion vectors for unnatural patterns
+  // ... implementation using frame differencing
+  return 0.68; // Placeholder
+}`
     },
     {
       id: "metadata",
       label: "Metadata Analysis",
       icon: Database,
-      language: "TypeScript 5.4",
-      framework: "React 18 / ExifReader / C2PA SDK",
-      description: "2026 Gold Standard: C2PA cryptographic provenance verification, double-compression detection, and AI software header identification",
+      language: "TypeScript",
+      framework: "File API / ArrayBuffer / Crypto API",
+      description: "Browser-native file forensics using File API for metadata extraction, SHA-256 hashing, and byte entropy analysis",
       code: `// ============================================================
-// METADATA ANALYZER - 2026 C2PA Provenance Standard
-// Purpose: Verify authenticity through cryptographic proof
-// Key Tech: C2PA (Content Authenticity Initiative), EXIF
+// METADATA ANALYZER - Browser-Native Implementation
+// Purpose: Verify file authenticity through metadata analysis
+// Key Tech: File API, Crypto API, ArrayBuffer
 // ============================================================
 
-import ExifReader from 'exifreader';           // Line 1: Read EXIF metadata from images
-import { verifyC2PA, C2PAManifest } from '@contentauth/sdk';  // Line 2: C2PA verification
+// This runs entirely in the browser - no server required
 
-// TypeScript interface defining what our analysis returns
-interface MetadataResult {
-  isModified: boolean;           // Has the file been altered?
-  compressionLevel: number;      // Double-compression indicator
-  creationDate: string | null;   // When was this created?
-  software: string[];            // What software touched this file?
-  hasC2PASignature: boolean;     // Does it have cryptographic proof?
-  provenanceChain: C2PAManifest | null;  // Full chain of custody
+export async function analyzeMetadata(file: File) {
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  
+  // STEP 1: SHA-256 Hash for Integrity
+  // Creates unique fingerprint of the file
+  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  // STEP 2: Byte Entropy Analysis
+  // AI-generated files may have unusual entropy patterns
+  const entropy = calculateEntropy(bytes);
+  
+  // STEP 3: File Signature Detection
+  // Check magic bytes for file type verification
+  const fileSignature = detectFileSignature(bytes);
+  
+  // STEP 4: EXIF/XMP Metadata Extraction
+  // Look for AI generation markers in metadata
+  const metadata = extractMetadata(bytes);
+  const aiMarkers = detectAIMarkers(metadata);
+  
+  // STEP 5: Embedded Data Detection
+  // Check for hidden data or unusual structures
+  const embeddedScore = detectEmbeddedData(bytes);
+  
+  // STEP 6: Fuzzy Hash for Similarity
+  // Generate similarity hash for comparison
+  const fuzzyHash = generateFuzzyHash(bytes);
+  
+  return {
+    hash,
+    entropy,
+    fileSignature,
+    aiMarkers,
+    embeddedScore,
+    fuzzyHash,
+    isModified: aiMarkers.length > 0 || entropy < 7.0,
+    confidence: calculateMetadataConfidence(entropy, aiMarkers, embeddedScore)
+  };
 }
 
-export class MetadataAnalyzer {
-  /**
-   * Analyze file metadata for signs of manipulation.
-   * This is the "Gold Standard" for 2026 - cryptographic proof of origin.
-   */
-  async analyze(file: File): Promise<MetadataResult> {
-    // Convert file to ArrayBuffer for analysis
-    const buffer = await file.arrayBuffer();
-    
-    // Read all EXIF/XMP metadata from the file
-    const tags = ExifReader.load(buffer, { expanded: true });
-    
-    // STEP 1: Check for C2PA Cryptographic Proof
-    // C2PA = Coalition for Content Provenance and Authenticity
-    // This is like a digital signature from the camera itself
-    const provenance = await this.verifyProvenance(buffer);
-    
-    // STEP 2: Detect "Double Compression" artifacts
-    // When someone edits an image, it's often re-compressed
-    // We can detect this by analyzing compression block patterns
-    const compression = this.analyzeELA(buffer);
-    
-    // STEP 3: Detect AI Software Headers
-    // Tools like Stable Diffusion leave markers in XMP metadata
-    // Example: "Software: ComfyUI/Automatic1111"
-    const software = this.detectDeepfakeSignatures(tags);
-    
-    // STEP 4: GPS and Timestamp Consistency
-    // Check if GPS coordinates match the claimed time of day
-    const geoConsistency = this.verifyGeoTemporalData(tags);
-    
-    // Return comprehensive metadata analysis
-    return {
-      isModified: !provenance.isVerified || software.length > 0,
-      compressionLevel: compression.level,
-      creationDate: tags.exif?.DateTimeOriginal?.description || null,
-      software: software,
-      hasC2PASignature: provenance.exists,
-      provenanceChain: provenance.manifest
-    };
+function calculateEntropy(bytes: Uint8Array): number {
+  // Shannon entropy calculation
+  // Measures randomness of byte distribution
+  const freq = new Array(256).fill(0);
+  
+  for (const byte of bytes) {
+    freq[byte]++;
   }
-
-  /**
-   * Verify C2PA cryptographic provenance chain.
-   * This checks if the image has a valid digital signature.
-   */
-  private async verifyProvenance(buffer: ArrayBuffer): Promise<{
-    exists: boolean;
-    isVerified: boolean;
-    manifest: C2PAManifest | null;
-  }> {
-    try {
-      // Attempt to verify C2PA manifest
-      // This checks cryptographic signatures from camera to current state
-      const result = await verifyC2PA(new Uint8Array(buffer));
-      return {
-        exists: true,
-        isVerified: result.isValid && result.trustChain.isComplete,
-        manifest: result.manifest
-      };
-    } catch {
-      // No C2PA signature found
-      return { exists: false, isVerified: false, manifest: null };
+  
+  let entropy = 0;
+  const len = bytes.length;
+  
+  for (const count of freq) {
+    if (count > 0) {
+      const p = count / len;
+      entropy -= p * Math.log2(p);
     }
   }
+  
+  return entropy; // 0-8 scale (8 = max entropy)
+}
 
-  /**
-   * Detect AI generation software signatures in metadata.
-   * Many AI tools leave identifiable traces.
-   */
-  private detectDeepfakeSignatures(tags: any): string[] {
-    const aiSignatures = [
-      'Stable-Diffusion',  // Open-source image generator
-      'Midjourney',        // Commercial art generator
-      'DALL-E',            // OpenAI's image model
-      'Sora',              // OpenAI's video model
-      'Runway',            // Video editing AI
-      'Pika',              // AI video generator
-      'Kling',             // Chinese AI video
-      'ComfyUI',           // SD workflow tool
-      'Automatic1111'      // SD web interface
-    ];
-    
-    // Check XMP Software field for AI signatures
-    const software = tags.xmp?.Software?.description || '';
-    return aiSignatures.filter(
-      sig => software.toLowerCase().includes(sig.toLowerCase())
-    );
+function detectFileSignature(bytes: Uint8Array): string {
+  // Check first bytes for file type magic numbers
+  const signatures: Record<string, number[]> = {
+    'JPEG': [0xFF, 0xD8, 0xFF],
+    'PNG': [0x89, 0x50, 0x4E, 0x47],
+    'PDF': [0x25, 0x50, 0x44, 0x46],
+    'MP4': [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70],
+    'WebM': [0x1A, 0x45, 0xDF, 0xA3]
+  };
+  
+  for (const [type, sig] of Object.entries(signatures)) {
+    if (sig.every((byte, i) => bytes[i] === byte)) {
+      return type;
+    }
   }
+  return 'Unknown';
+}
+
+function detectAIMarkers(metadata: Record<string, string>): string[] {
+  // Check for AI software markers
+  const aiKeywords = ['Stable Diffusion', 'DALL-E', 'Midjourney', 'ComfyUI', 'AI Generated'];
+  const found: string[] = [];
+  
+  for (const value of Object.values(metadata)) {
+    for (const keyword of aiKeywords) {
+      if (value.toLowerCase().includes(keyword.toLowerCase())) {
+        found.push(keyword);
+      }
+    }
+  }
+  
+  return found;
 }`
     },
     {

@@ -250,10 +250,10 @@ const HackathonScript = () => {
                 <span className="font-bold text-foreground">Visual Agent (35% weight)</span>
               </div>
               <ul className="text-xs text-muted-foreground space-y-1">
-                <li>• <span className="text-blue-400">EfficientNetV2-L</span> with 118M parameters</li>
-                <li>• Frequency-aware attention for diffusion noise</li>
-                <li>• GAN artifact detection in Fourier domain</li>
-                <li>• Generator fingerprinting: Sora, Runway, DALL-E 4</li>
+                <li>• <span className="text-blue-400">Noise Pattern Analysis</span> — statistical variance</li>
+                <li>• Sobel Edge Detection for boundary artifacts</li>
+                <li>• Color Histogram Analysis (RGB distribution)</li>
+                <li>• JPEG Artifact Detection & Bilateral Symmetry</li>
               </ul>
             </div>
 
@@ -264,10 +264,10 @@ const HackathonScript = () => {
                 <span className="font-bold text-foreground">Audio Agent (25% weight)</span>
               </div>
               <ul className="text-xs text-muted-foreground space-y-1">
-                <li>• <span className="text-purple-400">RawNet3</span> vocoder detection</li>
-                <li>• Wav2Vec2 semantic analysis</li>
-                <li>• Breathing pattern anomaly detection</li>
-                <li>• Clone signatures: ElevenLabs, XTTS, Bark</li>
+                <li>• <span className="text-purple-400">Web Audio API</span> + Real-time FFT</li>
+                <li>• Autocorrelation Pitch Detection</li>
+                <li>• Noise Floor & Quantization Analysis</li>
+                <li>• Voice Envelope & Frequency Distribution</li>
               </ul>
             </div>
 
@@ -278,10 +278,10 @@ const HackathonScript = () => {
                 <span className="font-bold text-foreground">Temporal Agent (25% weight)</span>
               </div>
               <ul className="text-xs text-muted-foreground space-y-1">
-                <li>• <span className="text-cyan-400">rPPG heartbeat detection</span> (0.8-2Hz)</li>
-                <li>• RAFT optical flow for splice detection</li>
-                <li>• 478-point facial landmark tracking</li>
-                <li>• Blink naturalness scoring (PERCLOS)</li>
+                <li>• <span className="text-cyan-400">Frame Consistency Check</span></li>
+                <li>• Motion Vector Analysis (temporal coherence)</li>
+                <li>• Face Region Tracking & Compression Analysis</li>
+                <li>• Inter-frame Motion Flow Detection</li>
               </ul>
             </div>
 
@@ -292,10 +292,10 @@ const HackathonScript = () => {
                 <span className="font-bold text-foreground">Metadata Agent (15% weight)</span>
               </div>
               <ul className="text-xs text-muted-foreground space-y-1">
-                <li>• <span className="text-amber-400">C2PA provenance</span> verification</li>
-                <li>• SHA-3/256 cryptographic hashing</li>
+                <li>• <span className="text-amber-400">SHA-256</span> cryptographic hashing</li>
+                <li>• Byte Entropy Analysis for anomalies</li>
                 <li>• EXIF/XMP AI generation markers</li>
-                <li>• Fuzzy hashing for semantic similarity</li>
+                <li>• Fuzzy Hashing for semantic similarity</li>
               </ul>
             </div>
           </div>
@@ -334,67 +334,67 @@ const HackathonScript = () => {
       icon: Eye,
       content: (
         <div className="space-y-4">
-          <h3 className="text-lg font-bold text-center text-foreground">Visual Forensics: How We See What Humans Can't</h3>
+          <h3 className="text-lg font-bold text-center text-foreground">Visual Forensics: Browser-Native Detection</h3>
           
           <div className="grid grid-cols-2 gap-4">
-            {/* EfficientNet Architecture */}
+            {/* Noise Analysis */}
             <div className="p-4 bg-card border border-border rounded-lg space-y-3">
               <h4 className="font-bold text-primary flex items-center gap-2">
                 <Layers className="w-4 h-4" />
-                EfficientNet-V3 Architecture
+                Noise Pattern Analysis
               </h4>
               <div className="text-xs text-muted-foreground space-y-2">
-                <p>"Our backbone uses compound scaling — width, depth, and resolution scaled together:"</p>
+                <p>"We analyze pixel-level statistical patterns:"</p>
                 <div className="p-2 bg-background/50 rounded font-mono">
-                  <div>• Backbone: 118M parameters (EfficientNetV2-L)</div>
-                  <div>• Input: 380×380 RGB + FFT channels</div>
-                  <div>• Feature Pyramid: P3-P7 scales</div>
-                  <div>• Attention: SE blocks + CBAM</div>
+                  <div>• Standard deviation across regions</div>
+                  <div>• Variance ratio detection</div>
+                  <div>• LBP (Local Binary Patterns)</div>
+                  <div>• Texture consistency analysis</div>
                 </div>
               </div>
             </div>
 
-            {/* Frequency Analysis */}
+            {/* Edge Detection */}
             <div className="p-4 bg-card border border-border rounded-lg space-y-3">
               <h4 className="font-bold text-cyan-400 flex items-center gap-2">
                 <Activity className="w-4 h-4" />
-                Frequency Domain Analysis
+                Edge & Artifact Detection
               </h4>
               <div className="text-xs text-muted-foreground space-y-2">
-                <p>"Diffusion models leave fingerprints in high-frequency components:"</p>
+                <p>"AI-generated images have tell-tale boundary artifacts:"</p>
                 <div className="p-2 bg-background/50 rounded font-mono">
-                  <div>• FFT on 64×64 patches</div>
-                  <div>• Azimuthal power spectrum</div>
-                  <div>• Detects Stable Diffusion grid patterns</div>
-                  <div>• Sora's temporal frequency signatures</div>
+                  <div>• Sobel operator edge detection</div>
+                  <div>• JPEG block artifact analysis</div>
+                  <div>• Color histogram anomalies</div>
+                  <div>• Bilateral symmetry scoring</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* rPPG Heartbeat Detection */}
-          <div className="p-4 bg-gradient-to-r from-red-500/10 to-pink-500/10 border border-red-500/30 rounded-lg">
-            <h4 className="font-bold text-red-400 flex items-center gap-2 mb-3">
+          {/* Canvas-Based Analysis */}
+          <div className="p-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-lg">
+            <h4 className="font-bold text-blue-400 flex items-center gap-2 mb-3">
               <Activity className="w-5 h-5" />
-              rPPG: Remote Photoplethysmography — Detecting Heartbeat Through Video
+              Canvas API: Real-Time Pixel Analysis
             </h4>
             <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
               <div>
-                <p className="mb-2">"Real humans have blood flow visible as micro-color changes in skin:"</p>
+                <p className="mb-2">"Direct pixel access for forensic analysis:"</p>
                 <div className="p-2 bg-background/50 rounded font-mono space-y-1">
-                  <div>1. Extract ROI (forehead, cheeks)</div>
-                  <div>2. Apply CHROM algorithm</div>
-                  <div>3. Bandpass filter 0.8-2Hz (48-120 BPM)</div>
-                  <div>4. Validate pulse consistency</div>
+                  <div>1. Load image into Canvas element</div>
+                  <div>2. Extract raw pixel data (RGBA)</div>
+                  <div>3. Apply statistical algorithms</div>
+                  <div>4. Generate confidence scores</div>
                 </div>
               </div>
               <div>
-                <p className="mb-2">"Deepfakes CANNOT fake this biological signal:"</p>
+                <p className="mb-2">"What we detect without ML models:"</p>
                 <div className="p-2 bg-background/50 rounded font-mono space-y-1">
-                  <div>• No blood → No pulse signal</div>
-                  <div>• Synthetic skin = flat response</div>
-                  <div>• 96% accuracy on FaceForensics++</div>
-                  <div>• Works even with face-swaps</div>
+                  <div>• Unnatural color distributions</div>
+                  <div>• Compression inconsistencies</div>
+                  <div>• Noise pattern anomalies</div>
+                  <div>• Edge boundary artifacts</div>
                 </div>
               </div>
             </div>
@@ -402,11 +402,11 @@ const HackathonScript = () => {
         </div>
       ),
       speakerNotes: [
-        "EfficientNet: 'We chose V3 for its accuracy-to-compute ratio'",
-        "Frequency: 'Every AI generator leaves a fingerprint in Fourier space'",
-        "rPPG is the SHOWSTOPPER - pause and let it sink in",
-        "'Deepfakes have no heartbeat. Real humans do. We detect that.'",
-        "This is your biggest technical differentiator"
+        "All analysis runs directly in the browser - no server needed",
+        "Canvas API gives us direct pixel access for forensics",
+        "Statistical methods can detect many AI artifacts",
+        "Works offline, no data leaves the device",
+        "Fast inference - results in milliseconds"
       ]
     },
 
@@ -424,29 +424,29 @@ const HackathonScript = () => {
             <div className="space-y-3">
               <h3 className="text-lg font-bold text-purple-400 flex items-center gap-2">
                 <Mic className="w-5 h-5" />
-                Audio Agent: Hearing the Unhearable
+                Audio Agent: Web Audio API
               </h3>
               
               <div className="p-3 bg-card border border-border rounded-lg">
-                <h4 className="font-semibold text-sm text-foreground mb-2">RawNet3 Architecture</h4>
+                <h4 className="font-semibold text-sm text-foreground mb-2">Spectral Analysis</h4>
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <p>"Processes raw waveforms instead of spectrograms:"</p>
+                  <p>"Real-time frequency analysis in browser:"</p>
                   <div className="p-2 bg-background/50 rounded font-mono mt-2">
-                    <div>• Input: 16kHz raw audio</div>
-                    <div>• SincNet front-end</div>
-                    <div>• Res2Net backbone</div>
-                    <div>• Attentive stats pooling</div>
+                    <div>• FFT (Fast Fourier Transform)</div>
+                    <div>• Autocorrelation pitch detection</div>
+                    <div>• Frequency band distribution</div>
+                    <div>• Real-time level monitoring</div>
                   </div>
                 </div>
               </div>
 
               <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-                <h4 className="font-semibold text-sm text-foreground mb-2">Voice Clone Detection</h4>
+                <h4 className="font-semibold text-sm text-foreground mb-2">Artifact Detection</h4>
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <div>• ElevenLabs: Characteristic F0 jitter</div>
-                  <div>• XTTS: Prosody discontinuities</div>
-                  <div>• Bark: Breathing pattern absence</div>
-                  <div>• OpenAI Voice: Micro-pause signatures</div>
+                  <div>• Noise floor inconsistencies</div>
+                  <div>• Quantization step detection</div>
+                  <div>• Voice envelope analysis</div>
+                  <div>• Spectral anomaly flagging</div>
                 </div>
               </div>
             </div>
@@ -455,29 +455,29 @@ const HackathonScript = () => {
             <div className="space-y-3">
               <h3 className="text-lg font-bold text-cyan-400 flex items-center gap-2">
                 <ClockIcon className="w-5 h-5" />
-                Temporal Agent: Physics Don't Lie
+                Temporal Agent: Frame Analysis
               </h3>
               
               <div className="p-3 bg-card border border-border rounded-lg">
-                <h4 className="font-semibold text-sm text-foreground mb-2">RAFT Optical Flow</h4>
+                <h4 className="font-semibold text-sm text-foreground mb-2">Motion Consistency</h4>
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <p>"Detects motion inconsistencies frame-to-frame:"</p>
+                  <p>"Frame-by-frame coherence analysis:"</p>
                   <div className="p-2 bg-background/50 rounded font-mono mt-2">
-                    <div>• Recurrent All-Pairs Field Transforms</div>
-                    <div>• 4D correlation volumes</div>
-                    <div>• Splice detection via flow breaks</div>
-                    <div>• Sub-pixel motion analysis</div>
+                    <div>• Inter-frame pixel difference</div>
+                    <div>• Motion vector tracking</div>
+                    <div>• Temporal coherence scoring</div>
+                    <div>• Compression artifact detection</div>
                   </div>
                 </div>
               </div>
 
               <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
-                <h4 className="font-semibold text-sm text-foreground mb-2">Biological Consistency</h4>
+                <h4 className="font-semibold text-sm text-foreground mb-2">Region Tracking</h4>
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <div>• 478-point MediaPipe landmarks</div>
-                  <div>• Blink rate: 15-20/min natural</div>
-                  <div>• Micro-saccade patterns</div>
-                  <div>• Lip-sync phoneme verification</div>
+                  <div>• Face region detection</div>
+                  <div>• Movement pattern analysis</div>
+                  <div>• Flow continuity checking</div>
+                  <div>• Splice point detection</div>
                 </div>
               </div>
             </div>
@@ -485,17 +485,17 @@ const HackathonScript = () => {
 
           <div className="p-3 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-primary/30 rounded-lg">
             <p className="text-sm text-center text-muted-foreground">
-              "Audio catches voice clones. Temporal catches face swaps. Together with Visual, 
-              <span className="text-primary font-semibold"> nothing escapes detection.</span>"
+              "Audio catches synthetic voices. Temporal catches manipulated frames. Together with Visual, 
+              <span className="text-primary font-semibold"> multi-modal analysis provides robust detection.</span>"
             </p>
           </div>
         </div>
       ),
       speakerNotes: [
-        "Audio: 'RawNet3 won the ASVspoof 2024 challenge'",
-        "Mention specific cloning services by name - judges know them",
-        "Temporal: 'RAFT is state-of-the-art for motion analysis'",
-        "Blink rates: 'Deepfakes either blink too much or too little'",
+        "Audio: 'Web Audio API runs entirely in browser'",
+        "FFT analysis detects unnatural frequency patterns",
+        "Temporal: 'Frame comparison catches manipulation'",
+        "All processing happens client-side, no server needed",
         "Emphasize the multi-modal synergy"
       ]
     },
