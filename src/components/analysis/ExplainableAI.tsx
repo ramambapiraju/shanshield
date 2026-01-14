@@ -76,14 +76,14 @@ const ExplainableAI = ({
             className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
           >
             <Clock className="w-4 h-4 mr-2" />
-            Timeline
+            Analysis Steps
           </TabsTrigger>
           <TabsTrigger 
             value="audio"
             className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
           >
             <AudioLines className="w-4 h-4 mr-2" />
-            Audio
+            Frequency
           </TabsTrigger>
         </TabsList>
 
@@ -164,7 +164,7 @@ const ExplainableAI = ({
           <div className="bg-card/50 border border-border/30 rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs font-display tracking-wider text-muted-foreground uppercase">
-                Temporal Anomaly Timeline
+                Analysis Step Timeline
               </span>
               <Button 
                 variant="ghost" 
@@ -186,7 +186,7 @@ const ExplainableAI = ({
                 <div
                   key={index}
                   className="absolute top-1/2 -translate-y-1/2 group cursor-pointer"
-                  style={{ left: `${(marker.timestamp / 60) * 100}%` }}
+                  style={{ left: `${(marker.timestamp / 10) * 100}%` }}
                 >
                   <div className={cn(
                     "w-4 h-4 rounded-full border-2 transition-transform hover:scale-125",
@@ -200,7 +200,7 @@ const ExplainableAI = ({
                     <div className="bg-popover border border-border rounded-lg p-2 text-xs whitespace-nowrap shadow-lg">
                       <div className="font-medium text-foreground">{marker.label}</div>
                       <div className="text-muted-foreground">{marker.description}</div>
-                      <div className="text-primary font-mono">{marker.timestamp.toFixed(1)}s</div>
+                      <div className="text-primary font-mono">Step {index + 1}</div>
                     </div>
                   </div>
                 </div>
@@ -227,7 +227,7 @@ const ExplainableAI = ({
                   )}
                 >
                   <span className="text-xs font-mono text-muted-foreground w-12">
-                    {marker.timestamp.toFixed(1)}s
+                    Step {index + 1}
                   </span>
                   <div className={cn(
                     "w-2 h-2 rounded-full",
@@ -245,12 +245,12 @@ const ExplainableAI = ({
           </div>
         </TabsContent>
 
-        {/* Audio Tab */}
+        {/* Frequency Tab */}
         <TabsContent value="audio" className="mt-4">
           <div className="bg-card/50 border border-border/30 rounded-lg p-4">
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs font-display tracking-wider text-muted-foreground uppercase">
-                Audio Spectrogram Analysis
+                Frequency Domain Analysis
               </span>
             </div>
 
@@ -299,7 +299,7 @@ const ExplainableAI = ({
               ))}
             </div>
 
-            {/* Audio analysis summary */}
+            {/* Analysis summary */}
             <div className="mt-4 grid grid-cols-2 gap-2">
               {audioSegments.filter(s => s.type !== 'normal').map((segment, index) => (
                 <div 
@@ -312,7 +312,7 @@ const ExplainableAI = ({
                 >
                   <div className="text-xs font-medium text-foreground">{segment.label}</div>
                   <div className="text-[10px] text-muted-foreground">
-                    {segment.start.toFixed(1)}s - {segment.end.toFixed(1)}s
+                    Band {segment.start.toFixed(0)} - {segment.end.toFixed(0)}
                   </div>
                 </div>
               ))}
