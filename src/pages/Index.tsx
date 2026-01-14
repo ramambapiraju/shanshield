@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Shield, Play, RotateCcw, Presentation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ErakshaBadge from "@/components/ErakshaBadge";
@@ -10,13 +10,24 @@ import ForensicReport from "@/components/analysis/ForensicReport";
 import FieldModeToggle from "@/components/analysis/FieldModeToggle";
 import SecurityIndicators from "@/components/analysis/SecurityIndicators";
 import JudgeModePanel from "@/components/JudgeModePanel";
-import HackathonScript from "@/components/HackathonScript";
 import PresentationMode from "@/components/PresentationMode";
 import TechShowcase from "@/components/TechShowcase";
 import { useAnalysis } from "@/hooks/useAnalysis";
 
 const Index = () => {
   const [showPresentation, setShowPresentation] = useState(false);
+
+  // Ctrl+P keyboard shortcut to toggle presentation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "p") {
+        e.preventDefault();
+        setShowPresentation((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
   const {
     files,
     isAnalyzing,
@@ -34,7 +45,6 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background cyber-grid relative overflow-hidden">
       <JudgeModePanel />
-      <HackathonScript />
       <PresentationMode isOpen={showPresentation} onClose={() => setShowPresentation(false)} />
       <div className="fixed inset-0 bg-radial-glow pointer-events-none" />
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
