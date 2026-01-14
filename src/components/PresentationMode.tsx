@@ -251,7 +251,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
                 </div>
               </div>
               <ul className="text-muted-foreground space-y-2">
-                <li>• <span className="text-blue-400 font-semibold">EfficientNet-V3</span> — 87M parameters</li>
+                <li>• <span className="text-blue-400 font-semibold">EfficientNetV2-L</span> — 118M parameters</li>
                 <li>• Frequency-aware attention (FFT analysis)</li>
                 <li>• GAN/Diffusion fingerprint detection</li>
                 <li>• Generator ID: Sora, Runway, DALL-E 4</li>
@@ -342,7 +342,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
               <div className="space-y-2 text-muted-foreground">
                 <p className="text-lg">Compound scaling: width × depth × resolution</p>
                 <div className="p-4 bg-background/50 rounded-lg font-mono text-sm">
-                  <div>• Backbone: 87M parameters</div>
+                  <div>• Backbone: 118M parameters (EfficientNetV2-L)</div>
                   <div>• Input: 380×380 RGB + FFT channels</div>
                   <div>• Feature Pyramid: P3-P7 scales</div>
                   <div>• Attention: SE blocks + CBAM</div>
@@ -640,7 +640,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Full Cloud Model</span>
-                  <span className="font-mono text-foreground">87M params</span>
+                  <span className="font-mono text-foreground">118M params</span>
                 </div>
                 <Progress value={100} className="h-2" />
                 
