@@ -11,7 +11,8 @@ import {
   ChevronUp,
   Zap,
   Shield,
-  Binary
+  Binary,
+  Brain
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,14 +34,14 @@ interface TechCategory {
 const techCategories: TechCategory[] = [
   {
     id: "image",
-    label: "Image Analysis",
+    label: "Visual Agent",
     icon: Eye,
     color: "text-cyan-400",
     methods: [
-      { name: "Noise Pattern Analysis", description: "Detects uniform GAN noise via coefficient of variation", score: "25%" },
+      { name: "Noise Pattern Analysis", description: "Detects uniform GAN noise via coefficient of variation", score: "20%" },
       { name: "Sobel Edge Detection", description: "Identifies artificial sharpening and edge irregularities", score: "15%" },
       { name: "Color Histogram Analysis", description: "Finds unnatural color spikes and channel decorrelation", score: "15%" },
-      { name: "JPEG Artifact Detection", description: "Detects 8x8 block boundaries from double compression", score: "15%" },
+      { name: "JPEG Artifact Detection", description: "Detects 8x8 block boundaries from double compression", score: "20%" },
       { name: "Bilateral Symmetry Check", description: "Flags over-symmetric faces (GAN) or spliced regions", score: "15%" },
       { name: "LBP Texture Analysis", description: "Local Binary Pattern for texture consistency check", score: "15%" }
     ],
@@ -61,16 +62,15 @@ const analyzeNoise = (data, width, height) => {
   },
   {
     id: "video",
-    label: "Video Analysis",
+    label: "Temporal Agent",
     icon: Film,
     color: "text-purple-400",
     methods: [
-      { name: "Frame Consistency", description: "Detects flickering via inter-frame difference variance", score: "20%" },
-      { name: "Temporal Coherence", description: "Optical flow analysis for motion discontinuities", score: "20%" },
+      { name: "Frame Consistency", description: "Detects flickering via inter-frame difference variance", score: "25%" },
+      { name: "Temporal Coherence", description: "Motion vector analysis for discontinuities", score: "25%" },
       { name: "Face Region Tracking", description: "Compares face vs background change ratios", score: "20%" },
       { name: "Compression Analysis", description: "Multi-frame 8x8 block artifact variance", score: "15%" },
-      { name: "Motion Flow Analysis", description: "Acceleration-based unnatural motion detection", score: "15%" },
-      { name: "Frame Extraction", description: "Samples 5-15 frames based on duration", score: "10%" }
+      { name: "Motion Flow Analysis", description: "Acceleration-based unnatural motion detection", score: "15%" }
     ],
     realCode: `// Real implementation in src/lib/videoAnalyzer.ts
 const extractFrames = async (video, numFrames) => {
@@ -84,14 +84,14 @@ const extractFrames = async (video, numFrames) => {
 };
 
 const analyzeTemporalCoherence = (frames) => {
-  // Calculate optical flow between frames
+  // Calculate motion vectors between frames
   // Check for sudden motion discontinuities
   if (ratio > 3 || ratio < 0.33) discontinuities++;
 };`
   },
   {
     id: "audio",
-    label: "Audio Analysis",
+    label: "Audio Agent",
     icon: AudioLines,
     color: "text-green-400",
     methods: [
@@ -104,7 +104,7 @@ const analyzeTemporalCoherence = (frames) => {
     ],
     realCode: `// Real implementation in src/lib/audioAnalyzer.ts
 const computeFFT = (samples, fftSize) => {
-  // Simple DFT implementation
+  // DFT implementation for frequency analysis
   for (let k = 0; k < fftSize / 2; k++) {
     for (let n = 0; n < fftSize; n++) {
       const angle = (2 * Math.PI * k * n) / fftSize;
@@ -122,16 +122,16 @@ const analyzePitch = (audioBuffer) => {
   },
   {
     id: "document",
-    label: "Document Analysis",
+    label: "Metadata Agent",
     icon: FileText,
     color: "text-orange-400",
     methods: [
       { name: "PDF Metadata Forensics", description: "Parses producer, creator, dates for inconsistencies", score: "20%" },
-      { name: "Byte Entropy Analysis", description: "High entropy (>90%) suggests obfuscation", score: "20%" },
-      { name: "Content Consistency", description: "Null byte ratio and ASCII distribution check", score: "15%" },
-      { name: "Creation Patterns", description: "Verifies legitimate producers and date formats", score: "15%" },
+      { name: "SHA-256 Hashing", description: "Cryptographic file integrity verification", score: "20%" },
+      { name: "Byte Entropy Analysis", description: "High entropy (>90%) suggests obfuscation", score: "15%" },
+      { name: "EXIF/XMP Parsing", description: "Detects AI generation markers and software tags", score: "15%" },
       { name: "Embedded Media Scan", description: "Detects JavaScript, embedded files, forms", score: "15%" },
-      { name: "Modification History", description: "Creation vs modification date analysis", score: "15%" }
+      { name: "Fuzzy Hashing", description: "Similarity detection for modified copies", score: "15%" }
     ],
     realCode: `// Real implementation in src/lib/documentAnalyzer.ts
 const parsePDFMetadata = async (file) => {
@@ -146,10 +146,37 @@ const parsePDFMetadata = async (file) => {
   return { version, producer, creator, hasEncryption };
 };
 
-const analyzeBytePatterns = async (file) => {
-  // Calculate Shannon entropy
-  entropy -= p * Math.log2(p);
-  return entropyScore / 8 * 100; // Normalize to 0-100
+// SHA-256 via Web Crypto API
+const hash = await crypto.subtle.digest('SHA-256', buffer);`
+  },
+  {
+    id: "arbiter",
+    label: "Arbiter Agent",
+    icon: Brain,
+    color: "text-primary",
+    methods: [
+      { name: "Dempster-Shafer Fusion", description: "Combines agent beliefs with uncertainty handling", score: "40%" },
+      { name: "Conflict Detection", description: "Identifies when agents disagree significantly", score: "25%" },
+      { name: "Weighted Consensus", description: "Agent-specific weights based on media type", score: "20%" },
+      { name: "Confidence Calibration", description: "Adjusts final confidence based on signal strength", score: "15%" }
+    ],
+    realCode: `// Dempster-Shafer belief fusion algorithm
+const fuseBeliefs = (agents) => {
+  // Combine mass functions from all agents
+  let combined = { authentic: 0, fake: 0, uncertain: 1 };
+  
+  for (const agent of agents) {
+    const K = combined.authentic * agent.fake + 
+              combined.fake * agent.authentic;
+    
+    // Normalize after removing conflict
+    const norm = 1 - K;
+    combined.authentic = (combined.authentic * agent.authentic) / norm;
+    combined.fake = (combined.fake * agent.fake) / norm;
+  }
+  
+  // Detect high conflict (K > 0.7 = agents disagree)
+  return { verdict: combined.fake > 0.5, conflict: K > 0.7 };
 };`
   },
   {
@@ -161,8 +188,7 @@ const analyzeBytePatterns = async (file) => {
       { name: "WebRTC Camera Access", description: "getUserMedia with 1920x1080 resolution", score: "—" },
       { name: "Frame Capture", description: "Canvas-based JPEG capture at 95% quality", score: "—" },
       { name: "Video Recording", description: "MediaRecorder with VP9/H.264 codecs", score: "—" },
-      { name: "Camera Switching", description: "Supports front/back camera toggle", score: "—" },
-      { name: "Audio+Video Sync", description: "Records with microphone when permitted", score: "—" }
+      { name: "Camera Switching", description: "Supports front/back camera toggle", score: "—" }
     ],
     realCode: `// Real implementation in MediaUploader.tsx
 const startCamera = async (mode) => {
@@ -188,8 +214,8 @@ const captureFromCamera = () => {
     color: "text-yellow-400",
     methods: [
       { name: "Audio Context API", description: "Web Audio API with echo/noise cancellation", score: "—" },
-      { name: "Real-time Levels", description: "FFT-based frequency visualization", score: "—" },
-      { name: "Opus Recording", description: "MediaRecorder with WebM/Opus encoding", score: "—" },
+      { name: "Real-time FFT", description: "Live frequency visualization", score: "—" },
+      { name: "WebM Recording", description: "MediaRecorder with Opus encoding", score: "—" },
       { name: "Level Monitoring", description: "RequestAnimationFrame for smooth meters", score: "—" }
     ],
     realCode: `// Real implementation in MediaUploader.tsx
@@ -208,7 +234,6 @@ const startAudioCapture = async () => {
   // Real-time level monitoring
   const dataArray = new Uint8Array(analyser.frequencyBinCount);
   analyser.getByteFrequencyData(dataArray);
-  const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
 };`
   }
 ];
@@ -228,11 +253,11 @@ const TechShowcase = () => {
             </h2>
           </div>
           <p className="text-xs text-muted-foreground max-w-xl mx-auto">
-            All analysis is performed client-side using real algorithms — no simulated or random data
+            All analysis is performed client-side using real algorithms — no external APIs or simulated data
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {techCategories.map((category) => {
             const Icon = category.icon;
             const isExpanded = expandedCategory === category.id;
@@ -336,7 +361,7 @@ const TechShowcase = () => {
           </div>
           <div className="flex items-center gap-2">
             <Cpu className="w-3 h-3 text-cyan-400" />
-            <span>Browser-Based ML</span>
+            <span>Browser-Native Processing</span>
           </div>
         </div>
       </div>

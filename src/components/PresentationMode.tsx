@@ -23,11 +23,7 @@ import {
   Pause,
   RotateCcw,
   Maximize2,
-  Atom,
-  GraduationCap,
-  Calendar,
-  TrendingUp,
-  ShieldAlert
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -54,7 +50,6 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Sync with prop
   useEffect(() => {
     if (isOpen !== undefined) {
       setIsVisible(isOpen);
@@ -81,7 +76,6 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // F5 or Cmd+Shift+P (Mac-friendly) to toggle presentation mode
       if (e.key === "F5" || ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "p")) {
         e.preventDefault();
         if (isVisible) {
@@ -169,7 +163,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold text-primary">100%</div>
-              <div className="text-sm text-muted-foreground">Explainable AI</div>
+              <div className="text-sm text-muted-foreground">Client-Side / Offline</div>
             </div>
           </div>
           <p className="text-xl text-foreground mt-8">
@@ -221,7 +215,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             <div className="p-6 bg-card border border-border rounded-xl">
               <div className="w-12 h-12 rounded-full bg-destructive/20 flex items-center justify-center text-destructive font-bold mb-4">3</div>
               <h3 className="text-xl font-bold text-foreground mb-2">Cloud Dependency</h3>
-              <p className="text-muted-foreground">Border agents, military analysts need offline detection. None exists.</p>
+              <p className="text-muted-foreground">Border agents, analysts need offline detection. None exists.</p>
             </div>
           </div>
         </div>
@@ -232,7 +226,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
     {
       id: "architecture",
       title: "Multi-Agent Architecture",
-      subtitle: "Four Specialized AI Agents That Debate",
+      subtitle: "Four Specialized AI Agents That Collaborate",
       duration: "1 min 30 sec",
       icon: Brain,
       content: (
@@ -251,10 +245,10 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
                 </div>
               </div>
               <ul className="text-muted-foreground space-y-2">
-                <li>• <span className="text-blue-400 font-semibold">EfficientNetV2-L</span> — 118M parameters</li>
-                <li>• Frequency-aware attention (FFT analysis)</li>
-                <li>• GAN/Diffusion fingerprint detection</li>
-                <li>• Generator ID: Sora, Runway, DALL-E 4</li>
+                <li>• <span className="text-blue-400 font-semibold">Noise Pattern Analysis</span> — GAN uniformity detection</li>
+                <li>• Sobel Edge Detection for artificial sharpening</li>
+                <li>• Color histogram & channel decorrelation</li>
+                <li>• JPEG double compression artifacts</li>
               </ul>
             </div>
 
@@ -267,10 +261,10 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
                 </div>
               </div>
               <ul className="text-muted-foreground space-y-2">
-                <li>• <span className="text-purple-400 font-semibold">RawNet3</span> vocoder detection</li>
-                <li>• Wav2Vec2 semantic analysis</li>
-                <li>• Breathing pattern verification</li>
-                <li>• Clone ID: ElevenLabs, XTTS, Bark</li>
+                <li>• <span className="text-purple-400 font-semibold">FFT Spectral Analysis</span> — TTS detection</li>
+                <li>• Autocorrelation pitch consistency</li>
+                <li>• Noise floor anomaly detection</li>
+                <li>• Voice envelope naturalness scoring</li>
               </ul>
             </div>
 
@@ -283,10 +277,10 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
                 </div>
               </div>
               <ul className="text-muted-foreground space-y-2">
-                <li>• <span className="text-cyan-400 font-semibold">rPPG heartbeat detection</span> (0.8-2Hz)</li>
-                <li>• RAFT optical flow analysis</li>
-                <li>• 478-point facial landmark tracking</li>
-                <li>• Blink pattern validation (PERCLOS)</li>
+                <li>• <span className="text-cyan-400 font-semibold">Frame Consistency</span> — Flicker detection</li>
+                <li>• Motion vector coherence analysis</li>
+                <li>• Face vs background change ratios</li>
+                <li>• Compression artifact variance</li>
               </ul>
             </div>
 
@@ -299,10 +293,10 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
                 </div>
               </div>
               <ul className="text-muted-foreground space-y-2">
-                <li>• <span className="text-amber-400 font-semibold">C2PA provenance</span> verification</li>
-                <li>• SHA-3/256 cryptographic hashing</li>
+                <li>• <span className="text-amber-400 font-semibold">SHA-256 Hashing</span> — Integrity verification</li>
                 <li>• EXIF/XMP AI generation markers</li>
-                <li>• Fuzzy hashing for similarity</li>
+                <li>• Byte entropy analysis for obfuscation</li>
+                <li>• Fuzzy hashing for similarity detection</li>
               </ul>
             </div>
           </div>
@@ -312,7 +306,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
               <Brain className="w-12 h-12 text-primary" />
               <div>
                 <h3 className="text-2xl font-bold text-foreground">Arbiter Agent — The Judge</h3>
-                <p className="text-muted-foreground">Dempster-Shafer belief fusion • Conflict detection • Consensus building</p>
+                <p className="text-muted-foreground">Dempster-Shafer belief fusion • Conflict detection • Weighted consensus</p>
               </div>
             </div>
           </div>
@@ -337,15 +331,15 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             <div className="p-6 bg-card border border-border rounded-xl space-y-4">
               <h3 className="text-2xl font-bold text-primary flex items-center gap-2">
                 <Layers className="w-6 h-6" />
-                EfficientNetV2-L Architecture
+                Noise Pattern Analysis
               </h3>
               <div className="space-y-2 text-muted-foreground">
-                <p className="text-lg">Compound scaling: width × depth × resolution</p>
+                <p className="text-lg">GAN-generated images have unnaturally uniform noise</p>
                 <div className="p-4 bg-background/50 rounded-lg font-mono text-sm">
-                  <div>• Backbone: 118M parameters (EfficientNetV2-L)</div>
-                  <div>• Input: 380×380 RGB + FFT channels</div>
-                  <div>• Feature Pyramid: P3-P7 scales</div>
-                  <div>• Attention: SE blocks + CBAM</div>
+                  <div>• Sample adjacent pixel differences</div>
+                  <div>• Calculate coefficient of variation</div>
+                  <div>• CV &lt; 30% indicates synthetic origin</div>
+                  <div>• Works on compressed images</div>
                 </div>
               </div>
             </div>
@@ -356,49 +350,37 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
                 Frequency Domain Analysis
               </h3>
               <div className="space-y-2 text-muted-foreground">
-                <p className="text-lg">Diffusion models leave high-frequency fingerprints</p>
+                <p className="text-lg">AI models leave high-frequency fingerprints</p>
                 <div className="p-4 bg-background/50 rounded-lg font-mono text-sm">
-                  <div>• FFT on 64×64 patches</div>
-                  <div>• Azimuthal power spectrum</div>
-                  <div>• Stable Diffusion grid detection</div>
-                  <div>• Sora temporal signatures</div>
+                  <div>• Sobel edge detection</div>
+                  <div>• Color channel correlation</div>
+                  <div>• JPEG 8x8 block boundary detection</div>
+                  <div>• Double compression artifacts</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="p-6 bg-gradient-to-r from-red-500/10 to-pink-500/10 border-2 border-red-500/40 rounded-xl">
-            <h3 className="text-2xl font-bold text-red-400 flex items-center gap-2 mb-4">
-              <Activity className="w-6 h-6" />
-              rPPG: Remote Photoplethysmography — Detecting Heartbeat Through Video
-            </h3>
-            <div className="grid grid-cols-2 gap-6 text-muted-foreground">
-              <div>
-                <p className="text-lg mb-3">Real humans have visible blood flow as micro-color changes:</p>
-                <div className="p-4 bg-background/50 rounded-lg font-mono text-sm space-y-1">
-                  <div>1. Extract ROI (forehead, cheeks)</div>
-                  <div>2. Apply CHROM algorithm</div>
-                  <div>3. Bandpass filter 0.8-2Hz</div>
-                  <div>4. Validate pulse consistency</div>
-                </div>
-              </div>
-              <div>
-                <p className="text-lg mb-3 text-primary font-semibold">Deepfakes CANNOT fake this biological signal!</p>
-                <div className="p-4 bg-primary/10 rounded-lg space-y-2">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-primary" />
-                    <span>Validates living human presence</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-primary" />
-                    <span>Works on compressed video</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-primary" />
-                    <span>Unfakeable by current AI</span>
-                  </div>
-                </div>
-              </div>
+          <div className="grid grid-cols-2 gap-6">
+            <div className="p-6 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/40 rounded-xl">
+              <h3 className="text-xl font-bold text-blue-400 flex items-center gap-2 mb-3">
+                <Eye className="w-5 h-5" />
+                Bilateral Symmetry Check
+              </h3>
+              <p className="text-muted-foreground">
+                GAN faces are often too symmetric. Real faces have natural asymmetries. 
+                We measure symmetry scores to flag synthetic content.
+              </p>
+            </div>
+            <div className="p-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-2 border-purple-500/40 rounded-xl">
+              <h3 className="text-xl font-bold text-purple-400 flex items-center gap-2 mb-3">
+                <Layers className="w-5 h-5" />
+                LBP Texture Analysis
+              </h3>
+              <p className="text-muted-foreground">
+                Local Binary Patterns detect texture inconsistencies in skin regions
+                that appear uniform but should have natural variation.
+              </p>
             </div>
           </div>
         </div>
@@ -423,12 +405,12 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
               </h2>
               
               <div className="p-6 bg-card border border-purple-500/30 rounded-xl space-y-4">
-                <h4 className="text-xl font-bold text-purple-400">RawNet3 Architecture</h4>
+                <h4 className="text-xl font-bold text-purple-400">FFT Spectral Analysis</h4>
                 <div className="p-4 bg-background/50 rounded-lg font-mono text-sm text-muted-foreground">
-                  <div>• Sinc convolutions on raw waveform</div>
-                  <div>• GRU temporal modeling</div>
-                  <div>• Attentive statistics pooling</div>
-                  <div>• 1.2M parameters, real-time</div>
+                  <div>• Compute frequency magnitudes via DFT</div>
+                  <div>• Analyze spectral centroid & flatness</div>
+                  <div>• TTS has unnatural spectral regularity</div>
+                  <div>• Real-time Web Audio API processing</div>
                 </div>
               </div>
 
@@ -437,19 +419,19 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
                 <ul className="space-y-2 text-muted-foreground">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-purple-400" />
-                    Vocoder artifacts (buzzy quality)
+                    Unnatural pitch consistency
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-purple-400" />
-                    Missing breathing patterns
+                    Unnaturally clean noise floor
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-purple-400" />
-                    Unnatural prosody/rhythm
+                    Robotic envelope patterns
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-purple-400" />
-                    Clone signatures: ElevenLabs, XTTS
+                    Missing high frequencies (TTS)
                   </li>
                 </ul>
               </div>
@@ -463,12 +445,12 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
               </h2>
               
               <div className="p-6 bg-card border border-cyan-500/30 rounded-xl space-y-4">
-                <h4 className="text-xl font-bold text-cyan-400">RAFT Optical Flow</h4>
+                <h4 className="text-xl font-bold text-cyan-400">Motion Analysis</h4>
                 <div className="p-4 bg-background/50 rounded-lg font-mono text-sm text-muted-foreground">
-                  <div>• Recurrent all-pairs field transforms</div>
-                  <div>• Frame-to-frame motion analysis</div>
-                  <div>• Splice detection at cut points</div>
-                  <div>• Physics consistency validation</div>
+                  <div>• Extract frames at regular intervals</div>
+                  <div>• Calculate inter-frame differences</div>
+                  <div>• Detect motion discontinuities</div>
+                  <div>• Analyze acceleration patterns</div>
                 </div>
               </div>
 
@@ -481,15 +463,15 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-cyan-400" />
-                    Unnatural blink patterns
+                    Flickering artifacts
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-cyan-400" />
-                    Micro-expression timing
+                    Face/background inconsistency
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-cyan-400" />
-                    Motion physics violations
+                    Unnatural motion physics
                   </li>
                 </ul>
               </div>
@@ -546,15 +528,15 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">1</div>
                   <div>
-                    <p className="font-semibold text-foreground">GradCAM++ Heatmaps</p>
-                    <p className="text-sm text-muted-foreground">Visual highlighting of suspicious regions</p>
+                    <p className="font-semibold text-foreground">Per-Agent Reasoning</p>
+                    <p className="text-sm text-muted-foreground">Each agent provides its own analysis and score</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">2</div>
                   <div>
-                    <p className="font-semibold text-foreground">SHAP Feature Attribution</p>
-                    <p className="text-sm text-muted-foreground">Quantified contribution of each feature</p>
+                    <p className="font-semibold text-foreground">Conflict Detection</p>
+                    <p className="text-sm text-muted-foreground">When agents disagree, we flag it explicitly</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -582,16 +564,16 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             </h4>
             <div className="grid grid-cols-4 gap-4 text-center text-sm text-muted-foreground">
               <div className="p-3 bg-background/50 rounded-lg">
-                <div className="text-primary font-bold">SHA-3/256</div>
+                <div className="text-primary font-bold">SHA-256</div>
                 <div>File hashing</div>
               </div>
               <div className="p-3 bg-background/50 rounded-lg">
                 <div className="text-primary font-bold">Timestamps</div>
-                <div>RFC 3161 TSA</div>
+                <div>Analysis time</div>
               </div>
               <div className="p-3 bg-background/50 rounded-lg">
-                <div className="text-primary font-bold">C2PA Signing</div>
-                <div>Provenance chain</div>
+                <div className="text-primary font-bold">EXIF Parse</div>
+                <div>Metadata extraction</div>
               </div>
               <div className="p-3 bg-background/50 rounded-lg">
                 <div className="text-primary font-bold">Audit Logs</div>
@@ -607,7 +589,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
     {
       id: "field-mode",
       title: "Field Mode",
-      subtitle: "True Offline Edge Detection",
+      subtitle: "True Offline Client-Side Detection",
       duration: "45 sec",
       icon: Wifi,
       content: (
@@ -619,63 +601,66 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
           <div className="grid grid-cols-3 gap-6 mb-6">
             <div className="text-center p-6 bg-card border border-border rounded-xl">
               <Cpu className="w-12 h-12 text-primary mx-auto mb-3" />
-              <div className="text-3xl font-bold text-foreground">12MB</div>
-              <div className="text-muted-foreground">Compressed model</div>
+              <div className="text-3xl font-bold text-foreground">100%</div>
+              <div className="text-muted-foreground">Client-Side</div>
             </div>
             <div className="text-center p-6 bg-card border border-border rounded-xl">
               <Zap className="w-12 h-12 text-warning mx-auto mb-3" />
-              <div className="text-3xl font-bold text-foreground">&lt;300ms</div>
-              <div className="text-muted-foreground">Edge inference</div>
+              <div className="text-3xl font-bold text-foreground">&lt;6s</div>
+              <div className="text-muted-foreground">Analysis time</div>
             </div>
             <div className="text-center p-6 bg-card border border-border rounded-xl">
               <Wifi className="w-12 h-12 text-cyan-400 mx-auto mb-3" />
-              <div className="text-3xl font-bold text-foreground">100%</div>
-              <div className="text-muted-foreground">Offline capable</div>
+              <div className="text-3xl font-bold text-foreground">0</div>
+              <div className="text-muted-foreground">External API calls</div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
             <div className="p-6 bg-card border border-border rounded-xl">
-              <h3 className="text-xl font-bold text-foreground mb-4">Progressive Model Compression</h3>
+              <h3 className="text-xl font-bold text-foreground mb-4">Browser-Native Technologies</h3>
               <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Full Cloud Model</span>
-                  <span className="font-mono text-foreground">118M params</span>
-                </div>
-                <Progress value={100} className="h-2" />
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">INT8 Quantized</span>
-                  <span className="font-mono text-foreground">22M params</span>
-                </div>
-                <Progress value={25} className="h-2" />
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">INT4 + Pruned</span>
-                  <span className="font-mono text-foreground">5.5M params</span>
-                </div>
-                <Progress value={6} className="h-2" />
-              </div>
-            </div>
-
-            <div className="p-6 bg-card border border-border rounded-xl">
-              <h3 className="text-xl font-bold text-foreground mb-4">Deployment Stack</h3>
-              <div className="space-y-3 text-muted-foreground">
                 <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg">
                   <div className="w-3 h-3 rounded-full bg-primary" />
-                  <span><strong className="text-foreground">WebGPU</strong> — GPU acceleration in browser</span>
+                  <span className="text-muted-foreground"><strong className="text-foreground">Canvas API</strong> — Frame extraction & processing</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg">
                   <div className="w-3 h-3 rounded-full bg-cyan-400" />
-                  <span><strong className="text-foreground">ONNX Runtime</strong> — Cross-platform inference</span>
+                  <span className="text-muted-foreground"><strong className="text-foreground">Web Audio API</strong> — FFT & spectral analysis</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg">
                   <div className="w-3 h-3 rounded-full bg-purple-400" />
-                  <span><strong className="text-foreground">WebAssembly</strong> — CPU fallback</span>
+                  <span className="text-muted-foreground"><strong className="text-foreground">Web Crypto API</strong> — SHA-256 hashing</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg">
                   <div className="w-3 h-3 rounded-full bg-amber-400" />
-                  <span><strong className="text-foreground">Service Workers</strong> — Offline caching</span>
+                  <span className="text-muted-foreground"><strong className="text-foreground">FileReader API</strong> — Binary parsing</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 bg-card border border-border rounded-xl">
+              <h3 className="text-xl font-bold text-foreground mb-4">Deployment Benefits</h3>
+              <div className="space-y-3 text-muted-foreground">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-success" />
+                  <span>Works offline / air-gapped environments</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-success" />
+                  <span>No data leaves user's device</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-success" />
+                  <span>No API keys or subscriptions needed</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-success" />
+                  <span>Scales to unlimited users at zero cost</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-success" />
+                  <span>GDPR/privacy compliant by design</span>
                 </div>
               </div>
             </div>
@@ -684,345 +669,302 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
       )
     },
 
-    // SLIDE 8: CONTINUOUS LEARNING
+    // SLIDE 8: ARBITER AGENT
     {
-      id: "continuous-learning",
-      title: "Continuous Learning",
-      subtitle: "Weekly Model Updates & Threat Hunting",
+      id: "arbiter",
+      title: "The Arbiter",
+      subtitle: "Dempster-Shafer Belief Fusion",
       duration: "45 sec",
-      icon: RefreshCw,
+      icon: Brain,
       content: (
         <div className="space-y-6">
           <h2 className="text-4xl font-bold text-center font-display text-foreground mb-6">
-            Staying Ahead of Attackers
+            The Judge: Combining Agent Opinions
           </h2>
 
-          <div className="grid grid-cols-4 gap-4 mb-6">
-            <div className="text-center p-4 bg-primary/10 border border-primary/30 rounded-xl">
-              <Calendar className="w-8 h-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold text-foreground">Weekly</div>
-              <div className="text-sm text-muted-foreground">Model retraining</div>
+          <div className="grid grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <h3 className="text-2xl font-bold text-primary">Dempster-Shafer Theory</h3>
+              <div className="p-6 bg-card border border-border rounded-xl space-y-4">
+                <p className="text-muted-foreground">
+                  Unlike simple averaging, Dempster-Shafer handles uncertainty and allows agents to express "I don't know."
+                </p>
+                <div className="p-4 bg-background/50 rounded-lg font-mono text-sm text-muted-foreground">
+                  <div>// Combine beliefs from all agents</div>
+                  <div>K = conflict between agents</div>
+                  <div>if (K &gt; 0.7) flag_conflict();</div>
+                  <div>combined = normalize(beliefs);</div>
+                </div>
+              </div>
             </div>
-            <div className="text-center p-4 bg-warning/10 border border-warning/30 rounded-xl">
-              <Target className="w-8 h-8 text-warning mx-auto mb-2" />
-              <div className="text-2xl font-bold text-foreground">48-72hr</div>
-              <div className="text-sm text-muted-foreground">New threat response</div>
-            </div>
-            <div className="text-center p-4 bg-destructive/10 border border-destructive/30 rounded-xl">
-              <ShieldAlert className="w-8 h-8 text-destructive mx-auto mb-2" />
-              <div className="text-2xl font-bold text-foreground">Red Team</div>
-              <div className="text-sm text-muted-foreground">Adversarial testing</div>
-            </div>
-            <div className="text-center p-4 bg-cyan-400/10 border border-cyan-400/30 rounded-xl">
-              <TrendingUp className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-foreground">+1.5%</div>
-              <div className="text-sm text-muted-foreground">Monthly accuracy gain</div>
+
+            <div className="space-y-4">
+              <h3 className="text-2xl font-bold text-primary">Agent Weights</h3>
+              <div className="p-6 bg-card border border-border rounded-xl space-y-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-blue-400" />
+                      Visual Agent
+                    </span>
+                    <span className="font-mono text-blue-400">35%</span>
+                  </div>
+                  <Progress value={35} className="h-2" />
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="flex items-center gap-2">
+                      <Mic className="w-4 h-4 text-purple-400" />
+                      Audio Agent
+                    </span>
+                    <span className="font-mono text-purple-400">25%</span>
+                  </div>
+                  <Progress value={25} className="h-2" />
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-cyan-400" />
+                      Temporal Agent
+                    </span>
+                    <span className="font-mono text-cyan-400">25%</span>
+                  </div>
+                  <Progress value={25} className="h-2" />
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-amber-400" />
+                      Metadata Agent
+                    </span>
+                    <span className="font-mono text-amber-400">15%</span>
+                  </div>
+                  <Progress value={15} className="h-2" />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="p-6 bg-card border border-border rounded-xl">
-            <h3 className="text-xl font-bold text-foreground mb-4">Weekly Update Pipeline</h3>
-            <div className="flex items-center justify-between">
-              <div className="text-center p-4 bg-background/50 rounded-lg flex-1">
-                <Database className="w-6 h-6 text-primary mx-auto mb-2" />
-                <div className="text-sm font-semibold">Honeypot Collection</div>
-                <div className="text-xs text-muted-foreground">New deepfake samples</div>
-              </div>
-              <ChevronRight className="w-6 h-6 text-muted-foreground" />
-              <div className="text-center p-4 bg-background/50 rounded-lg flex-1">
-                <ShieldAlert className="w-6 h-6 text-destructive mx-auto mb-2" />
-                <div className="text-sm font-semibold">Red Team Attack</div>
-                <div className="text-xs text-muted-foreground">Adversarial testing</div>
-              </div>
-              <ChevronRight className="w-6 h-6 text-muted-foreground" />
-              <div className="text-center p-4 bg-background/50 rounded-lg flex-1">
-                <Brain className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-                <div className="text-sm font-semibold">Model Training</div>
-                <div className="text-xs text-muted-foreground">PyTorch 2.4 + MLflow</div>
-              </div>
-              <ChevronRight className="w-6 h-6 text-muted-foreground" />
-              <div className="text-center p-4 bg-background/50 rounded-lg flex-1">
-                <RefreshCw className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
-                <div className="text-sm font-semibold">Gradual Rollout</div>
-                <div className="text-xs text-muted-foreground">Canary → Full deploy</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg text-center">
-            <p className="text-lg text-foreground">
-              <span className="font-bold text-primary">Key insight:</span> Deepfake technology evolves weekly. 
-              Static models become obsolete within months. SHANSHIELD evolves faster than attackers.
+          <div className="p-6 bg-gradient-to-r from-primary/20 to-primary/5 border-2 border-primary/50 rounded-xl">
+            <h4 className="text-xl font-bold text-foreground mb-3">Conflict Detection</h4>
+            <p className="text-muted-foreground">
+              When Visual says <span className="text-destructive font-bold">FAKE</span> but Audio says <span className="text-success font-bold">REAL</span>, 
+              we don't average — we <span className="text-primary font-bold">FLAG A CONFLICT</span>. This catches sophisticated attacks that fool single-modal systems.
             </p>
           </div>
         </div>
       )
     },
 
-    // SLIDE 9: FUTURE & QUANTUM PREPAREDNESS (NEW!)
+    // SLIDE 9: DEMO WALKTHROUGH
     {
-      id: "quantum-future",
-      title: "Future & Quantum Preparedness",
-      subtitle: "Post-Quantum Cryptography & Biological Anchors",
-      duration: "1 min",
-      icon: Atom,
+      id: "demo",
+      title: "Live Demo",
+      subtitle: "See SHANSHIELD in Action",
+      duration: "2 min",
+      icon: Zap,
       content: (
         <div className="space-y-6">
-          <h2 className="text-4xl font-bold text-center font-display text-foreground mb-4">
-            Preparing for the Quantum Era
+          <h2 className="text-4xl font-bold text-center font-display text-foreground mb-8">
+            Demo Walkthrough
           </h2>
 
-          <div className="p-6 bg-gradient-to-r from-destructive/10 to-warning/10 border border-destructive/30 rounded-xl mb-6">
-            <div className="flex items-start gap-4">
-              <AlertTriangle className="w-10 h-10 text-destructive shrink-0" />
-              <div>
-                <h3 className="text-2xl font-bold text-destructive mb-2">The Quantum Threat to Cryptography</h3>
-                <p className="text-muted-foreground text-lg">
-                  Quantum computers running <strong className="text-foreground">Shor's algorithm</strong> will break RSA-2048 and ECDSA. 
-                  Current C2PA signatures, SSL certificates, and blockchain hashes become <span className="text-destructive font-semibold">worthless</span>.
-                </p>
-                <div className="grid grid-cols-3 gap-4 mt-4">
-                  <div className="p-3 bg-background/50 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-destructive">2030-2035</div>
-                    <div className="text-sm text-muted-foreground">Cryptographic Q-Day</div>
-                  </div>
-                  <div className="p-3 bg-background/50 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-warning">RSA-2048</div>
-                    <div className="text-sm text-muted-foreground">Broken by Shor's</div>
-                  </div>
-                  <div className="p-3 bg-background/50 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-destructive">ECDSA</div>
-                    <div className="text-sm text-muted-foreground">Compromised</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <div className="p-6 bg-gradient-to-br from-primary/10 to-cyan-500/10 border border-primary/30 rounded-xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Lock className="w-8 h-8 text-primary" />
-                <h3 className="text-xl font-bold text-foreground">NIST Post-Quantum Standards</h3>
-              </div>
-              <p className="text-muted-foreground mb-4">
-                SHANSHIELD implements <strong className="text-primary">FIPS 203, 204, 205</strong> — finalized August 2024:
+          <div className="grid grid-cols-3 gap-6">
+            <div className="p-6 bg-card border border-border rounded-xl">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xl mb-4">1</div>
+              <h3 className="text-xl font-bold text-foreground mb-2">Upload Media</h3>
+              <p className="text-muted-foreground">
+                Drag & drop any image, video, audio, or document. Or use live camera/microphone capture.
               </p>
-              <div className="space-y-3">
-                <div className="p-3 bg-background/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-primary" />
-                    <span className="font-semibold text-foreground">ML-KEM (Kyber)</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground ml-7">Lattice-based key encapsulation</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-primary" />
-                    <span className="font-semibold text-foreground">ML-DSA (Dilithium)</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground ml-7">Digital signatures for C2PA</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-primary" />
-                    <span className="font-semibold text-foreground">SLH-DSA (SPHINCS+)</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground ml-7">Hash-based backup signatures</p>
-                </div>
-              </div>
             </div>
-
-            <div className="p-6 bg-gradient-to-br from-red-500/10 to-pink-500/10 border border-red-500/30 rounded-xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Activity className="w-8 h-8 text-red-400" />
-                <h3 className="text-xl font-bold text-foreground">Biological Anchors — Unfakeable</h3>
-              </div>
-              <p className="text-muted-foreground mb-4">
-                Quantum computers can break math, but they <strong className="text-red-400">cannot fake biology</strong>:
+            <div className="p-6 bg-card border border-border rounded-xl">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xl mb-4">2</div>
+              <h3 className="text-xl font-bold text-foreground mb-2">Watch Analysis</h3>
+              <p className="text-muted-foreground">
+                See each agent work in real-time. Visual, Audio, Temporal, and Metadata agents analyze simultaneously.
               </p>
-              <div className="space-y-3">
-                <div className="p-3 bg-background/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-red-400" />
-                    <span className="font-semibold text-foreground">rPPG Heartbeat</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground ml-7">Blood flow visible through skin</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Eye className="w-5 h-5 text-red-400" />
-                    <span className="font-semibold text-foreground">Micro-Saccades</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground ml-7">Involuntary eye movements (50-100ms)</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Brain className="w-5 h-5 text-red-400" />
-                    <span className="font-semibold text-foreground">Blink Dynamics</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground ml-7">Natural patterns impossible to synthesize</p>
-                </div>
-              </div>
+            </div>
+            <div className="p-6 bg-card border border-border rounded-xl">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xl mb-4">3</div>
+              <h3 className="text-xl font-bold text-foreground mb-2">Review Results</h3>
+              <p className="text-muted-foreground">
+                Get detailed verdict with per-agent scores, conflict detection, and explainable reasoning.
+              </p>
             </div>
           </div>
 
-          <div className="p-4 bg-primary/10 border border-primary/30 rounded-xl">
-            <div className="flex items-center gap-3">
-              <GraduationCap className="w-8 h-8 text-primary" />
-              <div>
-                <h4 className="font-bold text-foreground">Weekly Learning Requirement</h4>
-                <p className="text-muted-foreground">
-                  Post-quantum cryptography evolves rapidly. SHANSHIELD's engineering team maintains 
-                  <strong className="text-primary"> weekly PQC briefings</strong> and updates hybrid signature schemes as NIST refines standards.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/40 rounded-xl mt-4">
-            <div className="flex items-center gap-3">
-              <Atom className="w-8 h-8 text-primary" />
-              <div>
-                <h4 className="font-bold text-foreground">Personal Quantum Commitment</h4>
-                <p className="text-muted-foreground">
-                  Currently pursuing <strong className="text-primary">Quantum Fundamentals & Advanced Algorithms</strong> course 
-                  at <strong className="text-accent">Amaravati Quantum Valley</strong>, offered by 
-                  <strong className="text-primary"> WiSER, Andhra Pradesh Government</strong> & <strong className="text-accent">QubiTech</strong>.
-                </p>
-              </div>
+          <div className="p-8 bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/30 rounded-2xl text-center">
+            <h3 className="text-2xl font-bold text-foreground mb-4">Try It Now!</h3>
+            <p className="text-lg text-muted-foreground mb-4">
+              Exit presentation mode and upload a file to see real client-side deepfake detection.
+            </p>
+            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+              <span className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-success" />
+                No signup required
+              </span>
+              <span className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-success" />
+                100% private
+              </span>
+              <span className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-success" />
+                Works offline
+              </span>
             </div>
           </div>
         </div>
       )
     },
 
-    // SLIDE 10: CLOSING
+    // SLIDE 10: THANK YOU
     {
       id: "closing",
-      title: "Why SHANSHIELD Wins",
-      subtitle: "The Complete Solution",
+      title: "Thank You",
+      subtitle: "Questions?",
       duration: "30 sec",
       icon: Award,
       content: (
-        <div className="flex flex-col items-center justify-center h-full space-y-8">
-          <h2 className="text-5xl font-bold text-center font-display text-foreground">
-            "Truth Shouldn't Be Optional"
-          </h2>
+        <div className="flex flex-col items-center justify-center h-full text-center space-y-8">
+          <div className="relative">
+            <Award className="w-24 h-24 text-primary" />
+            <div className="absolute inset-0 w-24 h-24 bg-primary/20 rounded-full blur-3xl" />
+          </div>
+          
+          <div className="space-y-4">
+            <h1 className="text-6xl font-bold text-gradient-cyber font-display">Thank You!</h1>
+            <p className="text-2xl text-muted-foreground">Questions & Discussion</p>
+          </div>
 
-          <div className="grid grid-cols-3 gap-6 w-full max-w-3xl">
-            <div className="text-center p-6 bg-primary/10 border border-primary/30 rounded-xl">
-              <div className="text-4xl font-bold text-primary">6.5s</div>
-              <div className="text-muted-foreground">Avg Analysis</div>
+          <div className="grid grid-cols-4 gap-6 mt-8">
+            <div className="text-center p-4 bg-card border border-border rounded-lg">
+              <div className="text-2xl font-bold text-primary">4+1</div>
+              <div className="text-sm text-muted-foreground">AI Agents</div>
             </div>
-            <div className="text-center p-6 bg-primary/10 border border-primary/30 rounded-xl">
-              <div className="text-4xl font-bold text-primary">100%</div>
-              <div className="text-muted-foreground">Explainable</div>
+            <div className="text-center p-4 bg-card border border-border rounded-lg">
+              <div className="text-2xl font-bold text-primary">100%</div>
+              <div className="text-sm text-muted-foreground">Client-Side</div>
             </div>
-            <div className="text-center p-6 bg-primary/10 border border-primary/30 rounded-xl">
-              <div className="text-4xl font-bold text-primary">Offline</div>
-              <div className="text-muted-foreground">Field Ready</div>
+            <div className="text-center p-4 bg-card border border-border rounded-lg">
+              <div className="text-2xl font-bold text-primary">Real</div>
+              <div className="text-sm text-muted-foreground">Algorithms</div>
+            </div>
+            <div className="text-center p-4 bg-card border border-border rounded-lg">
+              <div className="text-2xl font-bold text-primary">Free</div>
+              <div className="text-sm text-muted-foreground">No API Keys</div>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 w-full max-w-3xl">
-            <div className="flex items-center gap-2 p-3 bg-card border border-border rounded-lg">
-              <CheckCircle className="w-5 h-5 text-primary" />
-              <span className="text-foreground">Multi-agent debate</span>
-            </div>
-            <div className="flex items-center gap-2 p-3 bg-card border border-border rounded-lg">
-              <CheckCircle className="w-5 h-5 text-primary" />
-              <span className="text-foreground">rPPG biological proof</span>
-            </div>
-            <div className="flex items-center gap-2 p-3 bg-card border border-border rounded-lg">
-              <CheckCircle className="w-5 h-5 text-primary" />
-              <span className="text-foreground">Court-ready evidence</span>
-            </div>
-            <div className="flex items-center gap-2 p-3 bg-card border border-border rounded-lg">
-              <CheckCircle className="w-5 h-5 text-primary" />
-              <span className="text-foreground">True Field Mode</span>
-            </div>
-            <div className="flex items-center gap-2 p-3 bg-card border border-border rounded-lg">
-              <CheckCircle className="w-5 h-5 text-primary" />
-              <span className="text-foreground">Continuous learning</span>
-            </div>
-            <div className="flex items-center gap-2 p-3 bg-card border border-border rounded-lg">
-              <CheckCircle className="w-5 h-5 text-primary" />
-              <span className="text-foreground">Quantum-ready</span>
-            </div>
-          </div>
-
-          <div className="text-center space-y-4 mt-8">
-            <p className="text-2xl text-foreground">
-              I'm <span className="text-primary font-bold">Shanmuka Sai Varma</span>
+          <div className="mt-8 p-6 bg-primary/10 border border-primary/30 rounded-xl">
+            <p className="text-lg text-foreground">
+              <span className="font-bold text-primary">Shanmuka Sai Varma</span>
             </p>
-            <p className="text-xl text-muted-foreground">
-              In a world of synthetic lies, SHANSHIELD is the truth detector humanity needs.
-            </p>
-            <p className="text-lg text-primary font-semibold mt-4">
-              Thank you. I'm ready for your questions.
-            </p>
+            <p className="text-muted-foreground">SHANSHIELD — Multi-Agent Forensic Intelligence</p>
           </div>
         </div>
       )
     }
   ];
 
-  const currentSlideData = slides[currentSlide];
-  const progress = ((currentSlide + 1) / slides.length) * 100;
-
   if (!isVisible) return null;
 
+  const currentSlideData = slides[currentSlide];
+  const progress = ((currentSlide + 1) / slides.length) * 100;
+  const Icon = currentSlideData.icon;
+
   return (
-    <div className="fixed inset-0 z-[200] bg-background flex flex-col">
-      {/* Top Bar */}
-      <div className="flex items-center justify-between p-3 bg-card/80 backdrop-blur border-b border-border">
+    <div className="fixed inset-0 z-50 bg-background">
+      {/* Top bar */}
+      <div className="absolute top-0 left-0 right-0 h-16 bg-card/80 backdrop-blur-xl border-b border-border flex items-center justify-between px-6 z-10">
         <div className="flex items-center gap-4">
-          <Shield className="w-6 h-6 text-primary" />
-          <span className="font-bold font-display">SHANSHIELD PRESENTATION</span>
-          <span className="text-muted-foreground text-sm">
-            Slide {currentSlide + 1} / {slides.length}
-          </span>
+          <Shield className="w-8 h-8 text-primary" />
+          <div>
+            <h1 className="font-display text-lg font-bold text-foreground">SHANSHIELD</h1>
+            <p className="text-xs text-muted-foreground">Presentation Mode</p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button size="sm" variant="outline" onClick={toggleFullscreen}>
-            <Maximize2 className="w-4 h-4 mr-1" />
-            {isFullscreen ? "Exit" : "Fullscreen"}
+        <div className="flex items-center gap-6">
+          {/* Timer controls */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsTimerRunning(!isTimerRunning)}
+              className="h-8 w-8 p-0"
+            >
+              {isTimerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            </Button>
+            <span className="font-mono text-lg text-foreground min-w-[60px]">
+              {formatTime(elapsedTime)}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setElapsedTime(0)}
+              className="h-8 w-8 p-0"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </Button>
+          </div>
+
+          <div className="text-sm text-muted-foreground">
+            {currentSlide + 1} / {slides.length}
+          </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleFullscreen}
+            className="h-8 w-8 p-0"
+          >
+            <Maximize2 className="w-4 h-4" />
           </Button>
 
-          <Button size="sm" variant="ghost" onClick={handleClose}>
-            <X className="w-5 h-5" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClose}
+            className="h-8 w-8 p-0"
+          >
+            <X className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      {/* Progress */}
-      <div className="px-4 py-2">
-        <Progress value={progress} className="h-1" />
-        <div className="flex gap-1 mt-2">
-          {slides.map((slide, idx) => (
-            <button
-              key={slide.id}
-              onClick={() => setCurrentSlide(idx)}
-              className={cn(
-                "flex-1 h-1.5 rounded-full transition-all",
-                idx === currentSlide ? "bg-primary" : idx < currentSlide ? "bg-primary/50" : "bg-muted"
+      {/* Progress bar */}
+      <div className="absolute top-16 left-0 right-0 h-1 bg-border">
+        <div
+          className="h-full bg-primary transition-all duration-300"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+
+      {/* Slide content */}
+      <div className="absolute top-20 bottom-20 left-0 right-0 overflow-auto p-8">
+        <div className="max-w-7xl mx-auto h-full">
+          {/* Slide header */}
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center">
+              <Icon className="w-8 h-8 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold font-display text-foreground">
+                {currentSlideData.title}
+              </h2>
+              {currentSlideData.subtitle && (
+                <p className="text-lg text-muted-foreground">{currentSlideData.subtitle}</p>
               )}
-            />
-          ))}
-        </div>
-      </div>
+            </div>
+            <div className="ml-auto text-sm text-muted-foreground">
+              Target: {currentSlideData.duration}
+            </div>
+          </div>
 
-      {/* Slide Content */}
-      <div className="flex-1 p-8 overflow-auto">
-        <div className="max-w-6xl mx-auto h-full">
+          {/* Slide content */}
           {currentSlideData.content}
         </div>
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="flex items-center justify-between p-4 bg-card/80 backdrop-blur border-t border-border">
+      {/* Bottom navigation */}
+      <div className="absolute bottom-0 left-0 right-0 h-20 bg-card/80 backdrop-blur-xl border-t border-border flex items-center justify-between px-6">
         <Button
           variant="outline"
           onClick={() => setCurrentSlide((prev) => Math.max(prev - 1, 0))}
@@ -1033,15 +975,23 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
           Previous
         </Button>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <currentSlideData.icon className="w-5 h-5 text-primary" />
-            <span className="font-semibold text-foreground">{currentSlideData.title}</span>
-            <span>• {currentSlideData.duration}</span>
-          </div>
+        <div className="flex items-center gap-2">
+          {slides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentSlide(idx)}
+              className={cn(
+                "w-3 h-3 rounded-full transition-all",
+                idx === currentSlide
+                  ? "bg-primary w-8"
+                  : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+              )}
+            />
+          ))}
         </div>
 
         <Button
+          variant="outline"
           onClick={() => setCurrentSlide((prev) => Math.min(prev + 1, slides.length - 1))}
           disabled={currentSlide === slides.length - 1}
           className="gap-2"
@@ -1052,14 +1002,11 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
       </div>
 
       {/* Keyboard hints */}
-      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-2 text-xs text-muted-foreground">
-        <kbd className="px-2 py-1 bg-muted rounded">←</kbd>
-        <kbd className="px-2 py-1 bg-muted rounded">→</kbd>
-        <span>Navigate</span>
-        <kbd className="px-2 py-1 bg-muted rounded ml-2">F</kbd>
-        <span>Fullscreen</span>
-        <kbd className="px-2 py-1 bg-muted rounded ml-2">ESC</kbd>
-        <span>Exit</span>
+      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex items-center gap-4 text-xs text-muted-foreground">
+        <span>← → Navigate</span>
+        <span>Space Next</span>
+        <span>F Fullscreen</span>
+        <span>Esc Exit</span>
       </div>
     </div>
   );
