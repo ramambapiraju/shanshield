@@ -814,7 +814,102 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
       )
     },
 
-    // SLIDE 10: THANK YOU
+    // SLIDE 10: FUTURE ROADMAP
+    {
+      id: "roadmap",
+      title: "Future Roadmap",
+      subtitle: "Advanced Features in Development",
+      duration: "45 sec",
+      icon: Target,
+      content: (
+        <div className="space-y-6">
+          <h2 className="text-4xl font-bold text-center font-display text-foreground mb-6">
+            Coming Soon — Advanced Detection
+          </h2>
+
+          <div className="grid grid-cols-2 gap-6">
+            <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-2 border-blue-500/40 rounded-2xl">
+              <div className="flex items-center gap-3 mb-4">
+                <Eye className="w-10 h-10 text-blue-400" />
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">Neural Network Models</h3>
+                  <span className="text-blue-400 font-semibold">Planned</span>
+                </div>
+              </div>
+              <ul className="text-muted-foreground space-y-2 text-sm">
+                <li>• <span className="text-blue-400 font-semibold">EfficientNetV2-L</span> — 118M parameter detection</li>
+                <li>• GAN/Diffusion fingerprint classification</li>
+                <li>• Generator ID: Sora, Runway, DALL-E 4</li>
+                <li>• Requires WebGPU/WASM inference</li>
+              </ul>
+            </div>
+
+            <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-2 border-purple-500/40 rounded-2xl">
+              <div className="flex items-center gap-3 mb-4">
+                <Mic className="w-10 h-10 text-purple-400" />
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">Advanced Voice Analysis</h3>
+                  <span className="text-purple-400 font-semibold">Planned</span>
+                </div>
+              </div>
+              <ul className="text-muted-foreground space-y-2 text-sm">
+                <li>• <span className="text-purple-400 font-semibold">RawNet3</span> vocoder detection</li>
+                <li>• Wav2Vec2 semantic analysis</li>
+                <li>• Clone ID: ElevenLabs, XTTS, Bark</li>
+                <li>• Breathing pattern verification</li>
+              </ul>
+            </div>
+
+            <div className="p-6 bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border-2 border-cyan-500/40 rounded-2xl">
+              <div className="flex items-center gap-3 mb-4">
+                <Activity className="w-10 h-10 text-cyan-400" />
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">Biometric Analysis</h3>
+                  <span className="text-cyan-400 font-semibold">Planned</span>
+                </div>
+              </div>
+              <ul className="text-muted-foreground space-y-2 text-sm">
+                <li>• <span className="text-cyan-400 font-semibold">rPPG</span> heartbeat detection (0.8-2Hz)</li>
+                <li>• 478-point facial landmark tracking</li>
+                <li>• Blink pattern validation (PERCLOS)</li>
+                <li>• RAFT optical flow analysis</li>
+              </ul>
+            </div>
+
+            <div className="p-6 bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-2 border-amber-500/40 rounded-2xl">
+              <div className="flex items-center gap-3 mb-4">
+                <Lock className="w-10 h-10 text-amber-400" />
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">Provenance Verification</h3>
+                  <span className="text-amber-400 font-semibold">Planned</span>
+                </div>
+              </div>
+              <ul className="text-muted-foreground space-y-2 text-sm">
+                <li>• <span className="text-amber-400 font-semibold">C2PA</span> content credentials</li>
+                <li>• SHA-3/256 cryptographic chaining</li>
+                <li>• Blockchain audit trail</li>
+                <li>• Digital watermark detection</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="p-6 bg-gradient-to-r from-primary/20 to-primary/5 border-2 border-primary/50 rounded-xl">
+            <h4 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2">
+              <Cpu className="w-6 h-6 text-primary" />
+              Technical Requirements
+            </h4>
+            <p className="text-muted-foreground">
+              These advanced features require <span className="text-primary font-bold">WebGPU</span> for neural network inference, 
+              <span className="text-primary font-bold"> MediaPipe</span> for facial landmarks, and 
+              <span className="text-primary font-bold"> server-side processing</span> for C2PA verification. 
+              Current implementation uses optimized browser-native algorithms that work 100% offline.
+            </p>
+          </div>
+        </div>
+      )
+    },
+
+    // SLIDE 11: THANK YOU
     {
       id: "closing",
       title: "Thank You",
