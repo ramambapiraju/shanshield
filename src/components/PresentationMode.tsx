@@ -154,7 +154,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
           </div>
           <div className="grid grid-cols-3 gap-8 mt-12">
             <div className="text-center">
-              <div className="text-4xl font-bold text-primary">6.5s</div>
+              <div className="text-4xl font-bold text-primary">5s</div>
               <div className="text-sm text-muted-foreground">Avg Analysis Time</div>
             </div>
             <div className="text-center">
