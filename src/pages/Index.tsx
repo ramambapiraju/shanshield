@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, Play, RotateCcw, Presentation, Sparkles, Square, ChevronRight } from "lucide-react";
+import { Shield, Play, RotateCcw, Presentation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ErakshaBadge from "@/components/ErakshaBadge";
 import MediaUploader from "@/components/analysis/MediaUploader";
@@ -14,7 +14,6 @@ import HackathonScript from "@/components/HackathonScript";
 import PresentationMode from "@/components/PresentationMode";
 import TechShowcase from "@/components/TechShowcase";
 import { useAnalysis } from "@/hooks/useAnalysis";
-import { useDemoMode } from "@/hooks/useDemoMode";
 
 const Index = () => {
   const [showPresentation, setShowPresentation] = useState(false);
@@ -31,26 +30,6 @@ const Index = () => {
     handleFieldModeChange,
     resetAnalysis
   } = useAnalysis();
-
-  const {
-    isDemoMode,
-    demoFiles,
-    isDemoAnalyzing,
-    demoComplete,
-    demoResult,
-    currentDemoLabel,
-    demoScenarioIndex,
-    totalScenarios,
-    startDemoMode,
-    nextDemoScenario,
-    stopDemoMode
-  } = useDemoMode();
-
-  // Use demo state when in demo mode
-  const activeFiles = isDemoMode ? demoFiles : files;
-  const activeAnalyzing = isDemoMode ? isDemoAnalyzing : isAnalyzing;
-  const activeComplete = isDemoMode ? demoComplete : analysisComplete;
-  const activeResult = isDemoMode ? demoResult : result;
 
   return (
     <div className="min-h-screen bg-background cyber-grid relative overflow-hidden">
@@ -102,59 +81,12 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* LEFT - Input & Controls */}
           <div className="lg:col-span-4 space-y-6">
-            <MediaUploader onFilesSelected={handleFilesSelected} isAnalyzing={activeAnalyzing} />
+            <MediaUploader onFilesSelected={handleFilesSelected} isAnalyzing={isAnalyzing} />
             
             <FieldModeToggle onModeChange={handleFieldModeChange} />
-
-            {/* Demo Mode Button */}
-            {!isDemoMode && !isAnalyzing && !analysisComplete && (
-              <Button 
-                onClick={startDemoMode}
-                variant="outline"
-                size="lg"
-                className="w-full border-accent/50 hover:border-accent hover:bg-accent/10 text-accent"
-              >
-                <Sparkles className="w-5 h-5 mr-2" />
-                AUTO DEMO MODE
-              </Button>
-            )}
-
-            {/* Stop Demo Button */}
-            {isDemoMode && (
-              <div className="space-y-3">
-                <div className="text-center p-3 bg-accent/10 border border-accent/30 rounded-lg">
-                  <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                    Demo Mode Active ({demoScenarioIndex + 1}/{totalScenarios})
-                  </div>
-                  <div className="font-display text-lg font-bold text-accent">{currentDemoLabel}</div>
-                </div>
-                
-                {/* Next Demo Button - only show when analysis is complete */}
-                {demoComplete && (
-                  <Button 
-                    onClick={nextDemoScenario}
-                    size="lg"
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-display tracking-wider"
-                  >
-                    <ChevronRight className="w-5 h-5 mr-2" />
-                    {demoScenarioIndex === 0 ? "NEXT: AUTHENTIC IMAGE" : "NEXT: DEEPFAKE IMAGE"}
-                  </Button>
-                )}
-                
-                <Button 
-                  onClick={stopDemoMode}
-                  variant="outline"
-                  size="lg"
-                  className="w-full border-destructive/50 text-destructive hover:bg-destructive/10"
-                >
-                  <Square className="w-5 h-5 mr-2" />
-                  STOP DEMO
-                </Button>
-              </div>
-            )}
             
             {/* Analyze Button - Always show when files exist */}
-            {files.length > 0 && !analysisComplete && !isDemoMode && (
+            {files.length > 0 && !analysisComplete && (
               <Button 
                 onClick={startAnalysis}
                 size="lg"
@@ -166,7 +98,7 @@ const Index = () => {
               </Button>
             )}
             
-            {analysisComplete && !isDemoMode && (
+            {analysisComplete && (
               <Button 
                 onClick={resetAnalysis}
                 variant="outline"
@@ -183,60 +115,57 @@ const Index = () => {
 
           {/* CENTER/RIGHT - Analysis & Results */}
           <div className="lg:col-span-8 space-y-6">
-            {/* Pipeline - for demo mode, show a simulated pipeline */}
-            {(activeAnalyzing || activeComplete) && activeFiles.length > 0 && (
+            {/* Pipeline */}
+            {(isAnalyzing || analysisComplete) && files.length > 0 && (
               <AnalysisPipeline
-                isActive={activeAnalyzing}
-                mediaType={activeFiles[0].type}
-                onComplete={isDemoMode ? () => {} : handleAnalysisComplete}
-                onProgress={isDemoMode ? () => {} : handleProgress}
+                isActive={isAnalyzing}
+                mediaType={files[0].type}
+                onComplete={handleAnalysisComplete}
+                onProgress={handleProgress}
               />
             )}
 
             {/* Results */}
-            {activeComplete && activeResult && (
+            {analysisComplete && result && (
               <>
                 {/* Forensic Report at Top */}
                 <ForensicReport
-                  mediaHash={activeResult.mediaHash}
-                  verdict={activeResult.verdict}
-                  confidence={activeResult.confidence}
-                  detectionMethods={activeResult.detectionMethods}
+                  mediaHash={result.mediaHash}
+                  verdict={result.verdict}
+                  confidence={result.confidence}
+                  detectionMethods={result.detectionMethods}
                   timestamp={new Date()}
                   deviceId="SHAN-001-FIELD"
-                  fileName={activeFiles[0].file.name}
-                  fileSize={activeFiles[0].file.size}
-                  processingTime={activeResult.processingTime}
+                  fileName={files[0].file.name}
+                  fileSize={files[0].file.size}
+                  processingTime={result.processingTime}
                 />
                 
                 <AnalysisResults
-                  verdict={activeResult.verdict}
-                  confidence={activeResult.confidence}
-                  indicators={activeResult.indicators}
-                  notDetected={activeResult.notDetected}
-                  processingTime={activeResult.processingTime}
+                  verdict={result.verdict}
+                  confidence={result.confidence}
+                  indicators={result.indicators}
+                  notDetected={result.notDetected}
+                  processingTime={result.processingTime}
                 />
                 
                 <ExplainableAI
-                  mediaType={activeFiles[0].type}
-                  heatmapRegions={activeResult.heatmapRegions}
-                  timelineMarkers={activeResult.timelineMarkers}
-                  audioSegments={activeResult.audioSegments}
-                  reasoning={activeResult.reasoning}
+                  mediaType={files[0].type}
+                  heatmapRegions={result.heatmapRegions}
+                  timelineMarkers={result.timelineMarkers}
+                  audioSegments={result.audioSegments}
+                  reasoning={result.reasoning}
                 />
               </>
             )}
 
             {/* Empty State */}
-            {!activeAnalyzing && !activeComplete && (
+            {!isAnalyzing && !analysisComplete && (
               <div className="flex items-center justify-center h-96 bg-card/30 border border-dashed border-border/50 rounded-xl">
                 <div className="text-center">
                   <Shield className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
                   <p className="text-muted-foreground font-display tracking-wider">
                     Upload media to begin analysis
-                  </p>
-                  <p className="text-muted-foreground/60 text-sm mt-2">
-                    or click AUTO DEMO MODE for a demonstration
                   </p>
                 </div>
               </div>
