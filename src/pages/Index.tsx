@@ -12,6 +12,7 @@ import SecurityIndicators from "@/components/analysis/SecurityIndicators";
 import JudgeModePanel from "@/components/JudgeModePanel";
 import HackathonScript from "@/components/HackathonScript";
 import PresentationMode from "@/components/PresentationMode";
+import TechShowcase from "@/components/TechShowcase";
 import { useAnalysis } from "@/hooks/useAnalysis";
 
 const Index = () => {
@@ -173,8 +174,11 @@ const Index = () => {
         </div>
       </main>
 
+      {/* Tech Showcase Section */}
+      <TechShowcase />
+
       {/* About Section */}
-      <section className="relative border-t border-border/50 bg-card/30 backdrop-blur-xl mt-12">
+      <section className="relative border-t border-border/50 bg-card/30 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-8">
           <div className="text-center space-y-4">
             <h2 className="font-display text-xl font-bold text-gradient-cyber tracking-wider">ABOUT THE DEVELOPER</h2>
