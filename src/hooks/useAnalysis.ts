@@ -1,6 +1,9 @@
 import { useState, useCallback } from "react";
 import type { VerdictType } from "@/components/analysis/AnalysisResults";
 import { analyzeImage, type AnalysisFindings } from "@/lib/imageAnalyzer";
+import { analyzeVideo, type VideoAnalysisFindings } from "@/lib/videoAnalyzer";
+import { analyzeAudio, type AudioAnalysisFindings } from "@/lib/audioAnalyzer";
+import { analyzeDocument, type DocumentAnalysisFindings } from "@/lib/documentAnalyzer";
 
 interface UploadedFile {
   file: File;
@@ -53,18 +56,37 @@ interface AnalysisResult {
   detectionMethods: string[];
 }
 
-// Generate analysis results from REAL pixel analysis
+type UnifiedAnalysis = {
+  score: number;
+  signals: string[];
+  details: Record<string, { score: number; description: string }>;
+  mediaType: 'image' | 'video' | 'audio' | 'document';
+};
+
+// Convert any analyzer result to unified format
+const toUnifiedAnalysis = (
+  result: AnalysisFindings | VideoAnalysisFindings | AudioAnalysisFindings | DocumentAnalysisFindings,
+  mediaType: 'image' | 'video' | 'audio' | 'document'
+): UnifiedAnalysis => {
+  return {
+    score: result.score,
+    signals: result.signals,
+    details: result.details as Record<string, { score: number; description: string }>,
+    mediaType
+  };
+};
+
+// Generate analysis results from REAL analysis
 const generateAnalysisResult = (
   file: UploadedFile, 
   isFieldMode: boolean,
-  realAnalysis: AnalysisFindings
+  analysis: UnifiedAnalysis
 ): AnalysisResult => {
-  const { score, signals, details } = realAnalysis;
+  const { score, signals, details, mediaType } = analysis;
   
   let verdict: VerdictType;
   let confidence: number;
   
-  // Determine verdict based on REAL analysis score
   if (score >= 55) {
     verdict = 'deepfake';
     confidence = Math.min(98, score + 25);
@@ -79,236 +101,80 @@ const generateAnalysisResult = (
     confidence = Math.min(98, 100 - score);
   }
 
-  // Generate indicators based on REAL analysis details
   const indicators: AnalysisIndicator[] = [];
   const notDetected: string[] = [];
+  const detailEntries = Object.entries(details);
 
-  // Noise Analysis Indicator
-  if (details.noiseAnalysis.score > 50) {
-    indicators.push({
-      name: "Noise Pattern Anomaly",
-      detected: true,
-      confidence: Math.round(details.noiseAnalysis.score),
-      description: details.noiseAnalysis.description
-    });
-  } else {
-    notDetected.push("Noise pattern anomalies");
-  }
-
-  // Edge Analysis Indicator  
-  if (details.edgeAnalysis.score > 50) {
-    indicators.push({
-      name: "Edge Enhancement Detected",
-      detected: true,
-      confidence: Math.round(details.edgeAnalysis.score),
-      description: details.edgeAnalysis.description
-    });
-  } else {
-    notDetected.push("Artificial edge enhancement");
-  }
-
-  // Color Analysis Indicator
-  if (details.colorAnalysis.score > 50) {
-    indicators.push({
-      name: "Color Distribution Anomaly",
-      detected: true,
-      confidence: Math.round(details.colorAnalysis.score),
-      description: details.colorAnalysis.description
-    });
-  } else {
-    notDetected.push("Color distribution anomalies");
-  }
-
-  // Compression Analysis Indicator
-  if (details.compressionAnalysis.score > 50) {
-    indicators.push({
-      name: "Compression Artifacts",
-      detected: true,
-      confidence: Math.round(details.compressionAnalysis.score),
-      description: details.compressionAnalysis.description
-    });
-  } else {
-    notDetected.push("Double compression artifacts");
-  }
-
-  // Symmetry Analysis Indicator
-  if (details.symmetryAnalysis.score > 50) {
-    indicators.push({
-      name: "Symmetry Anomaly",
-      detected: true,
-      confidence: Math.round(details.symmetryAnalysis.score),
-      description: details.symmetryAnalysis.description
-    });
-  } else {
-    notDetected.push("Symmetry manipulation");
-  }
-
-  // Texture Analysis Indicator
-  if (details.textureAnalysis.score > 50) {
-    indicators.push({
-      name: "Texture Irregularity",
-      detected: true,
-      confidence: Math.round(details.textureAnalysis.score),
-      description: details.textureAnalysis.description
-    });
-  } else {
-    notDetected.push("Texture irregularities");
-  }
-
-  // Generate heatmap regions based on REAL scores
-  const heatmapRegions: HeatmapRegion[] = [
-    { 
-      x: 25, y: 15, width: 35, height: 40, 
-      intensity: Math.round(details.noiseAnalysis.score), 
-      label: `Noise: ${details.noiseAnalysis.score > 50 ? 'Anomaly' : 'Normal'}` 
-    },
-    { 
-      x: 32, y: 42, width: 20, height: 15, 
-      intensity: Math.round(details.textureAnalysis.score), 
-      label: `Texture: ${details.textureAnalysis.score > 50 ? 'Irregular' : 'Natural'}` 
-    },
-    { 
-      x: 28, y: 22, width: 12, height: 12, 
-      intensity: Math.round(details.symmetryAnalysis.score), 
-      label: `Symmetry L: ${Math.round(details.symmetryAnalysis.score)}%` 
-    },
-    { 
-      x: 45, y: 22, width: 12, height: 12, 
-      intensity: Math.round(details.edgeAnalysis.score), 
-      label: `Edges: ${details.edgeAnalysis.score > 50 ? 'Enhanced' : 'Natural'}` 
-    },
-    { 
-      x: 35, y: 30, width: 15, height: 10, 
-      intensity: Math.round(details.colorAnalysis.score), 
-      label: `Color: ${details.colorAnalysis.score > 50 ? 'Anomaly' : 'Normal'}` 
+  for (const [key, value] of detailEntries) {
+    const name = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim();
+    if (value.score > 50) {
+      indicators.push({
+        name,
+        detected: true,
+        confidence: Math.round(value.score),
+        description: value.description
+      });
+    } else {
+      notDetected.push(name);
     }
-  ];
+  }
 
-  // Generate timeline markers based on REAL analysis steps
-  const timelineMarkers: TimelineMarker[] = [
-    { 
-      timestamp: 1, 
-      type: details.noiseAnalysis.score > 50 ? 'anomaly' : 'info', 
-      label: "Noise Analysis", 
-      description: details.noiseAnalysis.description 
-    },
-    { 
-      timestamp: 2, 
-      type: details.edgeAnalysis.score > 50 ? 'anomaly' : 'info', 
-      label: "Edge Detection", 
-      description: details.edgeAnalysis.description 
-    },
-    { 
-      timestamp: 3, 
-      type: details.colorAnalysis.score > 50 ? 'warning' : 'info', 
-      label: "Color Analysis", 
-      description: details.colorAnalysis.description 
-    },
-    { 
-      timestamp: 4, 
-      type: details.compressionAnalysis.score > 50 ? 'warning' : 'info', 
-      label: "Compression Check", 
-      description: details.compressionAnalysis.description 
-    },
-    { 
-      timestamp: 5, 
-      type: details.symmetryAnalysis.score > 50 ? 'anomaly' : 'info', 
-      label: "Symmetry Analysis", 
-      description: details.symmetryAnalysis.description 
-    },
-    { 
-      timestamp: 6, 
-      type: details.textureAnalysis.score > 50 ? 'anomaly' : 'info', 
-      label: "Texture Analysis", 
-      description: details.textureAnalysis.description 
-    }
-  ];
+  const heatmapRegions: HeatmapRegion[] = detailEntries.slice(0, 5).map(([key, value], i) => ({
+    x: 20 + (i % 3) * 25,
+    y: 15 + Math.floor(i / 3) * 30,
+    width: 20,
+    height: 25,
+    intensity: Math.round(value.score),
+    label: `${key.substring(0, 8)}: ${value.score > 50 ? 'Anomaly' : 'Normal'}`
+  }));
 
-  // Generate frequency segments based on REAL scores
-  const audioSegments: AudioSegment[] = [
-    { 
-      start: 0, end: 2, 
-      type: details.noiseAnalysis.score > 60 ? 'suspicious' : details.noiseAnalysis.score > 40 ? 'irregular' : 'normal', 
-      label: `Noise: ${Math.round(details.noiseAnalysis.score)}%` 
-    },
-    { 
-      start: 2, end: 4, 
-      type: details.edgeAnalysis.score > 60 ? 'suspicious' : details.edgeAnalysis.score > 40 ? 'irregular' : 'normal', 
-      label: `Edges: ${Math.round(details.edgeAnalysis.score)}%` 
-    },
-    { 
-      start: 4, end: 6, 
-      type: details.colorAnalysis.score > 60 ? 'suspicious' : details.colorAnalysis.score > 40 ? 'irregular' : 'normal', 
-      label: `Color: ${Math.round(details.colorAnalysis.score)}%` 
-    },
-    { 
-      start: 6, end: 8, 
-      type: details.compressionAnalysis.score > 60 ? 'suspicious' : details.compressionAnalysis.score > 40 ? 'irregular' : 'normal', 
-      label: `Compression: ${Math.round(details.compressionAnalysis.score)}%` 
-    },
-    { 
-      start: 8, end: 10, 
-      type: details.textureAnalysis.score > 60 ? 'suspicious' : details.textureAnalysis.score > 40 ? 'irregular' : 'normal', 
-      label: `Texture: ${Math.round(details.textureAnalysis.score)}%` 
-    }
-  ];
+  const timelineMarkers: TimelineMarker[] = detailEntries.map(([key, value], i) => ({
+    timestamp: i + 1,
+    type: value.score > 60 ? 'anomaly' : value.score > 40 ? 'warning' : 'info',
+    label: key.replace(/([A-Z])/g, ' $1').trim(),
+    description: value.description
+  }));
 
-  // Generate REAL reasoning chain with actual findings
+  const audioSegments: AudioSegment[] = detailEntries.map(([key, value], i) => ({
+    start: i * 2,
+    end: (i + 1) * 2,
+    type: value.score > 60 ? 'suspicious' : value.score > 40 ? 'irregular' : 'normal',
+    label: `${key.substring(0, 10)}: ${Math.round(value.score)}%`
+  }));
+
   const reasoning: string[] = [
-    `Pixel-level analysis completed on ${file.file.name} (${(file.file.size / 1024).toFixed(1)} KB)`,
-    `Noise Pattern Analysis: ${details.noiseAnalysis.description}`,
-    `Edge Detection Analysis: ${details.edgeAnalysis.description}`,
-    `Color Distribution Analysis: ${details.colorAnalysis.description}`,
-    `Compression Forensics: ${details.compressionAnalysis.description}`,
-    `Symmetry Analysis: ${details.symmetryAnalysis.description}`,
-    `Texture Consistency: ${details.textureAnalysis.description}`,
+    `Real ${mediaType} analysis completed on ${file.file.name} (${(file.file.size / 1024).toFixed(1)} KB)`,
+    ...detailEntries.map(([key, value]) => `${key}: ${value.description}`),
     `Overall manipulation score: ${score}/100`,
-    signals.length > 0 
-      ? `Detected anomalies: ${signals.join('; ')}`
-      : `No significant anomalies detected in pixel analysis`,
-    verdict === 'deepfake' 
-      ? `FINAL VERDICT: HIGH CONFIDENCE manipulation detected (${confidence}%)`
-      : verdict === 'suspicious'
-      ? `FINAL VERDICT: SUSPICIOUS - Manual review recommended (${confidence}%)`
-      : verdict === 'likely_authentic'
-      ? `FINAL VERDICT: LIKELY AUTHENTIC with minor anomalies (${confidence}%)`
-      : `FINAL VERDICT: AUTHENTIC - No manipulation detected (${confidence}%)`
+    signals.length > 0 ? `Detected anomalies: ${signals.join('; ')}` : 'No significant anomalies detected',
+    `FINAL VERDICT: ${verdict.toUpperCase()} (${confidence}% confidence)`
   ];
 
-  // Generate deterministic hash from file properties
   const hashInput = `${file.file.name}-${file.file.size}-${file.file.lastModified}-${score}`;
   let mediaHash = '';
   for (let i = 0; i < 64; i++) {
-    const charCode = hashInput.charCodeAt(i % hashInput.length);
-    mediaHash += ((charCode * (i + 1)) % 16).toString(16);
+    mediaHash += ((hashInput.charCodeAt(i % hashInput.length) * (i + 1)) % 16).toString(16);
   }
 
-  const detectionMethods = [
-    "Pixel Noise Analysis",
-    "Sobel Edge Detection",
-    "Color Histogram Analysis",
-    "JPEG Block Artifact Detection",
-    "Bilateral Symmetry Check",
-    "LBP Texture Analysis",
-    ...(isFieldMode ? ["WebGPU Edge Inference", "INT8 Quantized"] : ["Full Resolution Analysis", "Multi-pass Verification"])
-  ];
-
-  const processingTime = isFieldMode 
-    ? 1.5 + (file.file.size / 1024 / 1000)
-    : 3 + (file.file.size / 1024 / 500);
+  const methodsByType: Record<string, string[]> = {
+    image: ["Pixel Noise Analysis", "Sobel Edge Detection", "Color Histogram", "JPEG Artifact Detection", "Symmetry Check", "LBP Texture"],
+    video: ["Frame Consistency", "Temporal Coherence", "Face Region Tracking", "Compression Analysis", "Motion Flow", "A/V Sync Check"],
+    audio: ["Spectral Analysis", "Pitch Tracking", "Noise Floor Detection", "Compression Artifacts", "Voice Naturalness", "Frequency Distribution"],
+    document: ["Metadata Forensics", "Structure Analysis", "Content Consistency", "Creation Patterns", "Embedded Media Scan", "Modification History"]
+  };
 
   return {
     verdict,
     confidence: Math.round(confidence),
     indicators,
     notDetected,
-    processingTime: Math.round(processingTime * 100) / 100,
+    processingTime: isFieldMode ? 1.5 + (file.file.size / 1024 / 1000) : 3 + (file.file.size / 1024 / 500),
     heatmapRegions,
     timelineMarkers,
     audioSegments,
     reasoning,
     mediaHash,
-    detectionMethods
+    detectionMethods: methodsByType[mediaType] || methodsByType.image
   };
 };
 
@@ -319,7 +185,7 @@ export const useAnalysis = () => {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [isFieldMode, setIsFieldMode] = useState(false);
   const [currentProgress, setCurrentProgress] = useState({ step: '', progress: 0 });
-  const [realAnalysisResult, setRealAnalysisResult] = useState<AnalysisFindings | null>(null);
+  const [realAnalysisResult, setRealAnalysisResult] = useState<UnifiedAnalysis | null>(null);
 
   const handleFilesSelected = useCallback((selectedFiles: UploadedFile[]) => {
     setFiles(selectedFiles);
@@ -335,40 +201,33 @@ export const useAnalysis = () => {
     setAnalysisComplete(false);
     setResult(null);
 
-    // Run REAL pixel analysis for images
-    if (files[0].type === 'image') {
-      try {
-        const analysis = await analyzeImage(files[0].file);
-        setRealAnalysisResult(analysis);
-      } catch (error) {
-        console.error('Image analysis failed:', error);
-        // Fallback to basic analysis
-        setRealAnalysisResult({
-          score: 30,
-          signals: ['Analysis fallback - could not read image pixels'],
-          details: {
-            noiseAnalysis: { score: 30, description: 'Unable to analyze' },
-            edgeAnalysis: { score: 30, description: 'Unable to analyze' },
-            colorAnalysis: { score: 30, description: 'Unable to analyze' },
-            compressionAnalysis: { score: 30, description: 'Unable to analyze' },
-            symmetryAnalysis: { score: 30, description: 'Unable to analyze' },
-            textureAnalysis: { score: 30, description: 'Unable to analyze' }
-          }
-        });
+    const file = files[0];
+    
+    try {
+      let analysis: UnifiedAnalysis;
+      
+      if (file.type === 'image') {
+        const result = await analyzeImage(file.file);
+        analysis = toUnifiedAnalysis(result, 'image');
+      } else if (file.type === 'video') {
+        const result = await analyzeVideo(file.file);
+        analysis = toUnifiedAnalysis(result, 'video');
+      } else if (file.type === 'audio') {
+        const result = await analyzeAudio(file.file);
+        analysis = toUnifiedAnalysis(result, 'audio');
+      } else {
+        const result = await analyzeDocument(file.file);
+        analysis = toUnifiedAnalysis(result, 'document');
       }
-    } else {
-      // For non-images, use basic analysis
+      
+      setRealAnalysisResult(analysis);
+    } catch (error) {
+      console.error('Analysis failed:', error);
       setRealAnalysisResult({
-        score: 25,
-        signals: [],
-        details: {
-          noiseAnalysis: { score: 25, description: 'Video/audio analysis in progress' },
-          edgeAnalysis: { score: 25, description: 'Frame analysis in progress' },
-          colorAnalysis: { score: 25, description: 'Color space analysis in progress' },
-          compressionAnalysis: { score: 25, description: 'Codec analysis in progress' },
-          symmetryAnalysis: { score: 25, description: 'Temporal analysis in progress' },
-          textureAnalysis: { score: 25, description: 'Texture analysis in progress' }
-        }
+        score: 30,
+        signals: ['Analysis encountered an error'],
+        details: { error: { score: 30, description: 'Could not complete analysis' } },
+        mediaType: file.type
       });
     }
   }, [files]);
