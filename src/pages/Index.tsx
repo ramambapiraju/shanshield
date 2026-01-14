@@ -62,17 +62,7 @@ const Index = () => {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Button 
-              onClick={() => setShowPresentation(true)}
-              variant="outline"
-              className="gap-2 border-primary/50 hover:border-primary hover:bg-primary/10"
-            >
-              <Presentation className="w-4 h-4" />
-              <span className="hidden sm:inline">Present</span>
-            </Button>
-            <ErakshaBadge />
-          </div>
+          <ErakshaBadge />
         </div>
       </header>
 
@@ -205,7 +195,18 @@ const Index = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span className="font-display tracking-wider">SHANSHIELD v4.2.0</span>
-            <span className="uppercase tracking-widest">IIT Delhi ERAKSHA Hackathon 2026</span>
+            <div className="flex items-center gap-3">
+              <span className="uppercase tracking-widest">IIT Delhi ERAKSHA Hackathon 2026</span>
+              <Button 
+                onClick={() => setShowPresentation(true)}
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs gap-1 text-muted-foreground hover:text-primary"
+              >
+                <Presentation className="w-3 h-3" />
+                Present
+              </Button>
+            </div>
             <span className="font-display tracking-wider">CLASSIFIED // FOR OFFICIAL USE</span>
           </div>
         </div>
