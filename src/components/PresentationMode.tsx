@@ -23,11 +23,13 @@ import {
   Pause,
   RotateCcw,
   Maximize2,
-  FileText
+  FileText,
+  Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { jsPDF } from "jspdf";
 
 interface SlideData {
   id: string;
@@ -72,6 +74,323 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
       document.exitFullscreen();
       setIsFullscreen(false);
     }
+  }, []);
+
+  const downloadPresentationPDF = useCallback(() => {
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 15;
+    const contentWidth = pageWidth - 2 * margin;
+
+    const slideContents = [
+      {
+        title: "SHANSHIELD",
+        subtitle: "Multi-Agent Forensic Intelligence for Deepfake Detection",
+        content: [
+          "Key Highlights:",
+          "• 5s Average Analysis Time",
+          "• 4+1 AI Agents + Arbiter",
+          "• 100% Client-Side / Offline",
+          "",
+          "Presented by Shanmuka Sai Varma",
+          "",
+          "IIT Delhi e-Raksha Hackathon"
+        ]
+      },
+      {
+        title: "The Problem",
+        subtitle: "Why Current Detection Systems Fail",
+        content: [
+          "The Deepfake Crisis:",
+          "• $25B Annual fraud losses (2024)",
+          "• 500K+ Deepfakes shared daily",
+          "• 73% Humans fail to detect",
+          "",
+          "Three Critical Failures:",
+          "1. Single-Modal Blindness — Tools analyze video OR audio, never both",
+          "2. Black Box Crisis — '85% fake' is useless in court, no explanation",
+          "3. Cloud Dependency — No offline detection for field agents"
+        ]
+      },
+      {
+        title: "Multi-Agent Architecture",
+        subtitle: "Four Specialized AI Agents That Collaborate",
+        content: [
+          "Agentic AI Defense System:",
+          "",
+          "Visual Agent (35% weight):",
+          "• Noise Pattern Analysis — GAN uniformity detection",
+          "• Sobel Edge Detection for artificial sharpening",
+          "• JPEG double compression artifacts",
+          "",
+          "Audio Agent (25% weight):",
+          "• FFT Spectral Analysis — TTS detection",
+          "• Autocorrelation pitch consistency",
+          "",
+          "Temporal Agent (25% weight):",
+          "• Frame Consistency — Flicker detection",
+          "• Motion vector coherence analysis",
+          "",
+          "Metadata Agent (15% weight):",
+          "• SHA-256 Hashing — Integrity verification",
+          "• EXIF/XMP AI generation markers",
+          "",
+          "Arbiter Agent — The Judge:",
+          "• Dempster-Shafer belief fusion",
+          "• Conflict detection & weighted consensus"
+        ]
+      },
+      {
+        title: "Visual Agent Deep-Dive",
+        subtitle: "Seeing What Humans Can't",
+        content: [
+          "Visual Forensics Technology:",
+          "",
+          "Noise Pattern Analysis:",
+          "• GAN-generated images have unnaturally uniform noise",
+          "• Sample adjacent pixel differences",
+          "• Calculate coefficient of variation",
+          "• CV < 30% indicates synthetic origin",
+          "",
+          "Frequency Domain Analysis:",
+          "• AI models leave high-frequency fingerprints",
+          "• Sobel edge detection",
+          "• Color channel correlation",
+          "• JPEG 8x8 block boundary detection",
+          "",
+          "Bilateral Symmetry Check:",
+          "• GAN faces are often too symmetric",
+          "• Real faces have natural asymmetries",
+          "",
+          "LBP Texture Analysis:",
+          "• Local Binary Patterns detect texture inconsistencies"
+        ]
+      },
+      {
+        title: "Audio & Temporal Analysis",
+        subtitle: "Hearing and Timing What's Wrong",
+        content: [
+          "Audio Agent — FFT Spectral Analysis:",
+          "• Compute frequency magnitudes via DFT",
+          "• Analyze spectral centroid & flatness",
+          "• TTS has unnatural spectral regularity",
+          "• Detects: unnatural pitch, clean noise floor, robotic patterns",
+          "",
+          "Temporal Agent — Motion Analysis:",
+          "• Extract frames at regular intervals",
+          "• Calculate inter-frame differences",
+          "• Detect motion discontinuities",
+          "• Detects: temporal splices, flickering, face/background inconsistency"
+        ]
+      },
+      {
+        title: "Explainable AI",
+        subtitle: "Court-Ready Evidence Generation",
+        content: [
+          "From Black Box to Glass Box:",
+          "",
+          "Why Explainability Matters:",
+          "• Legal Requirement — EU AI Act mandates explainability",
+          "• Court Admissibility — Evidence must show WHERE and WHY",
+          "• Trust Building — Operators need to understand AI decisions",
+          "",
+          "How SHANSHIELD Explains:",
+          "1. Per-Agent Reasoning — Each agent provides analysis and score",
+          "2. Conflict Detection — Flagged when agents disagree",
+          "3. Natural Language Reports — Human-readable summaries",
+          "4. Confidence Intervals — Statistical uncertainty quantification",
+          "",
+          "Chain of Custody — Cryptographic Evidence Trail:",
+          "• SHA-256 file hashing",
+          "• Timestamps for analysis time",
+          "• EXIF/Metadata extraction",
+          "• Immutable audit logs"
+        ]
+      },
+      {
+        title: "Field Mode",
+        subtitle: "True Offline Client-Side Detection",
+        content: [
+          "Detection Anywhere — No Cloud Required:",
+          "",
+          "• 100% Client-Side processing",
+          "• <6s Analysis time",
+          "• 0 External API calls",
+          "",
+          "Browser-Native Technologies:",
+          "• Canvas API — Frame extraction & processing",
+          "• Web Audio API — FFT & spectral analysis",
+          "• Web Crypto API — SHA-256 hashing",
+          "• FileReader API — Binary parsing",
+          "",
+          "Deployment Benefits:",
+          "• Works offline / air-gapped environments",
+          "• No data leaves user's device",
+          "• No API keys or subscriptions needed",
+          "• Scales to unlimited users at zero cost",
+          "• GDPR/privacy compliant by design"
+        ]
+      },
+      {
+        title: "The Arbiter",
+        subtitle: "Dempster-Shafer Belief Fusion",
+        content: [
+          "The Judge: Combining Agent Opinions",
+          "",
+          "Dempster-Shafer Theory:",
+          "• Unlike simple averaging, handles uncertainty",
+          "• Allows agents to express 'I don't know'",
+          "• Measures conflict between agents",
+          "• K > 0.7 triggers conflict flag",
+          "",
+          "Agent Weights:",
+          "• Visual Agent: 35%",
+          "• Audio Agent: 25%",
+          "• Temporal Agent: 25%",
+          "• Metadata Agent: 15%",
+          "",
+          "Conflict Detection:",
+          "When Visual says FAKE but Audio says REAL,",
+          "we don't average — we FLAG A CONFLICT.",
+          "This catches sophisticated attacks that fool single-modal systems."
+        ]
+      },
+      {
+        title: "Live Demo",
+        subtitle: "See SHANSHIELD in Action",
+        content: [
+          "Demo Walkthrough:",
+          "",
+          "Step 1: Upload Media",
+          "• Drag & drop any image, video, audio, or document",
+          "• Or use live camera/microphone capture",
+          "",
+          "Step 2: Watch Analysis",
+          "• See each agent work in real-time",
+          "• Visual, Audio, Temporal, Metadata agents analyze simultaneously",
+          "",
+          "Step 3: Review Results",
+          "• Get detailed verdict with per-agent scores",
+          "• Conflict detection and explainable reasoning",
+          "",
+          "Try It Now!",
+          "• No signup required",
+          "• 100% private",
+          "• Works offline"
+        ]
+      },
+      {
+        title: "Future Roadmap",
+        subtitle: "Advanced Features in Development",
+        content: [
+          "Coming Soon — Advanced Detection:",
+          "",
+          "Neural Network Models (Planned):",
+          "• EfficientNetV2-L — 118M parameter detection",
+          "• GAN/Diffusion fingerprint classification",
+          "• Generator ID: Sora, Runway, DALL-E 4",
+          "",
+          "Advanced Voice Analysis (Planned):",
+          "• RawNet3 vocoder detection",
+          "• Wav2Vec2 semantic analysis",
+          "• Clone ID: ElevenLabs, XTTS, Bark",
+          "",
+          "Biometric Analysis (Planned):",
+          "• rPPG heartbeat detection (0.8-2Hz)",
+          "• 478-point facial landmark tracking",
+          "• Blink pattern validation (PERCLOS)",
+          "",
+          "Provenance Verification (Planned):",
+          "• C2PA content credentials",
+          "• SHA-3/256 cryptographic chaining",
+          "• Blockchain audit trail"
+        ]
+      },
+      {
+        title: "Thank You!",
+        subtitle: "SHANSHIELD",
+        content: [
+          "Key Achievements:",
+          "",
+          "• 4+1 AI Agents",
+          "• 100% Client-Side",
+          "• Real Algorithms",
+          "• Free — No API Keys",
+          "",
+          "Developer:",
+          "Shanmuka Sai Varma",
+          "",
+          "SHANSHIELD — Multi-Agent Forensic Intelligence",
+          "for Deepfake Detection",
+          "",
+          "Live Demo: shanshield.lovable.app"
+        ]
+      }
+    ];
+
+    slideContents.forEach((slide, index) => {
+      if (index > 0) pdf.addPage();
+
+      // Slide background
+      pdf.setFillColor(15, 15, 30);
+      pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+
+      // Header bar
+      pdf.setFillColor(0, 200, 150);
+      pdf.rect(0, 0, pageWidth, 3, 'F');
+
+      // Slide number
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 120);
+      pdf.text(`Slide ${index + 1} of ${slideContents.length}`, pageWidth - margin - 30, pageHeight - 8);
+
+      // Footer
+      pdf.setFontSize(8);
+      pdf.text("SHANSHIELD — Multi-Agent Forensic Intelligence", margin, pageHeight - 8);
+
+      // Title
+      pdf.setFontSize(28);
+      pdf.setTextColor(0, 200, 150);
+      pdf.text(slide.title, margin, margin + 15);
+
+      // Subtitle
+      if (slide.subtitle) {
+        pdf.setFontSize(14);
+        pdf.setTextColor(150, 150, 170);
+        pdf.text(slide.subtitle, margin, margin + 25);
+      }
+
+      // Content
+      pdf.setFontSize(11);
+      pdf.setTextColor(220, 220, 230);
+      let yPos = margin + 40;
+      const lineHeight = 6;
+      
+      slide.content.forEach((line) => {
+        if (yPos > pageHeight - 20) return;
+        
+        if (line.startsWith("•")) {
+          pdf.setTextColor(180, 180, 200);
+        } else if (line.endsWith(":")) {
+          pdf.setTextColor(0, 200, 150);
+          pdf.setFontSize(12);
+        } else {
+          pdf.setTextColor(220, 220, 230);
+          pdf.setFontSize(11);
+        }
+        
+        const splitLines = pdf.splitTextToSize(line, contentWidth);
+        splitLines.forEach((splitLine: string) => {
+          if (yPos < pageHeight - 20) {
+            pdf.text(splitLine, margin, yPos);
+            yPos += lineHeight;
+          }
+        });
+      });
+    });
+
+    pdf.save("SHANSHIELD_Presentation_11_Slides.pdf");
   }, []);
 
   useEffect(() => {
@@ -1002,6 +1321,16 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
           <div className="text-sm text-muted-foreground">
             {currentSlide + 1} / {slides.length}
           </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={downloadPresentationPDF}
+            className="h-8 w-8 p-0"
+            title="Download PDF"
+          >
+            <Download className="w-4 h-4" />
+          </Button>
 
           <Button
             variant="ghost"
