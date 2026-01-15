@@ -10,6 +10,7 @@ export interface AnalysisFindings {
     compressionAnalysis: { score: number; description: string };
     symmetryAnalysis: { score: number; description: string };
     textureAnalysis: { score: number; description: string };
+    repetitionAnalysis: { score: number; description: string };
   };
 }
 
@@ -378,11 +379,91 @@ const analyzeTexture = (data: Uint8ClampedArray, width: number, height: number):
   return { score: Math.min(100, Math.max(0, score)), description };
 };
 
+// Analyze repeating micro-patterns / tiling artifacts (can appear in AI-generated images)
+const analyzeRepetition = (data: Uint8ClampedArray, width: number, height: number): { score: number; description: string } => {
+  // Downsample to keep it fast
+  const step = 4;
+  const sw = Math.max(1, Math.floor(width / step));
+  const sh = Math.max(1, Math.floor(height / step));
+
+  // If the image is extremely small after resizing, this detector is not reliable
+  if (sw < 24 || sh < 24) {
+    return { score: 0, description: "Repetition check skipped (image too small)" };
+  }
+
+  const gray = new Uint8Array(sw * sh);
+
+  for (let y = 0; y < sh; y++) {
+    for (let x = 0; x < sw; x++) {
+      const px = Math.min(width - 1, x * step);
+      const py = Math.min(height - 1, y * step);
+      const idx = (py * width + px) * 4;
+      const r = data[idx];
+      const g = data[idx + 1];
+      const b = data[idx + 2];
+      gray[y * sw + x] = Math.round(r * 0.299 + g * 0.587 + b * 0.114);
+    }
+  }
+
+  const meanAbsDiffShift = (dx: number, dy: number) => {
+    let sum = 0;
+    let count = 0;
+
+    const xMax = sw - dx;
+    const yMax = sh - dy;
+
+    for (let y = 0; y < yMax; y++) {
+      const row = y * sw;
+      const rowShift = (y + dy) * sw;
+      for (let x = 0; x < xMax; x++) {
+        const a = gray[row + x];
+        const b = gray[rowShift + (x + dx)];
+        sum += Math.abs(a - b);
+        count++;
+      }
+    }
+
+    return count > 0 ? sum / count : 255;
+  };
+
+  const offsets = [8, 12, 16].filter((o) => o < sw / 2 && o < sh / 2);
+  const minDiffs: number[] = [];
+  let strongRepeats = 0;
+
+  for (const o of offsets) {
+    const diffX = meanAbsDiffShift(o, 0);
+    const diffY = meanAbsDiffShift(0, o);
+    const best = Math.min(diffX, diffY);
+    minDiffs.push(best);
+
+    // Very low difference at a non-trivial offset can indicate subtle tiling/repetition
+    if (best < 6) strongRepeats++;
+  }
+
+  const avgMinDiff = minDiffs.reduce((a, b) => a + b, 0) / Math.max(1, minDiffs.length);
+
+  let score = 0;
+  let description = "";
+
+  if (strongRepeats >= 2 && avgMinDiff < 8) {
+    score = 75 + (8 - avgMinDiff) * 4;
+    description = `Repetitive micro-patterns detected (avg diff: ${avgMinDiff.toFixed(1)})`;
+  } else if (strongRepeats >= 1 && avgMinDiff < 10) {
+    score = 50 + (10 - avgMinDiff) * 3;
+    description = `Possible tiling artifacts (avg diff: ${avgMinDiff.toFixed(1)})`;
+  } else {
+    score = Math.max(0, 18 - avgMinDiff * 1.2);
+    description = `No significant repetition detected (avg diff: ${avgMinDiff.toFixed(1)})`;
+  }
+
+  return { score: Math.min(100, Math.max(0, score)), description };
+};
+
 // Main analysis function with smart multi-signal detection
 export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
   const imageData = await loadImageData(file);
   const { data, width, height } = imageData;
-  
+
   // Run all analyses
   const noiseAnalysis = analyzeNoise(data, width, height);
   const edgeAnalysis = analyzeEdges(data, width, height);
@@ -390,44 +471,75 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
   const compressionAnalysis = analyzeCompression(data, width, height);
   const symmetryAnalysis = analyzeSymmetry(data, width, height);
   const textureAnalysis = analyzeTexture(data, width, height);
-  
+  const repetitionAnalysis = analyzeRepetition(data, width, height);
+
   // Collect signals - use higher threshold to reduce false positives
   const signals: string[] = [];
   const threshold = 55;
-  
+
   if (noiseAnalysis.score > threshold) signals.push(noiseAnalysis.description);
   if (edgeAnalysis.score > threshold) signals.push(edgeAnalysis.description);
   if (colorAnalysis.score > threshold) signals.push(colorAnalysis.description);
   if (compressionAnalysis.score > threshold) signals.push(compressionAnalysis.description);
   if (symmetryAnalysis.score > threshold) signals.push(symmetryAnalysis.description);
   if (textureAnalysis.score > threshold) signals.push(textureAnalysis.description);
-  
+  if (repetitionAnalysis.score > threshold) signals.push(repetitionAnalysis.description);
+
   // Count how many indicators are elevated (> 40)
   const elevatedCount = [
-    noiseAnalysis.score, edgeAnalysis.score, colorAnalysis.score,
-    compressionAnalysis.score, symmetryAnalysis.score, textureAnalysis.score
-  ].filter(s => s > 40).length;
-  
-  // Calculate weighted score
+    noiseAnalysis.score,
+    edgeAnalysis.score,
+    colorAnalysis.score,
+    compressionAnalysis.score,
+    symmetryAnalysis.score,
+    textureAnalysis.score,
+    repetitionAnalysis.score
+  ].filter((s) => s > 40).length;
+
+  // Calculate weighted score (weights sum to 1.0)
   let overallScore = (
-    noiseAnalysis.score * 0.25 +
-    edgeAnalysis.score * 0.15 +
-    colorAnalysis.score * 0.12 +
-    compressionAnalysis.score * 0.12 +
-    symmetryAnalysis.score * 0.18 +
-    textureAnalysis.score * 0.18
+    noiseAnalysis.score * 0.23 +
+    edgeAnalysis.score * 0.13 +
+    colorAnalysis.score * 0.11 +
+    compressionAnalysis.score * 0.10 +
+    symmetryAnalysis.score * 0.16 +
+    textureAnalysis.score * 0.17 +
+    repetitionAnalysis.score * 0.10
   );
-  
-  // Apply multi-signal boost: AI images trigger MULTIPLE detectors
-  // Real photos typically only trigger 0-1 detectors
-  if (elevatedCount >= 4) {
-    overallScore = overallScore * 1.3; // Strong AI signal
+
+  // Apply multi-signal boost: AI images often trigger MULTIPLE detectors,
+  // but modern generators can evade most checks and only trip one very strong indicator.
+  const strongAiIndicator = Math.max(
+    noiseAnalysis.score,
+    textureAnalysis.score,
+    symmetryAnalysis.score,
+    colorAnalysis.score,
+    repetitionAnalysis.score
+  );
+  const hasStrongAiIndicator = strongAiIndicator >= 85;
+
+  // With 7 detectors, require more concurrent elevations for a big boost
+  if (elevatedCount >= 5) {
+    overallScore = overallScore * 1.25;
+  } else if (elevatedCount >= 4) {
+    overallScore = overallScore * 1.12;
   } else if (elevatedCount >= 3) {
-    overallScore = overallScore * 1.15;
-  } else if (elevatedCount <= 1) {
-    overallScore = overallScore * 0.7; // Likely authentic - dampen score
+    overallScore = overallScore * 1.06;
   }
-  
+
+  // Guardrail: if ANY high-confidence AI signature is detected, don't return "authentic".
+  if (hasStrongAiIndicator) {
+    overallScore = Math.max(overallScore, 45); // at least suspicious
+  }
+  if (strongAiIndicator >= 92) {
+    overallScore = Math.max(overallScore, 60); // at least deepfake
+  }
+
+  // Mild dampening only when *everything* looks clean (prevents false positives on real photos).
+  if (!hasStrongAiIndicator && elevatedCount <= 1 && overallScore < 30) {
+    overallScore = overallScore * 0.9;
+  }
+
   return {
     score: Math.round(Math.min(100, Math.max(0, overallScore))),
     signals,
@@ -437,7 +549,8 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
       colorAnalysis,
       compressionAnalysis,
       symmetryAnalysis,
-      textureAnalysis
+      textureAnalysis,
+      repetitionAnalysis
     }
   };
 };
