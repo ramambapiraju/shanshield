@@ -38,27 +38,40 @@ const techCategories: TechCategory[] = [
     icon: Eye,
     color: "text-cyan-400",
     methods: [
-      { name: "Noise Pattern Analysis", description: "Detects uniform GAN noise via coefficient of variation", score: "20%" },
-      { name: "Sobel Edge Detection", description: "Identifies artificial sharpening and edge irregularities", score: "15%" },
+      { name: "Noise Pattern Analysis", description: "Detects uniform GAN noise via coefficient of variation on local blocks", score: "20%" },
+      { name: "Sobel Edge Detection", description: "Identifies artificial sharpening using mean/median edge ratio", score: "15%" },
       { name: "Color Histogram Analysis", description: "Finds unnatural color spikes and channel decorrelation", score: "15%" },
-      { name: "JPEG Artifact Detection", description: "Detects 8x8 block boundaries from double compression", score: "20%" },
+      { name: "JPEG Artifact Detection", description: "Detects 8x8 block boundaries from double compression", score: "15%" },
       { name: "Bilateral Symmetry Check", description: "Flags over-symmetric faces (GAN) or spliced regions", score: "15%" },
-      { name: "LBP Texture Analysis", description: "Local Binary Pattern for texture consistency check", score: "15%" }
+      { name: "LBP Texture Analysis", description: "Local Binary Pattern for texture consistency check", score: "10%" },
+      { name: "Repetition Detection", description: "Detects micro-pattern tiling artifacts in AI images", score: "5%" },
+      { name: "Gradient Analysis", description: "Identifies unnaturally smooth banded gradients", score: "5%" }
     ],
-    realCode: `// Real implementation in src/lib/imageAnalyzer.ts
+    realCode: `// From src/lib/imageAnalyzer.ts - analyzeNoise()
 const analyzeNoise = (data, width, height) => {
+  const noiseValues = [];
+  const localVariances = [];
+  
   // Sample noise by looking at differences between adjacent pixels
-  for (let y = 1; y < height - 1; y += 3) {
-    for (let x = 1; x < width - 1; x += 3) {
+  for (let y = 1; y < height - 1; y += 2) {
+    for (let x = 1; x < width - 1; x += 2) {
       const idx = (y * width + x) * 4;
-      const diffR = Math.abs(data[idx] - data[idxRight]);
+      const idxRight = (y * width + x + 1) * 4;
+      const idxDown = ((y + 1) * width + x) * 4;
+      
+      const diffR = Math.abs(data[idx] - data[idxRight]) + Math.abs(data[idx] - data[idxDown]);
       noiseValues.push((diffR + diffG + diffB) / 3);
     }
   }
+  
   // Calculate coefficient of variation
   const coefficientOfVariation = (stdDev / mean) * 100;
-  // GAN images have unnaturally uniform noise (CV < 30%)
-}`
+  
+  // GAN images have unnaturally uniform noise (CV < 25% AND local < 30%)
+  if (coefficientOfVariation < 25 && localCV < 30) {
+    score = 75 + (25 - coefficientOfVariation) * 1.5;
+  }
+};`
   },
   {
     id: "video",
@@ -66,17 +79,18 @@ const analyzeNoise = (data, width, height) => {
     icon: Film,
     color: "text-purple-400",
     methods: [
-      { name: "Frame Consistency", description: "Detects flickering via inter-frame difference variance", score: "25%" },
-      { name: "Temporal Coherence", description: "Motion vector analysis for discontinuities", score: "25%" },
-      { name: "Face Region Tracking", description: "Compares face vs background change ratios", score: "20%" },
-      { name: "Compression Analysis", description: "Multi-frame 8x8 block artifact variance", score: "15%" },
-      { name: "Motion Flow Analysis", description: "Acceleration-based unnatural motion detection", score: "15%" }
+      { name: "Frame Consistency", description: "Detects flickering via inter-frame difference variance", score: "20%" },
+      { name: "Temporal Coherence", description: "Optical flow approximation for motion discontinuities", score: "20%" },
+      { name: "Face Region Tracking", description: "Compares face vs background change ratios for warping", score: "20%" },
+      { name: "Compression Analysis", description: "Multi-frame 8x8 block artifact variance detection", score: "15%" },
+      { name: "Motion Flow Analysis", description: "Acceleration-based unnatural motion detection", score: "15%" },
+      { name: "Audio-Video Sync", description: "Placeholder for lip-sync analysis", score: "10%" }
     ],
-    realCode: `// Real implementation in src/lib/videoAnalyzer.ts
-const extractFrames = async (video, numFrames) => {
-  const frames: ImageData[] = [];
+    realCode: `// From src/lib/videoAnalyzer.ts - extractFrames() & analyzeTemporalCoherence()
+const extractFrames = (video, numFrames = 10) => {
+  const frames = [];
   const interval = duration / (numFrames + 1);
-  // Seek through video and capture frames
+  
   video.onseeked = () => {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     frames.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
@@ -84,9 +98,16 @@ const extractFrames = async (video, numFrames) => {
 };
 
 const analyzeTemporalCoherence = (frames) => {
-  // Calculate motion vectors between frames
-  // Check for sudden motion discontinuities
-  if (ratio > 3 || ratio < 0.33) discontinuities++;
+  // Calculate optical flow approximation between frames
+  for (let i = 1; i < frames.length; i++) {
+    // Gradient calculation for motion vectors
+    const dx = ((curr[dxIdx] + curr[dxIdx+1] + curr[dxIdx+2]) / 3) - currGray;
+    const dy = ((curr[dyIdx] + curr[dyIdx+1] + curr[dyIdx+2]) / 3) - currGray;
+    
+    // Check for sudden motion discontinuities
+    const ratio = motionVectors[i] / (motionVectors[i-1] + 0.01);
+    if (ratio > 3 || ratio < 0.33) discontinuities++;
+  }
 };`
   },
   {
@@ -98,26 +119,35 @@ const analyzeTemporalCoherence = (frames) => {
       { name: "FFT Spectral Analysis", description: "Spectral centroid and flatness for TTS detection", score: "20%" },
       { name: "Autocorrelation Pitch", description: "Pitch consistency check via autocorrelation", score: "20%" },
       { name: "Noise Floor Detection", description: "Identifies unnaturally clean synthesized audio", score: "15%" },
-      { name: "Quantization Analysis", description: "Detects heavy compression artifacts", score: "15%" },
+      { name: "Quantization Analysis", description: "Detects heavy compression via unique level count", score: "15%" },
       { name: "Voice Envelope", description: "Attack/decay pattern analysis for naturalness", score: "15%" },
       { name: "Frequency Distribution", description: "Band energy analysis (TTS lacks high-freq)", score: "15%" }
     ],
-    realCode: `// Real implementation in src/lib/audioAnalyzer.ts
-const computeFFT = (samples, fftSize) => {
-  // DFT implementation for frequency analysis
+    realCode: `// From src/lib/audioAnalyzer.ts - computeFFT() & analyzePitch()
+const computeFFT = (samples, fftSize = 2048) => {
+  const magnitudes = new Float32Array(fftSize / 2);
+  
   for (let k = 0; k < fftSize / 2; k++) {
+    let realSum = 0, imagSum = 0;
     for (let n = 0; n < fftSize; n++) {
       const angle = (2 * Math.PI * k * n) / fftSize;
       realSum += real[n] * Math.cos(angle);
       imagSum -= real[n] * Math.sin(angle);
     }
-    magnitudes[k] = Math.sqrt(realSum² + imagSum²) / fftSize;
+    magnitudes[k] = Math.sqrt(realSum*realSum + imagSum*imagSum) / fftSize;
   }
 };
 
 const analyzePitch = (audioBuffer) => {
   // Autocorrelation-based pitch detection
-  // Natural speech has CV > 10%, TTS < 5%
+  for (let lag = 20; lag < frameSize / 2; lag++) {
+    let sum = 0;
+    for (let i = 0; i < frameSize - lag; i++) {
+      sum += frame[i] * frame[i + lag];
+    }
+    autocorr[lag] = sum;
+  }
+  // Natural speech has CV > 10%, TTS often < 5%
 };`
   },
   {
@@ -127,27 +157,35 @@ const analyzePitch = (audioBuffer) => {
     color: "text-orange-400",
     methods: [
       { name: "PDF Metadata Forensics", description: "Parses producer, creator, dates for inconsistencies", score: "20%" },
-      { name: "SHA-256 Hashing", description: "Cryptographic file integrity verification", score: "20%" },
-      { name: "Byte Entropy Analysis", description: "High entropy (>90%) suggests obfuscation", score: "15%" },
-      { name: "EXIF/XMP Parsing", description: "Detects AI generation markers and software tags", score: "15%" },
+      { name: "Byte Entropy Analysis", description: "Shannon entropy calculation - high entropy suggests obfuscation", score: "20%" },
+      { name: "Structure Analysis", description: "Stream count and binary ratio examination", score: "15%" },
+      { name: "Content Consistency", description: "Null byte ratio and ASCII distribution check", score: "15%" },
       { name: "Embedded Media Scan", description: "Detects JavaScript, embedded files, forms", score: "15%" },
-      { name: "Fuzzy Hashing", description: "Similarity detection for modified copies", score: "15%" }
+      { name: "Modification History", description: "Creation vs modification date comparison", score: "15%" }
     ],
-    realCode: `// Real implementation in src/lib/documentAnalyzer.ts
+    realCode: `// From src/lib/documentAnalyzer.ts - parsePDFMetadata() & analyzeBytePatterns()
 const parsePDFMetadata = async (file) => {
   const bytes = new Uint8Array(buffer);
   const text = new TextDecoder('latin1').decode(bytes);
   
-  // Parse PDF version and metadata
   const versionMatch = text.match(/%PDF-(\\d+\\.\\d+)/);
   const producerMatch = text.match(/\\/Producer\\s*\\(([^)]*)\\)/);
   const hasEncryption = text.includes('/Encrypt');
   
-  return { version, producer, creator, hasEncryption };
+  return { version, producer, creator, hasEncryption, streamCount };
 };
 
-// SHA-256 via Web Crypto API
-const hash = await crypto.subtle.digest('SHA-256', buffer);`
+const analyzeBytePatterns = async (file) => {
+  // Calculate Shannon entropy
+  let entropy = 0;
+  for (let i = 0; i < 256; i++) {
+    if (byteCounts[i] > 0) {
+      const p = byteCounts[i] / sampleSize;
+      entropy -= p * Math.log2(p);
+    }
+  }
+  return { entropyScore: entropy / 8 * 100, nullByteRatio, binaryRatio };
+};`
   },
   {
     id: "arbiter",
@@ -155,28 +193,27 @@ const hash = await crypto.subtle.digest('SHA-256', buffer);`
     icon: Brain,
     color: "text-primary",
     methods: [
-      { name: "Dempster-Shafer Fusion", description: "Combines agent beliefs with uncertainty handling", score: "40%" },
-      { name: "Conflict Detection", description: "Identifies when agents disagree significantly", score: "25%" },
-      { name: "Weighted Consensus", description: "Agent-specific weights based on media type", score: "20%" },
-      { name: "Confidence Calibration", description: "Adjusts final confidence based on signal strength", score: "15%" }
+      { name: "Weighted Score Fusion", description: "Combines agent scores with media-type specific weights", score: "40%" },
+      { name: "Signal Aggregation", description: "Collects signals above threshold from all agents", score: "25%" },
+      { name: "Confidence Calibration", description: "Adjusts final verdict based on signal count", score: "20%" },
+      { name: "Verdict Generation", description: "Produces AUTHENTIC/SUSPICIOUS/MANIPULATED label", score: "15%" }
     ],
-    realCode: `// Dempster-Shafer belief fusion algorithm
-const fuseBeliefs = (agents) => {
-  // Combine mass functions from all agents
-  let combined = { authentic: 0, fake: 0, uncertain: 1 };
+    realCode: `// From src/hooks/useAnalysis.ts - Score fusion logic
+const calculateOverallScore = (results) => {
+  // Each analyzer returns weighted subscores
+  // Image: noise 20%, edge 15%, color 15%, compression 15%, symmetry 15%, texture 10%...
+  // Video: frameConsistency 20%, temporalCoherence 20%, faceTracking 20%...
+  // Audio: spectral 20%, pitch 20%, noiseFloor 15%, compression 15%...
+  // Document: metadata 20%, structure 20%, content 15%...
   
-  for (const agent of agents) {
-    const K = combined.authentic * agent.fake + 
-              combined.fake * agent.authentic;
-    
-    // Normalize after removing conflict
-    const norm = 1 - K;
-    combined.authentic = (combined.authentic * agent.authentic) / norm;
-    combined.fake = (combined.fake * agent.fake) / norm;
-  }
+  const signals = [];
+  const threshold = 50;
   
-  // Detect high conflict (K > 0.7 = agents disagree)
-  return { verdict: combined.fake > 0.5, conflict: K > 0.7 };
+  // Collect all signals above threshold
+  if (analysisScore > threshold) signals.push(description);
+  
+  // Final verdict based on overall score
+  return score < 35 ? 'AUTHENTIC' : score < 65 ? 'SUSPICIOUS' : 'MANIPULATED';
 };`
   },
   {
@@ -190,10 +227,10 @@ const fuseBeliefs = (agents) => {
       { name: "Video Recording", description: "MediaRecorder with VP9/H.264 codecs", score: "—" },
       { name: "Camera Switching", description: "Supports front/back camera toggle", score: "—" }
     ],
-    realCode: `// Real implementation in MediaUploader.tsx
+    realCode: `// From src/components/analysis/MediaUploader.tsx
 const startCamera = async (mode) => {
   const stream = await navigator.mediaDevices.getUserMedia({ 
-    video: { facingMode: mode, width: { ideal: 1920 } },
+    video: { facingMode: mode, width: { ideal: 1920 }, height: { ideal: 1080 } },
     audio: true 
   });
   videoRef.current.srcObject = stream;
@@ -214,17 +251,17 @@ const captureFromCamera = () => {
     color: "text-yellow-400",
     methods: [
       { name: "Audio Context API", description: "Web Audio API with echo/noise cancellation", score: "—" },
-      { name: "Real-time FFT", description: "Live frequency visualization", score: "—" },
+      { name: "Real-time FFT", description: "AnalyserNode for live frequency visualization", score: "—" },
       { name: "WebM Recording", description: "MediaRecorder with Opus encoding", score: "—" },
       { name: "Level Monitoring", description: "RequestAnimationFrame for smooth meters", score: "—" }
     ],
-    realCode: `// Real implementation in MediaUploader.tsx
+    realCode: `// From src/components/analysis/MediaUploader.tsx
 const startAudioCapture = async () => {
   const stream = await navigator.mediaDevices.getUserMedia({ 
     audio: { echoCancellation: true, noiseSuppression: true }
   });
   
-  // Set up audio visualization
+  // Set up audio visualization with Web Audio API
   const audioContext = new AudioContext();
   const analyser = audioContext.createAnalyser();
   const source = audioContext.createMediaStreamSource(stream);
