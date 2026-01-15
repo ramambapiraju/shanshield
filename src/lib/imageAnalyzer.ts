@@ -11,6 +11,7 @@ export interface AnalysisFindings {
     symmetryAnalysis: { score: number; description: string };
     textureAnalysis: { score: number; description: string };
     repetitionAnalysis: { score: number; description: string };
+    gradientAnalysis: { score: number; description: string };
   };
 }
 
@@ -459,6 +460,78 @@ const analyzeRepetition = (data: Uint8ClampedArray, width: number, height: numbe
   return { score: Math.min(100, Math.max(0, score)), description };
 };
 
+// Analyze gradient uniformity - AI/animated images have unnaturally smooth, banded gradients
+const analyzeGradient = (data: Uint8ClampedArray, width: number, height: number): { score: number; description: string } => {
+  let smoothGradientCount = 0;
+  let totalRegions = 0;
+  let bandingCount = 0;
+  const regionSize = 32;
+  
+  // Check for unnaturally smooth gradient regions (AI hallmark)
+  for (let ry = 0; ry < height - regionSize; ry += regionSize) {
+    for (let rx = 0; rx < width - regionSize; rx += regionSize) {
+      const gradients: number[] = [];
+      let prevGray = -1;
+      let sameSteps = 0;
+      
+      // Sample diagonal line through region
+      for (let i = 0; i < regionSize; i++) {
+        const x = Math.min(rx + i, width - 1);
+        const y = Math.min(ry + i, height - 1);
+        const idx = (y * width + x) * 4;
+        const gray = Math.round((data[idx] + data[idx + 1] + data[idx + 2]) / 3);
+        
+        if (prevGray >= 0) {
+          const diff = gray - prevGray;
+          gradients.push(diff);
+          // Banding: exact same step multiple times
+          if (Math.abs(diff) < 2) sameSteps++;
+        }
+        prevGray = gray;
+      }
+      
+      if (gradients.length > 5) {
+        // Check if gradient is suspiciously uniform
+        const mean = gradients.reduce((a, b) => a + b, 0) / gradients.length;
+        const variance = gradients.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / gradients.length;
+        
+        totalRegions++;
+        
+        // AI images have very low variance in gradients (smooth transitions)
+        if (variance < 2 && sameSteps > gradients.length * 0.6) {
+          smoothGradientCount++;
+          bandingCount++;
+        } else if (variance < 4) {
+          smoothGradientCount++;
+        }
+      }
+    }
+  }
+  
+  const smoothRatio = totalRegions > 0 ? smoothGradientCount / totalRegions : 0;
+  const bandingRatio = totalRegions > 0 ? bandingCount / totalRegions : 0;
+  
+  let score = 0;
+  let description = '';
+  
+  // High smooth ratio + banding = strong AI indicator
+  if (smoothRatio > 0.4 && bandingRatio > 0.15) {
+    score = 85 + bandingRatio * 50;
+    description = `AI-generated gradient banding (smooth: ${(smoothRatio * 100).toFixed(1)}%, banding: ${(bandingRatio * 100).toFixed(1)}%)`;
+  } else if (smoothRatio > 0.35) {
+    score = 65 + smoothRatio * 40;
+    description = `Synthetic smooth gradients (${(smoothRatio * 100).toFixed(1)}% regions)`;
+  } else if (smoothRatio > 0.25) {
+    score = 40 + smoothRatio * 30;
+    description = `Moderate gradient uniformity (${(smoothRatio * 100).toFixed(1)}%)`;
+  } else {
+    score = Math.max(0, 15 - (0.25 - smoothRatio) * 60);
+    description = `Natural gradient variation (${(smoothRatio * 100).toFixed(1)}%)`;
+  }
+  
+  return { score: Math.min(100, Math.max(0, score)), description };
+};
+
 // Main analysis function with smart multi-signal detection
 export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
   const imageData = await loadImageData(file);
@@ -472,10 +545,11 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
   const symmetryAnalysis = analyzeSymmetry(data, width, height);
   const textureAnalysis = analyzeTexture(data, width, height);
   const repetitionAnalysis = analyzeRepetition(data, width, height);
+  const gradientAnalysis = analyzeGradient(data, width, height);
 
-  // Collect signals - use higher threshold to reduce false positives
+  // Collect signals - use moderate threshold
   const signals: string[] = [];
-  const threshold = 55;
+  const threshold = 50;
 
   if (noiseAnalysis.score > threshold) signals.push(noiseAnalysis.description);
   if (edgeAnalysis.score > threshold) signals.push(edgeAnalysis.description);
@@ -484,60 +558,71 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
   if (symmetryAnalysis.score > threshold) signals.push(symmetryAnalysis.description);
   if (textureAnalysis.score > threshold) signals.push(textureAnalysis.description);
   if (repetitionAnalysis.score > threshold) signals.push(repetitionAnalysis.description);
+  if (gradientAnalysis.score > threshold) signals.push(gradientAnalysis.description);
 
-  // Count how many indicators are elevated (> 40)
-  const elevatedCount = [
+  // Count how many indicators are elevated (> 35)
+  const allScores = [
     noiseAnalysis.score,
     edgeAnalysis.score,
     colorAnalysis.score,
     compressionAnalysis.score,
     symmetryAnalysis.score,
     textureAnalysis.score,
-    repetitionAnalysis.score
-  ].filter((s) => s > 40).length;
+    repetitionAnalysis.score,
+    gradientAnalysis.score
+  ];
+  const elevatedCount = allScores.filter((s) => s > 35).length;
 
   // Calculate weighted score (weights sum to 1.0)
   let overallScore = (
-    noiseAnalysis.score * 0.23 +
-    edgeAnalysis.score * 0.13 +
-    colorAnalysis.score * 0.11 +
-    compressionAnalysis.score * 0.10 +
-    symmetryAnalysis.score * 0.16 +
-    textureAnalysis.score * 0.17 +
-    repetitionAnalysis.score * 0.10
+    noiseAnalysis.score * 0.18 +
+    edgeAnalysis.score * 0.10 +
+    colorAnalysis.score * 0.10 +
+    compressionAnalysis.score * 0.08 +
+    symmetryAnalysis.score * 0.14 +
+    textureAnalysis.score * 0.16 +
+    repetitionAnalysis.score * 0.08 +
+    gradientAnalysis.score * 0.16  // High weight for gradient - catches animated/AI style
   );
 
-  // Apply multi-signal boost: AI images often trigger MULTIPLE detectors,
-  // but modern generators can evade most checks and only trip one very strong indicator.
+  // Find strongest AI indicator
   const strongAiIndicator = Math.max(
     noiseAnalysis.score,
     textureAnalysis.score,
     symmetryAnalysis.score,
     colorAnalysis.score,
-    repetitionAnalysis.score
+    repetitionAnalysis.score,
+    gradientAnalysis.score
   );
-  const hasStrongAiIndicator = strongAiIndicator >= 85;
+  const hasStrongAiIndicator = strongAiIndicator >= 70;
+  const hasVeryStrongIndicator = strongAiIndicator >= 85;
 
-  // With 7 detectors, require more concurrent elevations for a big boost
+  // Multi-signal boost: AI images trigger multiple detectors
   if (elevatedCount >= 5) {
-    overallScore = overallScore * 1.25;
+    overallScore = overallScore * 1.35;
   } else if (elevatedCount >= 4) {
-    overallScore = overallScore * 1.12;
+    overallScore = overallScore * 1.20;
   } else if (elevatedCount >= 3) {
-    overallScore = overallScore * 1.06;
+    overallScore = overallScore * 1.10;
+  } else if (elevatedCount >= 2) {
+    overallScore = overallScore * 1.05;
   }
 
-  // Guardrail: if ANY high-confidence AI signature is detected, don't return "authentic".
-  if (hasStrongAiIndicator) {
-    overallScore = Math.max(overallScore, 45); // at least suspicious
-  }
-  if (strongAiIndicator >= 92) {
-    overallScore = Math.max(overallScore, 60); // at least deepfake
+  // Guardrail: strong AI signature = at least suspicious
+  if (hasVeryStrongIndicator) {
+    overallScore = Math.max(overallScore, 55); // at least deepfake territory
+  } else if (hasStrongAiIndicator) {
+    overallScore = Math.max(overallScore, 42); // at least suspicious
   }
 
-  // Mild dampening only when *everything* looks clean (prevents false positives on real photos).
-  if (!hasStrongAiIndicator && elevatedCount <= 1 && overallScore < 30) {
-    overallScore = overallScore * 0.9;
+  // Special case: animated/cartoon style (gradient + texture + low noise variance)
+  if (gradientAnalysis.score > 60 && textureAnalysis.score > 40) {
+    overallScore = Math.max(overallScore, 50);
+  }
+
+  // Mild dampening only when everything looks clean
+  if (!hasStrongAiIndicator && elevatedCount <= 1 && overallScore < 25) {
+    overallScore = overallScore * 0.85;
   }
 
   return {
@@ -550,7 +635,8 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
       compressionAnalysis,
       symmetryAnalysis,
       textureAnalysis,
-      repetitionAnalysis
+      repetitionAnalysis,
+      gradientAnalysis
     }
   };
 };
