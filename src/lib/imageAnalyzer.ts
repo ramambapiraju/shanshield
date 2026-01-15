@@ -49,16 +49,18 @@ const loadImageData = (file: File): Promise<ImageData> => {
   });
 };
 
-// Analyze noise patterns - GAN images often have uniform noise
+// Analyze noise patterns - GAN/Diffusion images often have uniform or patterned noise
 const analyzeNoise = (data: Uint8ClampedArray, width: number, height: number): { score: number; description: string } => {
   const noiseValues: number[] = [];
+  const highFreqNoise: number[] = [];
   
   // Sample noise by looking at differences between adjacent pixels
-  for (let y = 1; y < height - 1; y += 3) {
-    for (let x = 1; x < width - 1; x += 3) {
+  for (let y = 1; y < height - 1; y += 2) {
+    for (let x = 1; x < width - 1; x += 2) {
       const idx = (y * width + x) * 4;
       const idxRight = (y * width + x + 1) * 4;
       const idxDown = ((y + 1) * width + x) * 4;
+      const idxDiag = ((y + 1) * width + x + 1) * 4;
       
       // Calculate local variance
       const diffR = Math.abs(data[idx] - data[idxRight]) + Math.abs(data[idx] - data[idxDown]);
@@ -66,6 +68,10 @@ const analyzeNoise = (data: Uint8ClampedArray, width: number, height: number): {
       const diffB = Math.abs(data[idx + 2] - data[idxRight + 2]) + Math.abs(data[idx + 2] - data[idxDown + 2]);
       
       noiseValues.push((diffR + diffG + diffB) / 3);
+      
+      // High-frequency noise detection (AI models produce distinct patterns)
+      const diagDiff = Math.abs(data[idx] - data[idxDiag]) + Math.abs(data[idx + 1] - data[idxDiag + 1]) + Math.abs(data[idx + 2] - data[idxDiag + 2]);
+      highFreqNoise.push(diagDiff);
     }
   }
   
@@ -74,22 +80,26 @@ const analyzeNoise = (data: Uint8ClampedArray, width: number, height: number): {
   const variance = noiseValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / noiseValues.length;
   const stdDev = Math.sqrt(variance);
   
-  // Very low or very uniform noise is suspicious (GANs produce uniform noise)
-  // Natural images have varied noise patterns
-  const coefficientOfVariation = (stdDev / mean) * 100;
+  // High-freq analysis - AI images have suspicious uniformity in diagonal patterns
+  const hfMean = highFreqNoise.reduce((a, b) => a + b, 0) / highFreqNoise.length;
+  const hfVariance = highFreqNoise.reduce((sum, val) => sum + Math.pow(val - hfMean, 2), 0) / highFreqNoise.length;
+  const hfCoeffVar = (Math.sqrt(hfVariance) / (hfMean + 0.001)) * 100;
+  
+  const coefficientOfVariation = (stdDev / (mean + 0.001)) * 100;
   
   let score = 0;
   let description = '';
   
-  if (coefficientOfVariation < 30) {
-    score = 70 + (30 - coefficientOfVariation);
-    description = `Unnaturally uniform noise pattern detected (CV: ${coefficientOfVariation.toFixed(1)}%)`;
-  } else if (coefficientOfVariation < 50) {
-    score = 40 + (50 - coefficientOfVariation);
-    description = `Moderately uniform noise (CV: ${coefficientOfVariation.toFixed(1)}%)`;
+  // AI-generated images have unnaturally uniform noise and patterns
+  if (coefficientOfVariation < 40 || hfCoeffVar < 35) {
+    score = 75 + Math.max(0, 40 - coefficientOfVariation) + Math.max(0, 35 - hfCoeffVar);
+    description = `AI-characteristic uniform noise pattern (CV: ${coefficientOfVariation.toFixed(1)}%, HF: ${hfCoeffVar.toFixed(1)}%)`;
+  } else if (coefficientOfVariation < 55 || hfCoeffVar < 50) {
+    score = 55 + (55 - Math.min(coefficientOfVariation, hfCoeffVar)) * 0.8;
+    description = `Synthetic noise characteristics detected (CV: ${coefficientOfVariation.toFixed(1)}%)`;
   } else {
-    score = Math.max(0, 40 - (coefficientOfVariation - 50) / 2);
-    description = `Natural noise variation detected (CV: ${coefficientOfVariation.toFixed(1)}%)`;
+    score = Math.max(0, 40 - (coefficientOfVariation - 55) / 2);
+    description = `Natural noise variation (CV: ${coefficientOfVariation.toFixed(1)}%)`;
   }
   
   return { score: Math.min(100, Math.max(0, score)), description };
@@ -244,11 +254,12 @@ const analyzeCompression = (data: Uint8ClampedArray, width: number, height: numb
   return { score: Math.min(100, Math.max(0, score)), description };
 };
 
-// Analyze facial symmetry (if face region exists, asymmetry can indicate manipulation)
+// Analyze facial symmetry - AI images often have unnatural perfect symmetry
 const analyzeSymmetry = (data: Uint8ClampedArray, width: number, height: number): { score: number; description: string } => {
   const centerX = Math.floor(width / 2);
   let asymmetrySum = 0;
   let sampleCount = 0;
+  let perfectMatchCount = 0;
   
   // Compare left and right halves
   for (let y = Math.floor(height * 0.2); y < height * 0.8; y += 2) {
@@ -262,38 +273,45 @@ const analyzeSymmetry = (data: Uint8ClampedArray, width: number, height: number)
       
       asymmetrySum += diff;
       sampleCount++;
+      
+      // Count near-perfect matches (AI signature)
+      if (diff < 5) perfectMatchCount++;
     }
   }
   
   const avgAsymmetry = asymmetrySum / sampleCount;
+  const perfectRatio = perfectMatchCount / sampleCount;
   
   let score = 0;
   let description = '';
   
-  // Very high or very low asymmetry can both be suspicious
-  if (avgAsymmetry < 10) {
-    // Too symmetric - possibly GAN-generated
-    score = 50 + (10 - avgAsymmetry) * 5;
-    description = `Unusually symmetric (score: ${avgAsymmetry.toFixed(1)}) - possible GAN generation`;
+  // AI images often have too-perfect symmetry or high perfect-match ratios
+  if (avgAsymmetry < 15 || perfectRatio > 0.3) {
+    score = 70 + (15 - avgAsymmetry) * 2 + perfectRatio * 40;
+    description = `AI-like perfect symmetry detected (asym: ${avgAsymmetry.toFixed(1)}, perfect: ${(perfectRatio * 100).toFixed(1)}%)`;
+  } else if (avgAsymmetry < 25 || perfectRatio > 0.15) {
+    score = 50 + (25 - avgAsymmetry) + perfectRatio * 30;
+    description = `Unnaturally symmetric (score: ${avgAsymmetry.toFixed(1)}) - possible AI generation`;
   } else if (avgAsymmetry > 60) {
-    // Very asymmetric - possibly face-swapped
-    score = 30 + Math.min(50, (avgAsymmetry - 60) * 2);
-    description = `High asymmetry detected (score: ${avgAsymmetry.toFixed(1)}) - possible splicing`;
+    score = 30 + Math.min(40, (avgAsymmetry - 60) * 1.5);
+    description = `High asymmetry (score: ${avgAsymmetry.toFixed(1)}) - possible splicing`;
   } else {
-    score = Math.max(0, 30 - Math.abs(35 - avgAsymmetry));
+    score = Math.max(0, 25 - Math.abs(35 - avgAsymmetry) * 0.5);
     description = `Natural symmetry level (score: ${avgAsymmetry.toFixed(1)})`;
   }
   
   return { score: Math.min(100, Math.max(0, score)), description };
 };
 
-// Analyze texture consistency
+// Analyze texture consistency - AI models produce characteristic smooth/unnatural textures
 const analyzeTexture = (data: Uint8ClampedArray, width: number, height: number): { score: number; description: string } => {
   // Local Binary Pattern-like analysis for texture consistency
   const textureScores: number[] = [];
+  let smoothRegions = 0;
+  let totalRegions = 0;
   
-  for (let y = 1; y < height - 1; y += 4) {
-    for (let x = 1; x < width - 1; x += 4) {
+  for (let y = 1; y < height - 1; y += 3) {
+    for (let x = 1; x < width - 1; x += 3) {
       const getGray = (px: number, py: number) => {
         const idx = (py * width + px) * 4;
         return (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
@@ -308,6 +326,11 @@ const analyzeTexture = (data: Uint8ClampedArray, width: number, height: number):
         getGray(x-1, y), getGray(x+1, y),
         getGray(x-1, y+1), getGray(x, y+1), getGray(x+1, y+1)
       ];
+      
+      // Check for AI-characteristic smooth gradients
+      const maxDiff = Math.max(...neighbors.map(n => Math.abs(n - center)));
+      if (maxDiff < 8) smoothRegions++;
+      totalRegions++;
       
       for (let i = 0; i < 8; i++) {
         if (neighbors[i] > center) pattern |= (1 << i);
@@ -325,19 +348,23 @@ const analyzeTexture = (data: Uint8ClampedArray, width: number, height: number):
   }
   
   const avgTransitions = textureScores.reduce((a, b) => a + b, 0) / textureScores.length;
+  const smoothRatio = smoothRegions / totalRegions;
   
   let score = 0;
   let description = '';
   
-  // Unnatural textures have either too few or too many transitions
-  if (avgTransitions < 2) {
-    score = 60 + (2 - avgTransitions) * 20;
-    description = `Smooth/artificial texture detected (transitions: ${avgTransitions.toFixed(2)})`;
-  } else if (avgTransitions > 5) {
-    score = 40 + (avgTransitions - 5) * 10;
+  // AI images have characteristic smooth regions and low transition counts
+  if (avgTransitions < 2.5 || smoothRatio > 0.4) {
+    score = 70 + (2.5 - avgTransitions) * 15 + smoothRatio * 30;
+    description = `AI-generated smooth texture (trans: ${avgTransitions.toFixed(2)}, smooth: ${(smoothRatio * 100).toFixed(1)}%)`;
+  } else if (avgTransitions < 3.2 || smoothRatio > 0.25) {
+    score = 50 + (3.2 - avgTransitions) * 10 + smoothRatio * 20;
+    description = `Synthetic texture patterns detected (transitions: ${avgTransitions.toFixed(2)})`;
+  } else if (avgTransitions > 5.5) {
+    score = 35 + (avgTransitions - 5.5) * 8;
     description = `Noisy texture detected (transitions: ${avgTransitions.toFixed(2)})`;
   } else {
-    score = Math.abs(3.5 - avgTransitions) * 15;
+    score = Math.abs(4 - avgTransitions) * 10;
     description = `Natural texture patterns (transitions: ${avgTransitions.toFixed(2)})`;
   }
   

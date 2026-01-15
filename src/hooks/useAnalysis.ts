@@ -87,15 +87,16 @@ const generateAnalysisResult = (
   let verdict: VerdictType;
   let confidence: number;
   
-  if (score >= 55) {
+  // Lower thresholds to catch AI-generated content better
+  if (score >= 45) {
     verdict = 'deepfake';
-    confidence = Math.min(98, score + 25);
-  } else if (score >= 40) {
+    confidence = Math.min(98, score + 30);
+  } else if (score >= 32) {
     verdict = 'suspicious';
-    confidence = Math.min(85, score + 30);
-  } else if (score >= 25) {
+    confidence = Math.min(90, score + 35);
+  } else if (score >= 18) {
     verdict = 'likely_authentic';
-    confidence = Math.min(80, 100 - score);
+    confidence = Math.min(75, 100 - score);
   } else {
     verdict = 'authentic';
     confidence = Math.min(98, 100 - score);
