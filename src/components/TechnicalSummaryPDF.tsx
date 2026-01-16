@@ -90,9 +90,9 @@ const TechnicalSummaryPDF = ({ isOpen, onClose }: TechnicalSummaryPDFProps) => {
       // Detection Algorithms Section
       y = addSection("Real Detection Algorithms", y);
       const algorithms = [
-        ["Image", "Noise variance, Sobel edges, Color histogram, JPEG artifacts, LBP texture"],
-        ["Video", "Frame extraction, Temporal coherence, Optical flow, Motion analysis"],
-        ["Audio", "FFT spectral, Autocorrelation pitch, Noise floor, Spectral analysis"],
+        ["Image", "Noise variance, Sobel edges, Color histogram, JPEG artifacts, LBP texture, Quantum Entropy"],
+        ["Video", "Frame extraction, Temporal coherence, Optical flow, Motion analysis, Quantum Entropy"],
+        ["Audio", "FFT spectral, Autocorrelation pitch, Noise floor, Spectral analysis, Quantum Entropy"],
         ["Document", "PDF metadata, Entropy analysis, Byte patterns, Structure validation"]
       ];
       algorithms.forEach(([media, tech]) => {
@@ -105,6 +105,21 @@ const TechnicalSummaryPDF = ({ isOpen, onClose }: TechnicalSummaryPDFProps) => {
         y += 5;
       });
       y += 3;
+
+      // Quantum Entropy Section
+      y = addSection("Quantum Entropy Analysis (Unique Feature)", y);
+      const quantumInfo = [
+        "Von Neumann Entropy: S(ρ) = -Tr(ρ log₂ ρ) [1932]",
+        "Min-Entropy: H_min = -log₂(max λᵢ) - QKD security",
+        "Rényi Entropy: H₂ = -log₂(Σ λᵢ²) [1961]",
+        "Classical execution of quantum-derived algorithms"
+      ];
+      doc.setTextColor(128, 0, 128); // purple
+      quantumInfo.forEach((info) => {
+        doc.text("• " + info, 12, y);
+        y += 4;
+      });
+      y += 2;
 
       // Features Section
       y = addSection("Implemented Features", y);
@@ -271,9 +286,9 @@ const TechnicalSummaryPDF = ({ isOpen, onClose }: TechnicalSummaryPDFProps) => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr><td className="font-medium">Image</td><td>Noise variance, Sobel edges, Color histogram, JPEG artifacts, LBP texture, Symmetry</td></tr>
-                      <tr><td className="font-medium">Video</td><td>Frame extraction, Temporal coherence, Optical flow, Motion analysis, Face tracking</td></tr>
-                      <tr><td className="font-medium">Audio</td><td>FFT spectral, Autocorrelation pitch, Noise floor, Spectral centroid/flatness</td></tr>
+                      <tr><td className="font-medium">Image</td><td>Noise variance, Sobel edges, Color histogram, JPEG artifacts, LBP texture, <span className="text-purple-600 font-semibold">Quantum Entropy</span></td></tr>
+                      <tr><td className="font-medium">Video</td><td>Frame extraction, Temporal coherence, Optical flow, Motion analysis, <span className="text-purple-600 font-semibold">Quantum Entropy</span></td></tr>
+                      <tr><td className="font-medium">Audio</td><td>FFT spectral, Autocorrelation pitch, Noise floor, Spectral centroid/flatness, <span className="text-purple-600 font-semibold">Quantum Entropy</span></td></tr>
                       <tr><td className="font-medium">Document</td><td>PDF metadata, Entropy analysis, Byte patterns, Structure validation</td></tr>
                     </tbody>
                   </table>
@@ -292,16 +307,30 @@ const TechnicalSummaryPDF = ({ isOpen, onClose }: TechnicalSummaryPDFProps) => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr><td>Real Image Analysis</td><td className="text-green-600">✅ 6 detection methods</td></tr>
-                      <tr><td>Real Video Analysis</td><td className="text-green-600">✅ 6 detection methods</td></tr>
-                      <tr><td>Real Audio Analysis</td><td className="text-green-600">✅ 6 detection methods</td></tr>
+                      <tr><td>Real Image Analysis</td><td className="text-green-600">✅ 7 detection methods</td></tr>
+                      <tr><td>Real Video Analysis</td><td className="text-green-600">✅ 7 detection methods</td></tr>
+                      <tr><td>Real Audio Analysis</td><td className="text-green-600">✅ 7 detection methods</td></tr>
                       <tr><td>Real Document Analysis</td><td className="text-green-600">✅ 6 detection methods</td></tr>
+                      <tr><td>Quantum Entropy Analysis</td><td className="text-purple-600">✅ Von Neumann, Rényi, Min</td></tr>
                       <tr><td>Camera Capture</td><td className="text-green-600">✅ Functional</td></tr>
                       <tr><td>Audio Recording</td><td className="text-green-600">✅ Functional</td></tr>
                       <tr><td>Forensic Reports</td><td className="text-green-600">✅ Downloadable</td></tr>
                       <tr><td>Explainable AI</td><td className="text-green-600">✅ Real findings</td></tr>
                     </tbody>
                   </table>
+                </div>
+
+                {/* Quantum Entropy - Unique Feature */}
+                <div className="mb-3 bg-purple-50 border border-purple-200 rounded p-2">
+                  <h2 className="text-sm font-semibold text-purple-700 mb-1">
+                    ⚛️ Quantum Entropy Analysis (Unique)
+                  </h2>
+                  <ul className="text-xs space-y-1 text-purple-800">
+                    <li>• <strong>Von Neumann:</strong> S(ρ) = -Tr(ρ log₂ ρ) [1932]</li>
+                    <li>• <strong>Min-Entropy:</strong> H_min = -log₂(max λᵢ)</li>
+                    <li>• <strong>Rényi:</strong> H₂ = -log₂(Σ λᵢ²) [1961]</li>
+                    <li>• <strong>Honest:</strong> Classical execution of quantum math</li>
+                  </ul>
                 </div>
 
                 {/* Technical Highlights */}
