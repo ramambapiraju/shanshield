@@ -888,7 +888,164 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
       )
     },
 
-    // SLIDE 11: THANK YOU
+    // SLIDE 11: TECH STACK & CREDITS
+    {
+      id: "tech-credits",
+      title: "Technology Stack & Credits",
+      subtitle: "Built With Transparency",
+      duration: "1 min",
+      icon: Cpu,
+      content: (
+        <div className="space-y-6">
+          <h2 className="text-3xl font-bold text-center font-display text-foreground mb-4">
+            Complete Technology Disclosure
+          </h2>
+
+          {/* Agents Overview */}
+          <div className="grid grid-cols-5 gap-3 mb-6">
+            <div className="p-4 bg-gradient-to-br from-blue-500/15 to-blue-600/5 border border-blue-500/40 rounded-xl text-center">
+              <Eye className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+              <h4 className="font-bold text-foreground text-sm">Visual Agent</h4>
+              <p className="text-xs text-muted-foreground mt-1">Noise, Edge, LBP, Histograms</p>
+            </div>
+            <div className="p-4 bg-gradient-to-br from-purple-500/15 to-purple-600/5 border border-purple-500/40 rounded-xl text-center">
+              <Mic className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+              <h4 className="font-bold text-foreground text-sm">Audio Agent</h4>
+              <p className="text-xs text-muted-foreground mt-1">FFT, Pitch, Spectral Analysis</p>
+            </div>
+            <div className="p-4 bg-gradient-to-br from-cyan-500/15 to-cyan-600/5 border border-cyan-500/40 rounded-xl text-center">
+              <Activity className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
+              <h4 className="font-bold text-foreground text-sm">Temporal Agent</h4>
+              <p className="text-xs text-muted-foreground mt-1">Frame, Motion, Flicker Detection</p>
+            </div>
+            <div className="p-4 bg-gradient-to-br from-amber-500/15 to-amber-600/5 border border-amber-500/40 rounded-xl text-center">
+              <Database className="w-8 h-8 text-amber-400 mx-auto mb-2" />
+              <h4 className="font-bold text-foreground text-sm">Metadata Agent</h4>
+              <p className="text-xs text-muted-foreground mt-1">EXIF, Hashing, Entropy</p>
+            </div>
+            <div className="p-4 bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/40 rounded-xl text-center">
+              <Brain className="w-8 h-8 text-primary mx-auto mb-2" />
+              <h4 className="font-bold text-foreground text-sm">Arbiter Agent</h4>
+              <p className="text-xs text-muted-foreground mt-1">Belief Fusion, Consensus</p>
+            </div>
+          </div>
+
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-2 gap-6">
+            {/* Left: What's Implemented */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-400" />
+                Implemented Algorithms
+              </h3>
+              <div className="p-4 bg-card border border-green-500/30 rounded-xl space-y-3 text-sm">
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0" />
+                  <div><span className="text-blue-400 font-semibold">Noise Analysis:</span> <span className="text-muted-foreground">GAN uniformity detection via coefficient of variation</span></div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0" />
+                  <div><span className="text-blue-400 font-semibold">Sobel Edge:</span> <span className="text-muted-foreground">Gradient magnitude for sharpening artifacts</span></div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 rounded-full bg-purple-400 mt-1.5 shrink-0" />
+                  <div><span className="text-purple-400 font-semibold">FFT Spectral:</span> <span className="text-muted-foreground">Discrete Fourier Transform via Web Audio API</span></div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 rounded-full bg-purple-400 mt-1.5 shrink-0" />
+                  <div><span className="text-purple-400 font-semibold">Autocorrelation:</span> <span className="text-muted-foreground">Pitch consistency measurement</span></div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 rounded-full bg-cyan-400 mt-1.5 shrink-0" />
+                  <div><span className="text-cyan-400 font-semibold">Frame Analysis:</span> <span className="text-muted-foreground">Temporal coherence & flicker detection</span></div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 shrink-0" />
+                  <div><span className="text-amber-400 font-semibold">Shannon Entropy:</span> <span className="text-muted-foreground">Byte pattern obfuscation detection</span></div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
+                  <div><span className="text-primary font-semibold">Dempster-Shafer:</span> <span className="text-muted-foreground">Belief fusion for multi-agent consensus</span></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Technology Stack */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <Layers className="w-5 h-5 text-primary" />
+                Technology Stack
+              </h3>
+              <div className="p-4 bg-card border border-primary/30 rounded-xl space-y-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground font-semibold">Framework</span>
+                  <span className="text-primary font-mono">React 18 + TypeScript</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground font-semibold">Build Tool</span>
+                  <span className="text-primary font-mono">Vite 5</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground font-semibold">Styling</span>
+                  <span className="text-primary font-mono">Tailwind CSS</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground font-semibold">UI Components</span>
+                  <span className="text-primary font-mono">shadcn/ui + Radix</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground font-semibold">State Management</span>
+                  <span className="text-primary font-mono">React Query</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground font-semibold">PDF Generation</span>
+                  <span className="text-primary font-mono">jsPDF</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-foreground font-semibold">Charts</span>
+                  <span className="text-primary font-mono">Recharts</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Credits Banner */}
+          <div className="p-5 bg-gradient-to-r from-[#8B5CF6]/20 via-primary/10 to-cyan-500/20 border-2 border-primary/50 rounded-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#EC4899] flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">♥</span>
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-foreground">Built with Lovable</h4>
+                  <p className="text-sm text-muted-foreground">AI-powered development platform for rapid prototyping</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-foreground font-semibold">100% Client-Side</div>
+                <div className="text-xs text-muted-foreground">No external AI APIs for detection</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Honest Disclosure */}
+          <div className="p-4 bg-card border border-border rounded-xl">
+            <h4 className="text-lg font-bold text-foreground mb-2 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-warning" />
+              Honest Disclosure
+            </h4>
+            <p className="text-sm text-muted-foreground">
+              This is a <span className="text-primary font-semibold">proof-of-concept demonstrating forensic methodologies</span>. 
+              The algorithms are real and functional, implementing published research techniques. For production-grade accuracy, 
+              integration with trained neural networks (CNNs, Vision Transformers) would be required. 
+              All detection logic runs entirely in the browser — no data leaves your device.
+            </p>
+          </div>
+        </div>
+      )
+    },
+
+    // SLIDE 12: THANK YOU
     {
       id: "closing",
       title: "Thank You",
