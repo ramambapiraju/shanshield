@@ -816,7 +816,133 @@ const isPNG = pngMagic.every(
       )
     },
 
-    // SLIDE 9: ARBITER AGENT WITH CODE
+    // SLIDE 9: QUANTUM INFORMATION THEORY - UNIQUE FEATURE (MOVED BEFORE ARBITER)
+    {
+      id: "quantum-feature",
+      title: "Quantum Entropy Analysis",
+      subtitle: "Our Unique Differentiator",
+      duration: "1.5 min",
+      icon: Zap,
+      content: (
+        <div className="space-y-6">
+          <div className="text-center mb-4">
+            <h2 className="text-4xl font-bold text-gradient-cyber font-display">Quantum Information Theory</h2>
+            <p className="text-muted-foreground mt-2">Real algorithms from quantum physics — honestly executed on classical hardware</p>
+          </div>
+
+          {/* Academic References Banner */}
+          <div className="p-4 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/40 rounded-xl">
+            <div className="flex items-center justify-center gap-8 text-sm">
+              <div className="text-center">
+                <div className="text-purple-400 font-bold">Von Neumann (1932)</div>
+                <div className="text-muted-foreground">Mathematical Foundations of Quantum Mechanics</div>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div className="text-center">
+                <div className="text-cyan-400 font-bold">Rényi (1961)</div>
+                <div className="text-muted-foreground">On Measures of Entropy and Information</div>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div className="text-center">
+                <div className="text-primary font-bold">Tomamichel (2015)</div>
+                <div className="text-muted-foreground">Quantum Information Processing</div>
+              </div>
+            </div>
+          </div>
+
+          {/* The Three Entropy Formulas */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="p-5 bg-card border border-purple-500/40 rounded-xl text-center">
+              <div className="text-purple-400 text-sm font-semibold mb-2">Von Neumann Entropy</div>
+              <div className="text-2xl font-mono text-foreground mb-2">S(ρ) = -Tr(ρ log₂ ρ)</div>
+              <div className="text-xl font-mono text-purple-400 mb-2">= -Σᵢ λᵢ log₂(λᵢ)</div>
+              <p className="text-xs text-muted-foreground">Quantum generalization of Shannon entropy. Measures information content of quantum state.</p>
+            </div>
+            <div className="p-5 bg-card border border-cyan-500/40 rounded-xl text-center">
+              <div className="text-cyan-400 text-sm font-semibold mb-2">Min-Entropy</div>
+              <div className="text-2xl font-mono text-foreground mb-2">H_min(ρ) = -log₂(max λᵢ)</div>
+              <div className="text-xl font-mono text-cyan-400 mb-2">Used in QKD</div>
+              <p className="text-xs text-muted-foreground">Worst-case unpredictability measure. Used in quantum key distribution protocols.</p>
+            </div>
+            <div className="p-5 bg-card border border-primary/40 rounded-xl text-center">
+              <div className="text-primary text-sm font-semibold mb-2">Rényi Entropy (α=2)</div>
+              <div className="text-2xl font-mono text-foreground mb-2">H₂ = -log₂(Σᵢ λᵢ²)</div>
+              <div className="text-xl font-mono text-primary mb-2">Collision Entropy</div>
+              <p className="text-xs text-muted-foreground">Family of entropies. α=2 gives collision entropy used in cryptographic security.</p>
+            </div>
+          </div>
+
+          {/* Code Implementation */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-card border border-purple-500/40 rounded-xl">
+              <h4 className="text-lg font-bold text-purple-400 mb-2">src/lib/quantumEntropyAnalyzer.ts</h4>
+              <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Construct density matrix ρ = |ψ⟩⟨ψ|
+const densityMatrix = [];
+for (let i = 0; i < dimension; i++) {
+  densityMatrix[i] = [];
+  for (let j = 0; j < dimension; j++) {
+    densityMatrix[i][j] = normalized[i] * normalized[j];
+  }
+}
+
+// Von Neumann Entropy: S(ρ) = -Σᵢ λᵢ log₂(λᵢ)
+let vonNeumann = 0;
+for (const λ of eigenvalues) {
+  if (λ > 1e-10) {
+    vonNeumann -= λ * Math.log2(λ);
+  }
+}`}</pre>
+            </div>
+            <div className="p-4 bg-card border border-cyan-500/40 rounded-xl">
+              <h4 className="text-lg font-bold text-cyan-400 mb-2">Entropy Calculations</h4>
+              <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Min-Entropy: H_min = -log₂(max λᵢ)
+const maxEigenvalue = Math.max(...eigenvalues);
+const minEntropy = -Math.log2(maxEigenvalue);
+
+// Rényi Entropy (α=2): H₂ = -log₂(Σᵢ λᵢ²)
+const sumSquares = eigenvalues.reduce(
+  (sum, λ) => sum + λ * λ, 0
+);
+const renyiEntropy = -Math.log2(sumSquares);
+
+// Purity: Tr(ρ²) - pure state = 1
+const purity = sumSquares;`}</pre>
+            </div>
+          </div>
+
+          {/* Media Support */}
+          <div className="p-4 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-cyan-500/10 border border-primary/30 rounded-xl">
+            <div className="flex items-center justify-center gap-12">
+              <div className="text-center">
+                <Eye className="w-8 h-8 text-blue-400 mx-auto mb-1" />
+                <div className="text-sm font-bold text-foreground">Images</div>
+                <div className="text-xs text-muted-foreground">Pixel density matrix</div>
+              </div>
+              <div className="text-center">
+                <Activity className="w-8 h-8 text-cyan-400 mx-auto mb-1" />
+                <div className="text-sm font-bold text-foreground">Video</div>
+                <div className="text-xs text-muted-foreground">Frame entropy analysis</div>
+              </div>
+              <div className="text-center">
+                <Mic className="w-8 h-8 text-purple-400 mx-auto mb-1" />
+                <div className="text-sm font-bold text-foreground">Audio</div>
+                <div className="text-xs text-muted-foreground">Spectral density matrix</div>
+              </div>
+              <div className="h-12 w-px bg-border" />
+              <div className="text-center">
+                <Zap className="w-8 h-8 text-primary mx-auto mb-1" />
+                <div className="text-sm font-bold text-primary">Unique Feature</div>
+                <div className="text-xs text-muted-foreground">First deepfake tool with quantum entropy</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+
+    // SLIDE 10: ARBITER AGENT WITH CODE
     {
       id: "arbiter",
       title: "The Arbiter",
@@ -1086,131 +1212,6 @@ if (conflict > 0.7) {
       )
     },
 
-    // SLIDE 11: QUANTUM INFORMATION THEORY - UNIQUE FEATURE
-    {
-      id: "quantum-feature",
-      title: "Quantum Entropy Analysis",
-      subtitle: "Our Unique Differentiator",
-      duration: "1.5 min",
-      icon: Zap,
-      content: (
-        <div className="space-y-6">
-          <div className="text-center mb-4">
-            <h2 className="text-4xl font-bold text-gradient-cyber font-display">Quantum Information Theory</h2>
-            <p className="text-muted-foreground mt-2">Real algorithms from quantum physics — honestly executed on classical hardware</p>
-          </div>
-
-          {/* Academic References Banner */}
-          <div className="p-4 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/40 rounded-xl">
-            <div className="flex items-center justify-center gap-8 text-sm">
-              <div className="text-center">
-                <div className="text-purple-400 font-bold">Von Neumann (1932)</div>
-                <div className="text-muted-foreground">Mathematical Foundations of Quantum Mechanics</div>
-              </div>
-              <div className="h-8 w-px bg-border" />
-              <div className="text-center">
-                <div className="text-cyan-400 font-bold">Rényi (1961)</div>
-                <div className="text-muted-foreground">On Measures of Entropy and Information</div>
-              </div>
-              <div className="h-8 w-px bg-border" />
-              <div className="text-center">
-                <div className="text-primary font-bold">Tomamichel (2015)</div>
-                <div className="text-muted-foreground">Quantum Information Processing</div>
-              </div>
-            </div>
-          </div>
-
-          {/* The Three Entropy Formulas */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="p-5 bg-card border border-purple-500/40 rounded-xl text-center">
-              <div className="text-purple-400 text-sm font-semibold mb-2">Von Neumann Entropy</div>
-              <div className="text-2xl font-mono text-foreground mb-2">S(ρ) = -Tr(ρ log₂ ρ)</div>
-              <div className="text-xl font-mono text-purple-400 mb-2">= -Σᵢ λᵢ log₂(λᵢ)</div>
-              <p className="text-xs text-muted-foreground">Quantum generalization of Shannon entropy. Measures information content of quantum state.</p>
-            </div>
-            <div className="p-5 bg-card border border-cyan-500/40 rounded-xl text-center">
-              <div className="text-cyan-400 text-sm font-semibold mb-2">Min-Entropy</div>
-              <div className="text-2xl font-mono text-foreground mb-2">H_min(ρ) = -log₂(max λᵢ)</div>
-              <div className="text-xl font-mono text-cyan-400 mb-2">Used in QKD</div>
-              <p className="text-xs text-muted-foreground">Worst-case unpredictability measure. Used in quantum key distribution protocols.</p>
-            </div>
-            <div className="p-5 bg-card border border-primary/40 rounded-xl text-center">
-              <div className="text-primary text-sm font-semibold mb-2">Rényi Entropy (α=2)</div>
-              <div className="text-2xl font-mono text-foreground mb-2">H₂ = -log₂(Σᵢ λᵢ²)</div>
-              <div className="text-xl font-mono text-primary mb-2">Collision Entropy</div>
-              <p className="text-xs text-muted-foreground">Family of entropies. α=2 gives collision entropy used in cryptographic security.</p>
-            </div>
-          </div>
-
-          {/* Code Implementation */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-card border border-purple-500/40 rounded-xl">
-              <h4 className="text-lg font-bold text-purple-400 mb-2">src/lib/quantumEntropyAnalyzer.ts</h4>
-              <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Construct density matrix ρ = |ψ⟩⟨ψ|
-const densityMatrix = [];
-for (let i = 0; i < dimension; i++) {
-  densityMatrix[i] = [];
-  for (let j = 0; j < dimension; j++) {
-    densityMatrix[i][j] = normalized[i] * normalized[j];
-  }
-}
-
-// Von Neumann Entropy: S(ρ) = -Σᵢ λᵢ log₂(λᵢ)
-let vonNeumann = 0;
-for (const λ of eigenvalues) {
-  if (λ > 1e-10) {
-    vonNeumann -= λ * Math.log2(λ);
-  }
-}`}</pre>
-            </div>
-            <div className="p-4 bg-card border border-cyan-500/40 rounded-xl">
-              <h4 className="text-lg font-bold text-cyan-400 mb-2">Entropy Calculations</h4>
-              <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Min-Entropy: H_min = -log₂(max λᵢ)
-const maxEigenvalue = Math.max(...eigenvalues);
-const minEntropy = -Math.log2(maxEigenvalue);
-
-// Rényi Entropy (α=2): H₂ = -log₂(Σᵢ λᵢ²)
-const sumSquares = eigenvalues.reduce(
-  (sum, λ) => sum + λ * λ, 0
-);
-const renyiEntropy = -Math.log2(sumSquares);
-
-// Purity: Tr(ρ²) - pure state = 1
-const purity = sumSquares;`}</pre>
-            </div>
-          </div>
-
-          {/* Media Support */}
-          <div className="p-4 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-cyan-500/10 border border-primary/30 rounded-xl">
-            <div className="flex items-center justify-center gap-12">
-              <div className="text-center">
-                <Eye className="w-8 h-8 text-blue-400 mx-auto mb-1" />
-                <div className="text-sm font-bold text-foreground">Images</div>
-                <div className="text-xs text-muted-foreground">Pixel density matrix</div>
-              </div>
-              <div className="text-center">
-                <Activity className="w-8 h-8 text-cyan-400 mx-auto mb-1" />
-                <div className="text-sm font-bold text-foreground">Video</div>
-                <div className="text-xs text-muted-foreground">Frame entropy analysis</div>
-              </div>
-              <div className="text-center">
-                <Mic className="w-8 h-8 text-purple-400 mx-auto mb-1" />
-                <div className="text-sm font-bold text-foreground">Audio</div>
-                <div className="text-xs text-muted-foreground">Spectral density matrix</div>
-              </div>
-              <div className="h-12 w-px bg-border" />
-              <div className="text-center">
-                <Zap className="w-8 h-8 text-primary mx-auto mb-1" />
-                <div className="text-sm font-bold text-primary">Unique Feature</div>
-                <div className="text-xs text-muted-foreground">First deepfake tool with quantum entropy</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    },
 
     // SLIDE 12: TECH STACK & CREDITS
     {
