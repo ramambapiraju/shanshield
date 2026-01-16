@@ -911,7 +911,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             <div className="p-4 bg-gradient-to-br from-purple-500/15 to-purple-600/5 border border-purple-500/40 rounded-xl text-center">
               <Mic className="w-8 h-8 text-purple-400 mx-auto mb-2" />
               <h4 className="font-bold text-foreground text-sm">Audio Agent</h4>
-              <p className="text-xs text-muted-foreground mt-1">FFT, Pitch, Spectral Analysis</p>
+              <p className="text-xs text-muted-foreground mt-1">FFT, Pitch, Quantum Entropy</p>
             </div>
             <div className="p-4 bg-gradient-to-br from-cyan-500/15 to-cyan-600/5 border border-cyan-500/40 rounded-xl text-center">
               <Activity className="w-8 h-8 text-cyan-400 mx-auto mb-2" />

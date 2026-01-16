@@ -165,7 +165,7 @@ const generateAnalysisResult = (
   const methodsByType: Record<string, string[]> = {
     image: ["Pixel Noise Analysis", "Sobel Edge Detection", "Color Histogram", "JPEG Artifact Detection", "Symmetry Check", "LBP Texture", "Quantum Entropy Analysis"],
     video: ["Frame Consistency", "Temporal Coherence", "Face Region Tracking", "Compression Analysis", "Motion Flow", "A/V Sync Check", "Quantum Entropy"],
-    audio: ["Spectral Analysis", "Pitch Tracking", "Noise Floor Detection", "Compression Artifacts", "Voice Naturalness", "Frequency Distribution"],
+    audio: ["Spectral Analysis", "Pitch Tracking", "Noise Floor Detection", "Compression Artifacts", "Voice Naturalness", "Frequency Distribution", "Quantum Entropy"],
     document: ["Metadata Forensics", "Structure Analysis", "Content Consistency", "Creation Patterns", "Embedded Media Scan", "Modification History"]
   };
 
@@ -221,7 +221,8 @@ export const useAnalysis = () => {
         analysis = toUnifiedAnalysis(result, 'video', result.quantumEntropy);
       } else if (file.type === 'audio') {
         const result = await analyzeAudio(file.file);
-        analysis = toUnifiedAnalysis(result, 'audio');
+        // AudioQuantumEntropyResult is compatible with QuantumEntropyResult for display
+        analysis = toUnifiedAnalysis(result, 'audio', result.quantumEntropy as unknown as QuantumEntropyResult | undefined);
       } else {
         const result = await analyzeDocument(file.file);
         analysis = toUnifiedAnalysis(result, 'document');
