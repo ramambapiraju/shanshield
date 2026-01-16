@@ -13,6 +13,7 @@ import JudgeModePanel from "@/components/JudgeModePanel";
 import PresentationMode from "@/components/PresentationMode";
 import TechShowcase from "@/components/TechShowcase";
 import TechnicalSummaryPDF from "@/components/TechnicalSummaryPDF";
+import QuantumEntropyVisualizer from "@/components/QuantumEntropyVisualizer";
 import { useAnalysis } from "@/hooks/useAnalysis";
 
 const Index = () => {
@@ -169,6 +170,11 @@ const Index = () => {
                   audioSegments={result.audioSegments}
                   reasoning={result.reasoning}
                 />
+                
+                {/* Quantum Entropy Visualizer */}
+                {result.quantumEntropy && (
+                  <QuantumEntropyVisualizer result={result.quantumEntropy} />
+                )}
               </>
             )}
 

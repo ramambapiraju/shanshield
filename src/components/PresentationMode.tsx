@@ -964,6 +964,10 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
                   <div><span className="text-amber-400 font-semibold">Shannon Entropy:</span> <span className="text-muted-foreground">Byte pattern obfuscation detection</span></div>
                 </div>
                 <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 rounded-full bg-purple-400 mt-1.5 shrink-0" />
+                  <div><span className="text-purple-400 font-semibold">Quantum Entropy:</span> <span className="text-muted-foreground">Von Neumann, Rényi, min-entropy (1932/1961)</span></div>
+                </div>
+                <div className="flex items-start gap-2">
                   <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
                   <div><span className="text-primary font-semibold">Dempster-Shafer:</span> <span className="text-muted-foreground">Belief fusion for multi-agent consensus</span></div>
                 </div>

@@ -1,4 +1,5 @@
 // Real Image Analysis - Examines actual pixel data for deepfake/AI-generated indicators
+import { analyzeQuantumEntropy, type QuantumEntropyResult } from './quantumEntropyAnalyzer';
 
 export interface AnalysisFindings {
   score: number; // 0-100 manipulation likelihood
@@ -12,7 +13,9 @@ export interface AnalysisFindings {
     textureAnalysis: { score: number; description: string };
     repetitionAnalysis: { score: number; description: string };
     gradientAnalysis: { score: number; description: string };
+    quantumEntropyAnalysis?: { score: number; description: string };
   };
+  quantumEntropy?: QuantumEntropyResult;
 }
 
 // Load image and get pixel data
@@ -537,7 +540,7 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
   const imageData = await loadImageData(file);
   const { data, width, height } = imageData;
 
-  // Run all analyses
+  // Run all classical analyses
   const noiseAnalysis = analyzeNoise(data, width, height);
   const edgeAnalysis = analyzeEdges(data, width, height);
   const colorAnalysis = analyzeColors(data);
@@ -546,6 +549,15 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
   const textureAnalysis = analyzeTexture(data, width, height);
   const repetitionAnalysis = analyzeRepetition(data, width, height);
   const gradientAnalysis = analyzeGradient(data, width, height);
+
+  // Run Quantum Entropy Analysis (von Neumann, Rényi, min-entropy)
+  const quantumEntropy = analyzeQuantumEntropy(imageData);
+  const quantumEntropyAnalysis = {
+    score: Math.round(quantumEntropy.anomalyScore * 100),
+    description: quantumEntropy.entropyAnomaly 
+      ? `Quantum entropy anomaly detected (von Neumann: ${quantumEntropy.vonNeumannEntropy.toFixed(3)}, coherence: ${(quantumEntropy.quantumCoherence * 100).toFixed(1)}%)`
+      : `Normal quantum entropy patterns (von Neumann: ${quantumEntropy.vonNeumannEntropy.toFixed(3)})`
+  };
 
   // Collect signals - use moderate threshold
   const signals: string[] = [];
@@ -559,6 +571,7 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
   if (textureAnalysis.score > threshold) signals.push(textureAnalysis.description);
   if (repetitionAnalysis.score > threshold) signals.push(repetitionAnalysis.description);
   if (gradientAnalysis.score > threshold) signals.push(gradientAnalysis.description);
+  if (quantumEntropyAnalysis.score > threshold) signals.push(quantumEntropyAnalysis.description);
 
   // Count how many indicators are elevated (> 35)
   const allScores = [
@@ -569,30 +582,33 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
     symmetryAnalysis.score,
     textureAnalysis.score,
     repetitionAnalysis.score,
-    gradientAnalysis.score
+    gradientAnalysis.score,
+    quantumEntropyAnalysis.score
   ];
   const elevatedCount = allScores.filter((s) => s > 35).length;
 
   // Calculate weighted score (weights sum to 1.0)
   let overallScore = (
-    noiseAnalysis.score * 0.18 +
-    edgeAnalysis.score * 0.10 +
-    colorAnalysis.score * 0.10 +
-    compressionAnalysis.score * 0.08 +
-    symmetryAnalysis.score * 0.14 +
-    textureAnalysis.score * 0.16 +
-    repetitionAnalysis.score * 0.08 +
-    gradientAnalysis.score * 0.16  // High weight for gradient - catches animated/AI style
+    noiseAnalysis.score * 0.16 +
+    edgeAnalysis.score * 0.09 +
+    colorAnalysis.score * 0.09 +
+    compressionAnalysis.score * 0.07 +
+    symmetryAnalysis.score * 0.12 +
+    textureAnalysis.score * 0.14 +
+    repetitionAnalysis.score * 0.07 +
+    gradientAnalysis.score * 0.14 +
+    quantumEntropyAnalysis.score * 0.12  // Quantum entropy weight
   );
 
-  // Find strongest AI indicator
+  // Find strongest AI indicator (including quantum entropy)
   const strongAiIndicator = Math.max(
     noiseAnalysis.score,
     textureAnalysis.score,
     symmetryAnalysis.score,
     colorAnalysis.score,
     repetitionAnalysis.score,
-    gradientAnalysis.score
+    gradientAnalysis.score,
+    quantumEntropyAnalysis.score
   );
   const hasStrongAiIndicator = strongAiIndicator >= 70;
   const hasVeryStrongIndicator = strongAiIndicator >= 85;
@@ -636,7 +652,9 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
       symmetryAnalysis,
       textureAnalysis,
       repetitionAnalysis,
-      gradientAnalysis
-    }
+      gradientAnalysis,
+      quantumEntropyAnalysis
+    },
+    quantumEntropy
   };
 };

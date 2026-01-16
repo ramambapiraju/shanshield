@@ -4,6 +4,7 @@ import { analyzeImage, type AnalysisFindings } from "@/lib/imageAnalyzer";
 import { analyzeVideo, type VideoAnalysisFindings } from "@/lib/videoAnalyzer";
 import { analyzeAudio, type AudioAnalysisFindings } from "@/lib/audioAnalyzer";
 import { analyzeDocument, type DocumentAnalysisFindings } from "@/lib/documentAnalyzer";
+import { type QuantumEntropyResult } from "@/lib/quantumEntropyAnalyzer";
 
 interface UploadedFile {
   file: File;
@@ -54,6 +55,7 @@ interface AnalysisResult {
   reasoning: string[];
   mediaHash: string;
   detectionMethods: string[];
+  quantumEntropy?: QuantumEntropyResult;
 }
 
 type UnifiedAnalysis = {
@@ -61,18 +63,21 @@ type UnifiedAnalysis = {
   signals: string[];
   details: Record<string, { score: number; description: string }>;
   mediaType: 'image' | 'video' | 'audio' | 'document';
+  quantumEntropy?: QuantumEntropyResult;
 };
 
 // Convert any analyzer result to unified format
 const toUnifiedAnalysis = (
   result: AnalysisFindings | VideoAnalysisFindings | AudioAnalysisFindings | DocumentAnalysisFindings,
-  mediaType: 'image' | 'video' | 'audio' | 'document'
+  mediaType: 'image' | 'video' | 'audio' | 'document',
+  quantumEntropy?: QuantumEntropyResult
 ): UnifiedAnalysis => {
   return {
     score: result.score,
     signals: result.signals,
     details: result.details as Record<string, { score: number; description: string }>,
-    mediaType
+    mediaType,
+    quantumEntropy
   };
 };
 
@@ -158,8 +163,8 @@ const generateAnalysisResult = (
   }
 
   const methodsByType: Record<string, string[]> = {
-    image: ["Pixel Noise Analysis", "Sobel Edge Detection", "Color Histogram", "JPEG Artifact Detection", "Symmetry Check", "LBP Texture"],
-    video: ["Frame Consistency", "Temporal Coherence", "Face Region Tracking", "Compression Analysis", "Motion Flow", "A/V Sync Check"],
+    image: ["Pixel Noise Analysis", "Sobel Edge Detection", "Color Histogram", "JPEG Artifact Detection", "Symmetry Check", "LBP Texture", "Quantum Entropy Analysis"],
+    video: ["Frame Consistency", "Temporal Coherence", "Face Region Tracking", "Compression Analysis", "Motion Flow", "A/V Sync Check", "Quantum Entropy"],
     audio: ["Spectral Analysis", "Pitch Tracking", "Noise Floor Detection", "Compression Artifacts", "Voice Naturalness", "Frequency Distribution"],
     document: ["Metadata Forensics", "Structure Analysis", "Content Consistency", "Creation Patterns", "Embedded Media Scan", "Modification History"]
   };
@@ -175,7 +180,8 @@ const generateAnalysisResult = (
     audioSegments,
     reasoning,
     mediaHash,
-    detectionMethods: methodsByType[mediaType] || methodsByType.image
+    detectionMethods: methodsByType[mediaType] || methodsByType.image,
+    quantumEntropy: analysis.quantumEntropy
   };
 };
 
@@ -209,7 +215,7 @@ export const useAnalysis = () => {
       
       if (file.type === 'image') {
         const result = await analyzeImage(file.file);
-        analysis = toUnifiedAnalysis(result, 'image');
+        analysis = toUnifiedAnalysis(result, 'image', result.quantumEntropy);
       } else if (file.type === 'video') {
         const result = await analyzeVideo(file.file);
         analysis = toUnifiedAnalysis(result, 'video');
