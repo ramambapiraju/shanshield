@@ -7,7 +7,7 @@ import AnalysisPipeline from "@/components/analysis/AnalysisPipeline";
 import AnalysisResults from "@/components/analysis/AnalysisResults";
 import ExplainableAI from "@/components/analysis/ExplainableAI";
 import ForensicReport from "@/components/analysis/ForensicReport";
-import FieldModeToggle from "@/components/analysis/FieldModeToggle";
+import OfflineReadyIndicator from "@/components/analysis/FieldModeToggle";
 import SecurityIndicators from "@/components/analysis/SecurityIndicators";
 import JudgeModePanel from "@/components/JudgeModePanel";
 import PresentationMode from "@/components/PresentationMode";
@@ -35,12 +35,10 @@ const [showPresentation, setShowPresentation] = useState(false);
     isAnalyzing,
     analysisComplete,
     result,
-    isFieldMode,
     handleFilesSelected,
     startAnalysis,
     handleAnalysisComplete,
     handleProgress,
-    handleFieldModeChange,
     resetAnalysis
   } = useAnalysis();
 
@@ -96,7 +94,7 @@ const [showPresentation, setShowPresentation] = useState(false);
           <div className="lg:col-span-4 space-y-6">
             <MediaUploader onFilesSelected={handleFilesSelected} isAnalyzing={isAnalyzing} />
             
-            <FieldModeToggle onModeChange={handleFieldModeChange} />
+            <OfflineReadyIndicator />
             
             {/* Analyze Button - Always show when files exist */}
             {files.length > 0 && !analysisComplete && (
