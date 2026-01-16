@@ -1,4 +1,5 @@
 // Real Video Analysis - Frame-by-frame analysis for deepfake detection
+import { analyzeQuantumEntropy, type QuantumEntropyResult } from './quantumEntropyAnalyzer';
 
 export interface VideoAnalysisFindings {
   score: number;
@@ -13,6 +14,7 @@ export interface VideoAnalysisFindings {
   };
   frameCount: number;
   duration: number;
+  quantumEntropy?: QuantumEntropyResult;
 }
 
 // Extract frames from video
@@ -388,6 +390,12 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
         const motionAnalysis = analyzeMotion(frames);
         const audioVideoSync = analyzeAudioVideoSync();
         
+        // Quantum Entropy Analysis on first frame
+        let quantumEntropy: QuantumEntropyResult | undefined;
+        if (frames.length > 0) {
+          quantumEntropy = analyzeQuantumEntropy(frames[0]);
+        }
+        
         const signals: string[] = [];
         const threshold = 50;
         
@@ -398,7 +406,11 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
         if (motionAnalysis.score > threshold) signals.push(motionAnalysis.description);
         if (audioVideoSync.score > threshold) signals.push(audioVideoSync.description);
         
-        const overallScore = (
+        // Include quantum entropy in score if available
+        const quantumWeight = quantumEntropy ? 0.08 : 0;
+        const baseWeight = quantumEntropy ? 0.92 : 1.0;
+        
+        const baseScore = (
           frameConsistency.score * 0.20 +
           temporalCoherence.score * 0.20 +
           faceTracking.score * 0.20 +
@@ -406,6 +418,9 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
           motionAnalysis.score * 0.15 +
           audioVideoSync.score * 0.10
         );
+        
+        const overallScore = baseScore * baseWeight + 
+          (quantumEntropy ? quantumEntropy.anomalyScore * 100 * quantumWeight : 0);
         
         URL.revokeObjectURL(video.src);
         
@@ -421,7 +436,8 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
             audioVideoSync
           },
           frameCount: frames.length,
-          duration
+          duration,
+          quantumEntropy
         });
       } catch (err) {
         console.error('Video analysis error:', err);

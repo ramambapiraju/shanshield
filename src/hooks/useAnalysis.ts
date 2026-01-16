@@ -218,7 +218,7 @@ export const useAnalysis = () => {
         analysis = toUnifiedAnalysis(result, 'image', result.quantumEntropy);
       } else if (file.type === 'video') {
         const result = await analyzeVideo(file.file);
-        analysis = toUnifiedAnalysis(result, 'video');
+        analysis = toUnifiedAnalysis(result, 'video', result.quantumEntropy);
       } else if (file.type === 'audio') {
         const result = await analyzeAudio(file.file);
         analysis = toUnifiedAnalysis(result, 'audio');
