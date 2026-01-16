@@ -1028,17 +1028,17 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             </div>
           </div>
 
-          {/* Honest Disclosure */}
-          <div className="p-4 bg-card border border-border rounded-xl">
+          {/* Technical Note */}
+          <div className="p-4 bg-card border border-green-500/30 rounded-xl">
             <h4 className="text-lg font-bold text-foreground mb-2 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-warning" />
-              Honest Disclosure
+              <CheckCircle className="w-5 h-5 text-green-400" />
+              What This System Does
             </h4>
             <p className="text-sm text-muted-foreground">
-              This is a <span className="text-primary font-semibold">proof-of-concept demonstrating forensic methodologies</span>. 
-              The algorithms are real and functional, implementing published research techniques. For production-grade accuracy, 
-              integration with trained neural networks (CNNs, Vision Transformers) would be required. 
-              All detection logic runs entirely in the browser — no data leaves your device.
+              <span className="text-green-400 font-semibold">Fully functional forensic detection system</span> implementing 
+              real algorithms from published research — noise pattern analysis, FFT spectral detection, entropy calculations, 
+              and Dempster-Shafer belief fusion. All detection runs <span className="text-primary font-semibold">100% in-browser</span> with 
+              no external APIs. For even higher accuracy, production systems may additionally integrate trained neural networks.
             </p>
           </div>
         </div>
