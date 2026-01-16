@@ -293,166 +293,225 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
       )
     },
 
-    // SLIDE 4: VISUAL AGENT DEEP-DIVE
+    // SLIDE 4: VISUAL AGENT DEEP-DIVE WITH CODE
     {
       id: "visual-deep",
       title: "Visual Agent Deep-Dive",
-      subtitle: "Seeing What Humans Can't",
-      duration: "1 min",
+      subtitle: "Seeing What Humans Can't — With Code",
+      duration: "1 min 30 sec",
       icon: Eye,
       content: (
-        <div className="space-y-6">
-          <h2 className="text-4xl font-bold text-center font-display text-foreground mb-6">
-            Visual Forensics Technology
+        <div className="space-y-4">
+          <h2 className="text-3xl font-bold text-center font-display text-foreground mb-4">
+            Visual Agent — src/lib/imageAnalyzer.ts
           </h2>
 
-          <div className="grid grid-cols-2 gap-6">
-            <div className="p-6 bg-card border border-border rounded-xl space-y-4">
-              <h3 className="text-2xl font-bold text-primary flex items-center gap-2">
-                <Layers className="w-6 h-6" />
+          <div className="grid grid-cols-2 gap-4">
+            {/* Noise Analysis with Code */}
+            <div className="p-4 bg-card border border-blue-500/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-blue-400 flex items-center gap-2">
+                <Layers className="w-5 h-5" />
                 Noise Pattern Analysis
               </h3>
-              <div className="space-y-2 text-muted-foreground">
-                <p className="text-lg">GAN-generated images have unnaturally uniform noise</p>
-                <div className="p-4 bg-background/50 rounded-lg font-mono text-sm">
-                  <div>• Sample adjacent pixel differences</div>
-                  <div>• Calculate coefficient of variation</div>
-                  <div>• CV &lt; 30% indicates synthetic origin</div>
-                  <div>• Works on compressed images</div>
-                </div>
-              </div>
+              <pre className="p-3 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Sample adjacent pixel differences
+for (let y = 1; y < height - 1; y += 2) {
+  const idx = (y * width + x) * 4;
+  const idxRight = (y * width + x + 1) * 4;
+  const diffR = Math.abs(data[idx] - data[idxRight]);
+  noiseValues.push((diffR + diffG + diffB) / 3);
+}
+// Calculate coefficient of variation
+const cv = (stdDev / mean) * 100;
+// CV < 30% = synthetic origin (GAN)`}</pre>
+              <p className="text-xs text-muted-foreground">GAN images have unnaturally uniform noise patterns</p>
             </div>
 
-            <div className="p-6 bg-card border border-border rounded-xl space-y-4">
-              <h3 className="text-2xl font-bold text-cyan-400 flex items-center gap-2">
-                <Activity className="w-6 h-6" />
-                Frequency Domain Analysis
+            {/* Sobel Edge Detection with Code */}
+            <div className="p-4 bg-card border border-cyan-500/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-cyan-400 flex items-center gap-2">
+                <Activity className="w-5 h-5" />
+                Sobel Edge Detection
               </h3>
-              <div className="space-y-2 text-muted-foreground">
-                <p className="text-lg">AI models leave high-frequency fingerprints</p>
-                <div className="p-4 bg-background/50 rounded-lg font-mono text-sm">
-                  <div>• Sobel edge detection</div>
-                  <div>• Color channel correlation</div>
-                  <div>• JPEG 8x8 block boundary detection</div>
-                  <div>• Double compression artifacts</div>
-                </div>
-              </div>
+              <pre className="p-3 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Sobel kernels for gradient detection
+const Gx = [[-1,0,1],[-2,0,2],[-1,0,1]];
+const Gy = [[-1,-2,-1],[0,0,0],[1,2,1]];
+
+// Compute gradient magnitude
+const gradX = convolve(pixels, Gx);
+const gradY = convolve(pixels, Gy);
+const magnitude = Math.sqrt(gradX² + gradY²);
+
+// Detect artificial sharpening artifacts`}</pre>
+              <p className="text-xs text-muted-foreground">Detects artificial sharpening & edge artifacts</p>
+            </div>
+
+            {/* LBP Texture Analysis */}
+            <div className="p-4 bg-card border border-purple-500/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-purple-400 flex items-center gap-2">
+                <Layers className="w-5 h-5" />
+                Local Binary Patterns (LBP)
+              </h3>
+              <pre className="p-3 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Compare center pixel to 8 neighbors
+let lbpCode = 0;
+for (let i = 0; i < 8; i++) {
+  const neighbor = getNeighbor(x, y, i);
+  if (neighbor >= centerPixel) {
+    lbpCode |= (1 << i);
+  }
+}
+// Build histogram of LBP codes
+histogram[lbpCode]++;`}</pre>
+              <p className="text-xs text-muted-foreground">Detects texture inconsistencies in skin regions</p>
+            </div>
+
+            {/* Color Histogram Analysis */}
+            <div className="p-4 bg-card border border-amber-500/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-amber-400 flex items-center gap-2">
+                <Eye className="w-5 h-5" />
+                Color Histogram Analysis
+              </h3>
+              <pre className="p-3 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Build color histograms per channel
+const histR = new Array(256).fill(0);
+const histG = new Array(256).fill(0);
+const histB = new Array(256).fill(0);
+
+for (let i = 0; i < data.length; i += 4) {
+  histR[data[i]]++;
+  histG[data[i+1]]++;
+  histB[data[i+2]]++;
+}`}</pre>
+              <p className="text-xs text-muted-foreground">Analyzes color distribution for AI patterns</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            <div className="p-6 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/40 rounded-xl">
-              <h3 className="text-xl font-bold text-blue-400 flex items-center gap-2 mb-3">
-                <Eye className="w-5 h-5" />
-                Bilateral Symmetry Check
-              </h3>
-              <p className="text-muted-foreground">
-                GAN faces are often too symmetric. Real faces have natural asymmetries. 
-                We measure symmetry scores to flag synthetic content.
-              </p>
-            </div>
-            <div className="p-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-2 border-purple-500/40 rounded-xl">
-              <h3 className="text-xl font-bold text-purple-400 flex items-center gap-2 mb-3">
-                <Layers className="w-5 h-5" />
-                LBP Texture Analysis
-              </h3>
-              <p className="text-muted-foreground">
-                Local Binary Patterns detect texture inconsistencies in skin regions
-                that appear uniform but should have natural variation.
-              </p>
+          {/* Formula Box */}
+          <div className="p-3 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/40 rounded-xl">
+            <div className="flex items-center justify-center gap-8 text-sm">
+              <div className="text-center">
+                <div className="font-mono text-lg text-blue-400">CV = (σ / μ) × 100</div>
+                <div className="text-xs text-muted-foreground">Coefficient of Variation</div>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div className="text-center">
+                <div className="font-mono text-lg text-cyan-400">G = √(Gx² + Gy²)</div>
+                <div className="text-xs text-muted-foreground">Sobel Gradient Magnitude</div>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div className="text-center">
+                <div className="font-mono text-lg text-purple-400">LBP = Σ s(pᵢ - c) × 2ⁱ</div>
+                <div className="text-xs text-muted-foreground">Local Binary Pattern</div>
+              </div>
             </div>
           </div>
         </div>
       )
     },
 
-    // SLIDE 5: AUDIO & TEMPORAL AGENTS
+    // SLIDE 5: AUDIO & TEMPORAL AGENTS WITH CODE
     {
       id: "audio-temporal",
       title: "Audio & Temporal Analysis",
-      subtitle: "Hearing and Timing What's Wrong",
-      duration: "1 min",
+      subtitle: "Hearing and Timing What's Wrong — With Code",
+      duration: "1 min 30 sec",
       icon: Mic,
       content: (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-8">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
             {/* Audio Agent */}
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold font-display text-foreground flex items-center gap-3">
-                <Mic className="w-8 h-8 text-purple-400" />
-                Audio Agent
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold font-display text-foreground flex items-center gap-2">
+                <Mic className="w-6 h-6 text-purple-400" />
+                Audio Agent — src/lib/audioAnalyzer.ts
               </h2>
               
-              <div className="p-6 bg-card border border-purple-500/30 rounded-xl space-y-4">
-                <h4 className="text-xl font-bold text-purple-400">FFT Spectral Analysis</h4>
-                <div className="p-4 bg-background/50 rounded-lg font-mono text-sm text-muted-foreground">
-                  <div>• Compute frequency magnitudes via DFT</div>
-                  <div>• Analyze spectral centroid & flatness</div>
-                  <div>• TTS has unnatural spectral regularity</div>
-                  <div>• Real-time Web Audio API processing</div>
-                </div>
+              {/* FFT Code */}
+              <div className="p-3 bg-card border border-purple-500/40 rounded-xl">
+                <h4 className="text-lg font-bold text-purple-400 mb-2">FFT Spectral Analysis</h4>
+                <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Discrete Fourier Transform
+const computeFFT = (samples, fftSize = 2048) => {
+  const magnitudes = new Float32Array(fftSize / 2);
+  for (let k = 0; k < fftSize / 2; k++) {
+    let realSum = 0, imagSum = 0;
+    for (let n = 0; n < fftSize; n++) {
+      const angle = (2 * Math.PI * k * n) / fftSize;
+      realSum += real[n] * Math.cos(angle);
+      imagSum -= real[n] * Math.sin(angle);
+    }
+    magnitudes[k] = Math.sqrt(realSum² + imagSum²);
+  }
+  return magnitudes;
+};`}</pre>
               </div>
 
-              <div className="p-6 bg-card border border-purple-500/30 rounded-xl space-y-4">
-                <h4 className="text-xl font-bold text-purple-400">What It Detects</h4>
-                <ul className="space-y-2 text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-purple-400" />
-                    Unnatural pitch consistency
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-purple-400" />
-                    Unnaturally clean noise floor
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-purple-400" />
-                    Robotic envelope patterns
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-purple-400" />
-                    Missing high frequencies (TTS)
-                  </li>
-                </ul>
+              {/* Pitch Tracking */}
+              <div className="p-3 bg-card border border-purple-500/40 rounded-xl">
+                <h4 className="text-lg font-bold text-purple-400 mb-2">Pitch Autocorrelation</h4>
+                <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Autocorrelation for pitch detection
+// R(τ) = Σ x(n) × x(n + τ)
+const R_tau = computeAutocorrelation(samples);
+const pitchVariance = calculateVariance(pitches);
+// TTS: low variance = synthetic voice`}</pre>
               </div>
             </div>
 
             {/* Temporal Agent */}
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold font-display text-foreground flex items-center gap-3">
-                <Activity className="w-8 h-8 text-cyan-400" />
-                Temporal Agent
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold font-display text-foreground flex items-center gap-2">
+                <Activity className="w-6 h-6 text-cyan-400" />
+                Temporal Agent — src/lib/videoAnalyzer.ts
               </h2>
               
-              <div className="p-6 bg-card border border-cyan-500/30 rounded-xl space-y-4">
-                <h4 className="text-xl font-bold text-cyan-400">Motion Analysis</h4>
-                <div className="p-4 bg-background/50 rounded-lg font-mono text-sm text-muted-foreground">
-                  <div>• Extract frames at regular intervals</div>
-                  <div>• Calculate inter-frame differences</div>
-                  <div>• Detect motion discontinuities</div>
-                  <div>• Analyze acceleration patterns</div>
-                </div>
+              {/* Frame Extraction */}
+              <div className="p-3 bg-card border border-cyan-500/40 rounded-xl">
+                <h4 className="text-lg font-bold text-cyan-400 mb-2">Frame Extraction & Analysis</h4>
+                <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Extract frames at intervals
+video.currentTime = i * interval;
+await new Promise(r => video.onseeked = r);
+ctx.drawImage(video, 0, 0, width, height);
+const frameData = ctx.getImageData(0, 0, w, h);
+
+// Inter-frame difference analysis
+for (let p = 0; p < curr.length; p += 4) {
+  diff += Math.abs(curr[p] - prev[p]);
+}
+const avgDiff = diff / (w * h);`}</pre>
               </div>
 
-              <div className="p-6 bg-card border border-cyan-500/30 rounded-xl space-y-4">
-                <h4 className="text-xl font-bold text-cyan-400">What It Detects</h4>
-                <ul className="space-y-2 text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-cyan-400" />
-                    Temporal splices/cuts
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-cyan-400" />
-                    Flickering artifacts
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-cyan-400" />
-                    Face/background inconsistency
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-cyan-400" />
-                    Unnatural motion physics
-                  </li>
-                </ul>
+              {/* Flicker Detection */}
+              <div className="p-3 bg-card border border-cyan-500/40 rounded-xl">
+                <h4 className="text-lg font-bold text-cyan-400 mb-2">Flicker Detection</h4>
+                <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Detect high-frequency brightness changes
+const flickerScore = detectFlicker(diffs);
+// High variance = temporal inconsistency
+// Deepfakes often have frame-level glitches`}</pre>
+              </div>
+            </div>
+          </div>
+
+          {/* Formula Box */}
+          <div className="p-3 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-purple-500/40 rounded-xl">
+            <div className="flex items-center justify-center gap-6 text-sm">
+              <div className="text-center">
+                <div className="font-mono text-lg text-purple-400">X(k) = Σ x(n)·e^(-2πikn/N)</div>
+                <div className="text-xs text-muted-foreground">Discrete Fourier Transform</div>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div className="text-center">
+                <div className="font-mono text-lg text-purple-400">R(τ) = Σ x(n)·x(n+τ)</div>
+                <div className="text-xs text-muted-foreground">Autocorrelation</div>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div className="text-center">
+                <div className="font-mono text-lg text-cyan-400">Δf = |F(t) - F(t-1)|</div>
+                <div className="text-xs text-muted-foreground">Inter-Frame Difference</div>
               </div>
             </div>
           </div>
@@ -648,85 +707,224 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
       )
     },
 
-    // SLIDE 8: ARBITER AGENT
+    // SLIDE 8: METADATA AGENT WITH CODE
+    {
+      id: "metadata-agent",
+      title: "Metadata Agent",
+      subtitle: "Document Forensics & Integrity — With Code",
+      duration: "45 sec",
+      icon: Database,
+      content: (
+        <div className="space-y-4">
+          <h2 className="text-3xl font-bold text-center font-display text-foreground mb-4">
+            Metadata Agent — src/lib/documentAnalyzer.ts
+          </h2>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* SHA-256 Hashing */}
+            <div className="p-4 bg-card border border-amber-500/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-amber-400 flex items-center gap-2">
+                <Lock className="w-5 h-5" />
+                SHA-256 File Hashing
+              </h3>
+              <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Web Crypto API for integrity hashing
+const hashBuffer = await crypto.subtle.digest(
+  'SHA-256', 
+  arrayBuffer
+);
+const hashArray = Array.from(new Uint8Array(hashBuffer));
+const hashHex = hashArray
+  .map(b => b.toString(16).padStart(2, '0'))
+  .join('');
+// 64-char hex = unique file fingerprint`}</pre>
+            </div>
+
+            {/* Shannon Entropy */}
+            <div className="p-4 bg-card border border-amber-500/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-amber-400 flex items-center gap-2">
+                <Activity className="w-5 h-5" />
+                Shannon Entropy Analysis
+              </h3>
+              <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Byte-level entropy calculation
+const byteCounts = new Array(256).fill(0);
+for (let i = 0; i < sampleSize; i++) {
+  byteCounts[bytes[i]]++;
+}
+let entropy = 0;
+for (let i = 0; i < 256; i++) {
+  if (byteCounts[i] > 0) {
+    const p = byteCounts[i] / sampleSize;
+    entropy -= p * Math.log2(p);
+  }
+}`}</pre>
+            </div>
+
+            {/* EXIF Parsing */}
+            <div className="p-4 bg-card border border-amber-500/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-amber-400 flex items-center gap-2">
+                <Database className="w-5 h-5" />
+                EXIF/XMP Extraction
+              </h3>
+              <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Parse embedded metadata
+const producerMatch = text.match(
+  /\\/Producer\\s*\\(([^)]*)\\)/
+);
+const creatorMatch = text.match(
+  /\\/Creator\\s*\\(([^)]*)\\)/
+);
+// Detect AI generation markers:
+// "DALL-E", "Midjourney", "Stable Diffusion"`}</pre>
+            </div>
+
+            {/* Magic Bytes */}
+            <div className="p-4 bg-card border border-amber-500/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-amber-400 flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Magic Byte Verification
+              </h3>
+              <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Verify file signature matches extension
+const pngMagic = [0x89, 0x50, 0x4E, 0x47];
+const jpegMagic = [0xFF, 0xD8, 0xFF];
+
+const headerBytes = bytes.slice(0, 8);
+const isPNG = pngMagic.every(
+  (b, i) => headerBytes[i] === b
+);
+// Mismatch = possible tampering`}</pre>
+            </div>
+          </div>
+
+          {/* Formula Box */}
+          <div className="p-3 bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/40 rounded-xl">
+            <div className="flex items-center justify-center gap-8 text-sm">
+              <div className="text-center">
+                <div className="font-mono text-lg text-amber-400">H = -Σ p(x) × log₂(p(x))</div>
+                <div className="text-xs text-muted-foreground">Shannon Entropy Formula</div>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div className="text-center">
+                <div className="font-mono text-lg text-amber-400">Max H = 8 bits/byte</div>
+                <div className="text-xs text-muted-foreground">Random data = high entropy</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+
+    // SLIDE 9: ARBITER AGENT WITH CODE
     {
       id: "arbiter",
       title: "The Arbiter",
-      subtitle: "Dempster-Shafer Belief Fusion",
-      duration: "45 sec",
+      subtitle: "Dempster-Shafer Belief Fusion — With Code",
+      duration: "1 min",
       icon: Brain,
       content: (
-        <div className="space-y-6">
-          <h2 className="text-4xl font-bold text-center font-display text-foreground mb-6">
-            The Judge: Combining Agent Opinions
+        <div className="space-y-4">
+          <h2 className="text-3xl font-bold text-center font-display text-foreground mb-4">
+            Arbiter Agent — Belief Fusion
           </h2>
 
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <h3 className="text-2xl font-bold text-primary">Dempster-Shafer Theory</h3>
-              <div className="p-6 bg-card border border-border rounded-xl space-y-4">
-                <p className="text-muted-foreground">
-                  Unlike simple averaging, Dempster-Shafer handles uncertainty and allows agents to express "I don't know."
-                </p>
-                <div className="p-4 bg-background/50 rounded-lg font-mono text-sm text-muted-foreground">
-                  <div>// Combine beliefs from all agents</div>
-                  <div>K = conflict between agents</div>
-                  <div>if (K &gt; 0.7) flag_conflict();</div>
-                  <div>combined = normalize(beliefs);</div>
-                </div>
-              </div>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Dempster-Shafer Theory */}
+            <div className="p-4 bg-card border border-primary/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-primary flex items-center gap-2">
+                <Brain className="w-5 h-5" />
+                Dempster-Shafer Combination Rule
+              </h3>
+              <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Dempster-Shafer Belief Fusion
+// m₁₂(A) = Σ m₁(B)×m₂(C) / (1 - K)
+// K = conflict measure
+
+const combineBeliefs = (agents) => {
+  let belief_fake = 1, belief_real = 1;
+  
+  for (const agent of agents) {
+    belief_fake *= agent.fakeScore;
+    belief_real *= agent.realScore;
+  }
+  
+  // Normalize
+  const K = 1 - (belief_fake + belief_real);
+  return {
+    fake: belief_fake / (1 - K),
+    real: belief_real / (1 - K),
+    conflict: K
+  };
+};`}</pre>
             </div>
 
-            <div className="space-y-4">
-              <h3 className="text-2xl font-bold text-primary">Agent Weights</h3>
-              <div className="p-6 bg-card border border-border rounded-xl space-y-4">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="flex items-center gap-2">
-                      <Eye className="w-4 h-4 text-blue-400" />
-                      Visual Agent
-                    </span>
-                    <span className="font-mono text-blue-400">35%</span>
+            {/* Weighted Consensus */}
+            <div className="p-4 bg-card border border-primary/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-primary flex items-center gap-2">
+                <Target className="w-5 h-5" />
+                Weighted Agent Scores
+              </h3>
+              <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Agent weight configuration
+const weights = {
+  visual:   0.35,  // Primary signal
+  audio:    0.25,  // Voice analysis
+  temporal: 0.25,  // Frame consistency
+  metadata: 0.15   // Supporting evidence
+};
+
+// Weighted combination
+const finalScore = 
+  visual   * weights.visual   +
+  audio    * weights.audio    +
+  temporal * weights.temporal +
+  metadata * weights.metadata;`}</pre>
+              <div className="mt-3 space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-400" />
+                  <span className="text-xs text-muted-foreground">Visual: 35%</span>
+                  <div className="flex-1 h-1 bg-blue-400/30 rounded">
+                    <div className="h-1 bg-blue-400 rounded" style={{ width: '35%' }} />
                   </div>
-                  <Progress value={35} className="h-2" />
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="flex items-center gap-2">
-                      <Mic className="w-4 h-4 text-purple-400" />
-                      Audio Agent
-                    </span>
-                    <span className="font-mono text-purple-400">25%</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-purple-400" />
+                  <span className="text-xs text-muted-foreground">Audio: 25%</span>
+                  <div className="flex-1 h-1 bg-purple-400/30 rounded">
+                    <div className="h-1 bg-purple-400 rounded" style={{ width: '25%' }} />
                   </div>
-                  <Progress value={25} className="h-2" />
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="flex items-center gap-2">
-                      <Activity className="w-4 h-4 text-cyan-400" />
-                      Temporal Agent
-                    </span>
-                    <span className="font-mono text-cyan-400">25%</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                  <span className="text-xs text-muted-foreground">Temporal: 25%</span>
+                  <div className="flex-1 h-1 bg-cyan-400/30 rounded">
+                    <div className="h-1 bg-cyan-400 rounded" style={{ width: '25%' }} />
                   </div>
-                  <Progress value={25} className="h-2" />
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-amber-400" />
-                      Metadata Agent
-                    </span>
-                    <span className="font-mono text-amber-400">15%</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-amber-400" />
+                  <span className="text-xs text-muted-foreground">Metadata: 15%</span>
+                  <div className="flex-1 h-1 bg-amber-400/30 rounded">
+                    <div className="h-1 bg-amber-400 rounded" style={{ width: '15%' }} />
                   </div>
-                  <Progress value={15} className="h-2" />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="p-6 bg-gradient-to-r from-primary/20 to-primary/5 border-2 border-primary/50 rounded-xl">
-            <h4 className="text-xl font-bold text-foreground mb-3">Conflict Detection</h4>
-            <p className="text-muted-foreground">
-              When Visual says <span className="text-destructive font-bold">FAKE</span> but Audio says <span className="text-success font-bold">REAL</span>, 
-              we don't average — we <span className="text-primary font-bold">FLAG A CONFLICT</span>. This catches sophisticated attacks that fool single-modal systems.
-            </p>
+          {/* Conflict Detection */}
+          <div className="p-4 bg-gradient-to-r from-destructive/10 to-primary/10 border-2 border-primary/50 rounded-xl">
+            <h4 className="text-lg font-bold text-foreground mb-2 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-warning" />
+              Conflict Detection
+            </h4>
+            <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground">
+{`// Flag when agents strongly disagree
+if (conflict > 0.7) {
+  verdict = "CONFLICT_DETECTED";
+  reason = "Visual says FAKE but Audio says REAL — sophisticated attack possible";
+}`}</pre>
           </div>
         </div>
       )
@@ -944,55 +1142,43 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             </div>
           </div>
 
-          {/* How It Works */}
-          <div className="grid grid-cols-2 gap-6">
-            <div className="p-5 bg-card border border-green-500/40 rounded-xl">
-              <h4 className="text-lg font-bold text-green-400 mb-3 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5" />
-                How It Works (Honest Explanation)
-              </h4>
-              <ol className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex gap-2">
-                  <span className="text-green-400 font-bold">1.</span>
-                  Extract pixel luminance values as amplitude proxies
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-green-400 font-bold">2.</span>
-                  Construct density matrix ρ = |ψ⟩⟨ψ| (outer product)
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-green-400 font-bold">3.</span>
-                  Compute eigenvalues λᵢ via Gershgorin approximation
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-green-400 font-bold">4.</span>
-                  Calculate Von Neumann, Min-Entropy, Rényi measures
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-green-400 font-bold">5. </span>
-                  Detect anomalies via entropy ratio deviation
-                </li>
-              </ol>
+          {/* Code Implementation */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-card border border-purple-500/40 rounded-xl">
+              <h4 className="text-lg font-bold text-purple-400 mb-2">src/lib/quantumEntropyAnalyzer.ts</h4>
+              <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Construct density matrix ρ = |ψ⟩⟨ψ|
+const densityMatrix = [];
+for (let i = 0; i < dimension; i++) {
+  densityMatrix[i] = [];
+  for (let j = 0; j < dimension; j++) {
+    densityMatrix[i][j] = normalized[i] * normalized[j];
+  }
+}
+
+// Von Neumann Entropy: S(ρ) = -Σᵢ λᵢ log₂(λᵢ)
+let vonNeumann = 0;
+for (const λ of eigenvalues) {
+  if (λ > 1e-10) {
+    vonNeumann -= λ * Math.log2(λ);
+  }
+}`}</pre>
             </div>
-            <div className="p-5 bg-card border border-amber-500/40 rounded-xl">
-              <h4 className="text-lg font-bold text-amber-400 mb-3 flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5" />
-                Honest Disclosure
-              </h4>
-              <div className="space-y-3 text-sm">
-                <div className="p-3 bg-amber-500/10 rounded-lg">
-                  <p className="text-foreground font-semibold">What we DO:</p>
-                  <p className="text-muted-foreground">Execute real quantum information theory algorithms (the math from quantum physics textbooks)</p>
-                </div>
-                <div className="p-3 bg-card border border-border rounded-lg">
-                  <p className="text-foreground font-semibold">What we DON'T claim:</p>
-                  <p className="text-muted-foreground">We don't claim to run on quantum hardware. These are classical computations using quantum-derived mathematics.</p>
-                </div>
-                <div className="p-3 bg-green-500/10 rounded-lg">
-                  <p className="text-foreground font-semibold">Why it's valuable:</p>
-                  <p className="text-muted-foreground">Entropy measures detect statistical anomalies invisible to traditional algorithms.</p>
-                </div>
-              </div>
+            <div className="p-4 bg-card border border-cyan-500/40 rounded-xl">
+              <h4 className="text-lg font-bold text-cyan-400 mb-2">Entropy Calculations</h4>
+              <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Min-Entropy: H_min = -log₂(max λᵢ)
+const maxEigenvalue = Math.max(...eigenvalues);
+const minEntropy = -Math.log2(maxEigenvalue);
+
+// Rényi Entropy (α=2): H₂ = -log₂(Σᵢ λᵢ²)
+const sumSquares = eigenvalues.reduce(
+  (sum, λ) => sum + λ * λ, 0
+);
+const renyiEntropy = -Math.log2(sumSquares);
+
+// Purity: Tr(ρ²) - pure state = 1
+const purity = sumSquares;`}</pre>
             </div>
           </div>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Shield, Play, RotateCcw, Presentation, FileText, ScrollText } from "lucide-react";
+import { Shield, Play, RotateCcw, Presentation, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ErakshaBadge from "@/components/ErakshaBadge";
 import MediaUploader from "@/components/analysis/MediaUploader";
@@ -13,14 +13,12 @@ import JudgeModePanel from "@/components/JudgeModePanel";
 import PresentationMode from "@/components/PresentationMode";
 import TechShowcase from "@/components/TechShowcase";
 import TechnicalSummaryPDF from "@/components/TechnicalSummaryPDF";
-import PresentationScriptPDF from "@/components/PresentationScriptPDF";
 import QuantumEntropyVisualizer from "@/components/QuantumEntropyVisualizer";
 import { useAnalysis } from "@/hooks/useAnalysis";
 
 const Index = () => {
-  const [showPresentation, setShowPresentation] = useState(false);
+const [showPresentation, setShowPresentation] = useState(false);
   const [showTechSummary, setShowTechSummary] = useState(false);
-  const [showScriptPDF, setShowScriptPDF] = useState(false);
   // Ctrl+P keyboard shortcut to toggle presentation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -51,7 +49,6 @@ const Index = () => {
       <JudgeModePanel />
       <PresentationMode isOpen={showPresentation} onClose={() => setShowPresentation(false)} />
       <TechnicalSummaryPDF isOpen={showTechSummary} onClose={() => setShowTechSummary(false)} />
-      <PresentationScriptPDF isOpen={showScriptPDF} onClose={() => setShowScriptPDF(false)} />
       <div className="fixed inset-0 bg-radial-glow pointer-events-none" />
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
@@ -232,16 +229,7 @@ const Index = () => {
                 <FileText className="w-3 h-3" />
                 Tech PDF
               </Button>
-              <Button 
-                onClick={() => setShowScriptPDF(true)}
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-xs gap-1 text-muted-foreground hover:text-primary"
-              >
-                <ScrollText className="w-3 h-3" />
-                Script PDF
-              </Button>
-              <Button 
+              <Button
                 onClick={() => setShowPresentation(true)}
                 variant="ghost"
                 size="sm"
