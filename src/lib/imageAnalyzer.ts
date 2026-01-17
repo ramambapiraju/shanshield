@@ -1,5 +1,6 @@
 // Real Image Analysis - Examines actual pixel data for deepfake/AI-generated indicators
 import { analyzeQuantumEntropy, type QuantumEntropyResult } from './quantumEntropyAnalyzer';
+import { analyzeMetadata, type MetadataAnalysisResult } from './metadataAnalyzer';
 
 export interface AnalysisFindings {
   score: number; // 0-100 manipulation likelihood
@@ -14,8 +15,10 @@ export interface AnalysisFindings {
     repetitionAnalysis: { score: number; description: string };
     gradientAnalysis: { score: number; description: string };
     quantumEntropyAnalysis?: { score: number; description: string };
+    metadataAnalysis?: { score: number; description: string };
   };
   quantumEntropy?: QuantumEntropyResult;
+  metadata?: MetadataAnalysisResult;
 }
 
 // Load image and get pixel data
@@ -540,6 +543,9 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
   const imageData = await loadImageData(file);
   const { data, width, height } = imageData;
 
+  // Run metadata analysis first (catches filename patterns like "midjourney_", "dalle_")
+  const metadataResult = await analyzeMetadata(file, imageData);
+
   // Run all classical analyses
   const noiseAnalysis = analyzeNoise(data, width, height);
   const edgeAnalysis = analyzeEdges(data, width, height);
@@ -559,9 +565,20 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
       : `Normal quantum entropy patterns (von Neumann: ${quantumEntropy.vonNeumannEntropy.toFixed(3)})`
   };
 
-  // Collect signals - use moderate threshold
+  const metadataAnalysis = {
+    score: metadataResult.score,
+    description: metadataResult.detectedAITool 
+      ? `AI Tool Detected: ${metadataResult.detectedAITool}`
+      : 'No AI tool signatures found'
+  };
+
+  // Collect signals - add metadata signals first (strongest)
   const signals: string[] = [];
-  const threshold = 50;
+  if (metadataResult.signals.length > 0) {
+    signals.push(...metadataResult.signals);
+  }
+  
+  const threshold = 45; // Lowered threshold
 
   if (noiseAnalysis.score > threshold) signals.push(noiseAnalysis.description);
   if (edgeAnalysis.score > threshold) signals.push(edgeAnalysis.description);
@@ -587,18 +604,23 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
   ];
   const elevatedCount = allScores.filter((s) => s > 35).length;
 
-  // Calculate weighted score (weights sum to 1.0)
-  let overallScore = (
-    noiseAnalysis.score * 0.16 +
-    edgeAnalysis.score * 0.09 +
-    colorAnalysis.score * 0.09 +
-    compressionAnalysis.score * 0.07 +
-    symmetryAnalysis.score * 0.12 +
-    textureAnalysis.score * 0.14 +
-    repetitionAnalysis.score * 0.07 +
-    gradientAnalysis.score * 0.14 +
-    quantumEntropyAnalysis.score * 0.12  // Quantum entropy weight
-  );
+  // Dynamic weighting based on metadata detection
+  // If AI tool found in filename, metadata weight is HIGH
+  const metadataWeight = metadataResult.score >= 70 ? 0.40 : metadataResult.score >= 40 ? 0.25 : 0.10;
+  const pixelWeight = 1 - metadataWeight;
+
+  // Calculate pixel-based score
+  let pixelScore = (
+    noiseAnalysis.score * 0.14 +
+    edgeAnalysis.score * 0.08 +
+    colorAnalysis.score * 0.08 +
+    compressionAnalysis.score * 0.06 +
+    symmetryAnalysis.score * 0.11 +
+    textureAnalysis.score * 0.13 +
+    repetitionAnalysis.score * 0.06 +
+    gradientAnalysis.score * 0.13 +
+    quantumEntropyAnalysis.score * 0.11
+  ) / 0.90; // Normalize since weights don't sum to 1 for pixel portion
 
   // Find strongest AI indicator (including quantum entropy)
   const strongAiIndicator = Math.max(
@@ -615,20 +637,30 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
 
   // Multi-signal boost: AI images trigger multiple detectors
   if (elevatedCount >= 5) {
-    overallScore = overallScore * 1.35;
+    pixelScore = pixelScore * 1.35;
   } else if (elevatedCount >= 4) {
-    overallScore = overallScore * 1.20;
+    pixelScore = pixelScore * 1.20;
   } else if (elevatedCount >= 3) {
-    overallScore = overallScore * 1.10;
+    pixelScore = pixelScore * 1.10;
   } else if (elevatedCount >= 2) {
-    overallScore = overallScore * 1.05;
+    pixelScore = pixelScore * 1.05;
   }
+
+  // Combined score with metadata weighting
+  let overallScore = metadataResult.score * metadataWeight + pixelScore * pixelWeight;
 
   // Guardrail: strong AI signature = at least suspicious
   if (hasVeryStrongIndicator) {
-    overallScore = Math.max(overallScore, 55); // at least deepfake territory
+    overallScore = Math.max(overallScore, 55);
   } else if (hasStrongAiIndicator) {
-    overallScore = Math.max(overallScore, 42); // at least suspicious
+    overallScore = Math.max(overallScore, 42);
+  }
+
+  // Metadata override: if AI tool detected in filename, ensure high score
+  if (metadataResult.score >= 90) {
+    overallScore = Math.max(overallScore, 75);
+  } else if (metadataResult.score >= 70) {
+    overallScore = Math.max(overallScore, 55);
   }
 
   // Special case: animated/cartoon style (gradient + texture + low noise variance)
@@ -637,7 +669,7 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
   }
 
   // Mild dampening only when everything looks clean
-  if (!hasStrongAiIndicator && elevatedCount <= 1 && overallScore < 25) {
+  if (!hasStrongAiIndicator && elevatedCount <= 1 && overallScore < 25 && metadataResult.score < 30) {
     overallScore = overallScore * 0.85;
   }
 
@@ -653,8 +685,10 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
       textureAnalysis,
       repetitionAnalysis,
       gradientAnalysis,
-      quantumEntropyAnalysis
+      quantumEntropyAnalysis,
+      metadataAnalysis
     },
-    quantumEntropy
+    quantumEntropy,
+    metadata: metadataResult
   };
 };

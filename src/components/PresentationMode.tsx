@@ -205,7 +205,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
     {
       id: "architecture",
       title: "Multi-Agent Architecture",
-      subtitle: "Four Specialized AI Agents That Collaborate",
+      subtitle: "Five Specialized AI Agents That Collaborate",
       duration: "1 min 30 sec",
       icon: Brain,
       content: (
@@ -220,7 +220,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
                 <Eye className="w-10 h-10 text-blue-400" />
                 <div>
                   <h3 className="text-2xl font-bold text-foreground">Visual Agent</h3>
-                  <span className="text-blue-400 font-semibold">35% weight</span>
+                  <span className="text-blue-400 font-semibold">25-35% dynamic</span>
                 </div>
               </div>
               <ul className="text-muted-foreground space-y-2">
@@ -236,7 +236,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
                 <Mic className="w-10 h-10 text-purple-400" />
                 <div>
                   <h3 className="text-2xl font-bold text-foreground">Audio Agent</h3>
-                  <span className="text-purple-400 font-semibold">25% weight</span>
+                  <span className="text-purple-400 font-semibold">20-25% dynamic</span>
                 </div>
               </div>
               <ul className="text-muted-foreground space-y-2">
@@ -252,7 +252,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
                 <Activity className="w-10 h-10 text-cyan-400" />
                 <div>
                   <h3 className="text-2xl font-bold text-foreground">Temporal Agent</h3>
-                  <span className="text-cyan-400 font-semibold">25% weight</span>
+                  <span className="text-cyan-400 font-semibold">20-25% dynamic</span>
                 </div>
               </div>
               <ul className="text-muted-foreground space-y-2">
@@ -263,19 +263,19 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
               </ul>
             </div>
 
-            <div className="p-6 bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-2 border-amber-500/40 rounded-2xl">
+            <div className="p-6 bg-gradient-to-br from-red-500/10 to-red-600/5 border-2 border-red-500/40 rounded-2xl">
               <div className="flex items-center gap-3 mb-4">
-                <Database className="w-10 h-10 text-amber-400" />
+                <AlertTriangle className="w-10 h-10 text-red-400" />
                 <div>
-                  <h3 className="text-2xl font-bold text-foreground">Metadata Agent</h3>
-                  <span className="text-amber-400 font-semibold">15% weight</span>
+                  <h3 className="text-2xl font-bold text-foreground">AI Signature Agent</h3>
+                  <span className="text-red-400 font-semibold">10-50% DYNAMIC</span>
                 </div>
               </div>
               <ul className="text-muted-foreground space-y-2">
-                <li>• <span className="text-amber-400 font-semibold">SHA-256 Hashing</span> — Integrity verification</li>
-                <li>• EXIF/XMP AI generation markers</li>
-                <li>• Byte entropy analysis for obfuscation</li>
-                <li>• Fuzzy hashing for similarity detection</li>
+                <li>• <span className="text-red-400 font-semibold">Filename Pattern Matching</span> — 50+ AI tools</li>
+                <li>• Watermark detection (Kling, Sora, DALL-E)</li>
+                <li>• Corner overlay scanning for logos</li>
+                <li>• <strong className="text-red-400">HIGHEST weight when AI tool found!</strong></li>
               </ul>
             </div>
           </div>
@@ -285,7 +285,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
               <Brain className="w-12 h-12 text-primary" />
               <div>
                 <h3 className="text-2xl font-bold text-foreground">Arbiter Agent — The Judge</h3>
-                <p className="text-muted-foreground">Dempster-Shafer belief fusion • Conflict detection • Weighted consensus</p>
+                <p className="text-muted-foreground">Dempster-Shafer belief fusion • <strong className="text-primary">Dynamic Weighting</strong> • Conflict detection</p>
               </div>
             </div>
           </div>
@@ -816,7 +816,135 @@ const isPNG = pngMagic.every(
       )
     },
 
-    // SLIDE 9: QUANTUM INFORMATION THEORY - UNIQUE FEATURE (MOVED BEFORE ARBITER)
+    // SLIDE 9: AI SIGNATURE DETECTION - NEW FEATURE
+    {
+      id: "ai-signature",
+      title: "AI Signature Detection",
+      subtitle: "Catching AI Tools by Their Fingerprints",
+      duration: "1 min",
+      icon: AlertTriangle,
+      content: (
+        <div className="space-y-4">
+          <h2 className="text-3xl font-bold text-center font-display text-foreground mb-4">
+            AI Signature Agent — src/lib/metadataAnalyzer.ts
+          </h2>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* Filename Pattern Detection */}
+            <div className="p-4 bg-card border border-red-500/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-red-400 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5" />
+                50+ AI Tool Patterns
+              </h3>
+              <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Filename pattern matching
+const AI_PATTERNS = [
+  { pattern: /kling/i, tool: 'Kling AI', weight: 95 },
+  { pattern: /sora/i, tool: 'OpenAI Sora', weight: 95 },
+  { pattern: /midjourney/i, tool: 'Midjourney', weight: 95 },
+  { pattern: /dall-?e/i, tool: 'DALL-E', weight: 95 },
+  { pattern: /elevenlabs/i, tool: 'ElevenLabs', weight: 95 },
+  { pattern: /stable[_-]?diffusion/i, tool: 'SD', weight: 90 },
+  // ... 50+ more patterns
+];`}</pre>
+            </div>
+
+            {/* Watermark Detection */}
+            <div className="p-4 bg-card border border-red-500/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-red-400 flex items-center gap-2">
+                <Eye className="w-5 h-5" />
+                Watermark Corner Scanning
+              </h3>
+              <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// Scan corners for AI watermarks
+const corners = [
+  { name: 'top-left', x: 0, y: 0 },
+  { name: 'bottom-right', x: width-100, y: height-60 }
+];
+
+for (const corner of corners) {
+  // Analyze region for:
+  // - High contrast elements (logos)
+  // - Consistent color patterns
+  // - Sharp edges (text)
+  const contrastRatio = highContrastPixels / total;
+  if (contrastRatio > 0.15) {
+    watermarkScore = 70; // Watermark detected!
+  }
+}`}</pre>
+            </div>
+
+            {/* Dynamic Weighting */}
+            <div className="p-4 bg-card border border-red-500/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-red-400 flex items-center gap-2">
+                <Zap className="w-5 h-5" />
+                Dynamic Weight Override
+              </h3>
+              <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// If AI tool detected, metadata DOMINATES
+const metadataWeight = 
+  metadataScore >= 70 ? 0.50 :  // 50% weight!
+  metadataScore >= 40 ? 0.30 :  // 30% weight
+  0.15;                          // Default
+
+// Ensure detection even if pixels look clean
+if (metadataResult.score >= 90) {
+  overallScore = Math.max(overallScore, 75);
+} else if (metadataResult.score >= 70) {
+  overallScore = Math.max(overallScore, 55);
+}`}</pre>
+            </div>
+
+            {/* Why This Works */}
+            <div className="p-4 bg-card border border-primary/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-primary flex items-center gap-2">
+                <CheckCircle className="w-5 h-5" />
+                Why This Works
+              </h3>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
+                  <span><strong className="text-foreground">Humans don't name files "kling_xxx"</strong> — AI tools do</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
+                  <span><strong className="text-foreground">Watermarks are embedded</strong> — can't be removed by re-encoding</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-1.5" />
+                  <span><strong className="text-foreground">Catches sophisticated deepfakes</strong> — pixel analysis might miss</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 rounded-full bg-red-400 mt-1.5" />
+                  <span><strong className="text-red-400">Kling video → 95% score immediately</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Supported Tools Banner */}
+          <div className="p-3 bg-gradient-to-r from-red-500/10 to-red-600/10 border border-red-500/40 rounded-xl">
+            <div className="text-center text-sm">
+              <span className="text-muted-foreground">Detects: </span>
+              <span className="text-red-400 font-semibold">Kling</span>
+              <span className="text-muted-foreground"> • </span>
+              <span className="text-red-400 font-semibold">Sora</span>
+              <span className="text-muted-foreground"> • </span>
+              <span className="text-red-400 font-semibold">Midjourney</span>
+              <span className="text-muted-foreground"> • </span>
+              <span className="text-red-400 font-semibold">DALL-E</span>
+              <span className="text-muted-foreground"> • </span>
+              <span className="text-red-400 font-semibold">Stable Diffusion</span>
+              <span className="text-muted-foreground"> • </span>
+              <span className="text-red-400 font-semibold">ElevenLabs</span>
+              <span className="text-muted-foreground"> • </span>
+              <span className="text-red-400 font-semibold">Runway</span>
+              <span className="text-muted-foreground"> + 40 more</span>
+            </div>
+          </div>
+        </div>
+      )
+    },
     {
       id: "quantum-feature",
       title: "Quantum Entropy Analysis",
@@ -985,56 +1113,50 @@ const combineBeliefs = (agents) => {
 };`}</pre>
             </div>
 
-            {/* Weighted Consensus */}
+            {/* Dynamic Weighted Consensus */}
             <div className="p-4 bg-card border border-primary/40 rounded-xl space-y-3">
               <h3 className="text-xl font-bold text-primary flex items-center gap-2">
                 <Target className="w-5 h-5" />
-                Weighted Agent Scores
+                Dynamic Weighted Scoring
               </h3>
               <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Agent weight configuration
-const weights = {
-  visual:   0.35,  // Primary signal
-  audio:    0.25,  // Voice analysis
-  temporal: 0.25,  // Frame consistency
-  metadata: 0.15   // Supporting evidence
-};
+{`// DYNAMIC WEIGHTING - AI Signature dominates!
+const metadataWeight = 
+  metadataScore >= 70 ? 0.50 :  // AI tool found!
+  metadataScore >= 40 ? 0.30 :  // Possible AI
+  0.12;                          // Default
 
-// Weighted combination
+const pixelWeight = 1 - metadataWeight - 0.08;
+
 const finalScore = 
-  visual   * weights.visual   +
-  audio    * weights.audio    +
-  temporal * weights.temporal +
-  metadata * weights.metadata;`}</pre>
+  metadata * metadataWeight +    // 12-50%!
+  pixel    * pixelWeight    +    // 42-80%
+  quantum  * 0.08;               // 8%`}</pre>
               <div className="mt-3 space-y-1">
                 <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-red-400" />
+                  <span className="text-xs text-muted-foreground">AI Signature: <strong className="text-red-400">12-50%</strong></span>
+                  <div className="flex-1 h-1 bg-red-400/30 rounded">
+                    <div className="h-1 bg-red-400 rounded" style={{ width: '50%' }} />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-400" />
-                  <span className="text-xs text-muted-foreground">Visual: 35%</span>
+                  <span className="text-xs text-muted-foreground">Pixel Analysis: 42-80%</span>
                   <div className="flex-1 h-1 bg-blue-400/30 rounded">
-                    <div className="h-1 bg-blue-400 rounded" style={{ width: '35%' }} />
+                    <div className="h-1 bg-blue-400 rounded" style={{ width: '60%' }} />
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-purple-400" />
-                  <span className="text-xs text-muted-foreground">Audio: 25%</span>
+                  <span className="text-xs text-muted-foreground">Quantum Entropy: 8%</span>
                   <div className="flex-1 h-1 bg-purple-400/30 rounded">
-                    <div className="h-1 bg-purple-400 rounded" style={{ width: '25%' }} />
+                    <div className="h-1 bg-purple-400 rounded" style={{ width: '8%' }} />
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-cyan-400" />
-                  <span className="text-xs text-muted-foreground">Temporal: 25%</span>
-                  <div className="flex-1 h-1 bg-cyan-400/30 rounded">
-                    <div className="h-1 bg-cyan-400 rounded" style={{ width: '25%' }} />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-amber-400" />
-                  <span className="text-xs text-muted-foreground">Metadata: 15%</span>
-                  <div className="flex-1 h-1 bg-amber-400/30 rounded">
-                    <div className="h-1 bg-amber-400 rounded" style={{ width: '15%' }} />
-                  </div>
-                </div>
+              </div>
+              <div className="p-2 bg-red-500/10 border border-red-500/30 rounded-lg text-xs text-center">
+                <span className="text-red-400 font-bold">When AI tool detected → Metadata gets 50% weight!</span>
               </div>
             </div>
           </div>
