@@ -346,80 +346,102 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             <div className="p-4 bg-card border border-blue-500/40 rounded-xl space-y-3">
               <h3 className="text-xl font-bold text-blue-400 flex items-center gap-2">
                 <Layers className="w-5 h-5" />
-                Noise Pattern Analysis
+                Noise Pattern Analysis (Lines 65-88)
               </h3>
               <pre className="p-3 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Sample adjacent pixel differences
+{`// analyzeNoise() - imageAnalyzer.ts Lines 70-88
 for (let y = 1; y < height - 1; y += 2) {
-  const idx = (y * width + x) * 4;
-  const idxRight = (y * width + x + 1) * 4;
-  const diffR = Math.abs(data[idx] - data[idxRight]);
-  noiseValues.push((diffR + diffG + diffB) / 3);
+  for (let x = 1; x < width - 1; x += 2) {
+    const idx = (y * width + x) * 4;
+    const idxRight = (y * width + x + 1) * 4;
+    const idxDown = ((y + 1) * width + x) * 4;
+    
+    const diffR = Math.abs(data[idx] - data[idxRight]) 
+                + Math.abs(data[idx] - data[idxDown]);
+    noiseValues.push((diffR + diffG + diffB) / 3);
+  }
 }
-// Calculate coefficient of variation
-const cv = (stdDev / mean) * 100;
-// CV < 30% = synthetic origin (GAN)`}</pre>
-              <p className="text-xs text-muted-foreground">GAN images have unnaturally uniform noise patterns</p>
+const mean = noiseValues.reduce((a,b) => a+b, 0) / len;
+const stdDev = Math.sqrt(variance);
+const coefficientOfVariation = (stdDev / mean) * 100;
+// CV < 25% AND localCV < 30% = AI-characteristic`}</pre>
+              <p className="text-xs text-muted-foreground">GAN images have unnaturally uniform noise - both global AND local</p>
             </div>
 
             {/* Sobel Edge Detection with Code */}
             <div className="p-4 bg-card border border-cyan-500/40 rounded-xl space-y-3">
               <h3 className="text-xl font-bold text-cyan-400 flex items-center gap-2">
                 <Activity className="w-5 h-5" />
-                Sobel Edge Detection
+                Sobel Edge Detection (Lines 137-157)
               </h3>
               <pre className="p-3 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Sobel kernels for gradient detection
-const Gx = [[-1,0,1],[-2,0,2],[-1,0,1]];
-const Gy = [[-1,-2,-1],[0,0,0],[1,2,1]];
+{`// analyzeEdges() - imageAnalyzer.ts Lines 143-157
+const getGray = (px, py) => {
+  const idx = (py * width + px) * 4;
+  return (data[idx] + data[idx+1] + data[idx+2]) / 3;
+};
 
-// Compute gradient magnitude
-const gradX = convolve(pixels, Gx);
-const gradY = convolve(pixels, Gy);
-const magnitude = Math.sqrt(gradX² + gradY²);
+const gx = -getGray(x-1,y-1) + getGray(x+1,y-1) +
+           -2*getGray(x-1,y) + 2*getGray(x+1,y) +
+           -getGray(x-1,y+1) + getGray(x+1,y+1);
+const gy = -getGray(x-1,y-1) - 2*getGray(x,y-1) - getGray(x+1,y-1) +
+            getGray(x-1,y+1) + 2*getGray(x,y+1) + getGray(x+1,y+1);
 
-// Detect artificial sharpening artifacts`}</pre>
-              <p className="text-xs text-muted-foreground">Detects artificial sharpening & edge artifacts</p>
+const magnitude = Math.sqrt(gx * gx + gy * gy);
+// Edge ratio > 4 = artificial sharpening`}</pre>
+              <p className="text-xs text-muted-foreground">Actual Sobel kernel convolution for edge artifacts</p>
             </div>
 
             {/* LBP Texture Analysis */}
             <div className="p-4 bg-card border border-purple-500/40 rounded-xl space-y-3">
               <h3 className="text-xl font-bold text-purple-400 flex items-center gap-2">
                 <Layers className="w-5 h-5" />
-                Local Binary Patterns (LBP)
+                Local Binary Patterns (Lines 334-366)
               </h3>
               <pre className="p-3 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Compare center pixel to 8 neighbors
-let lbpCode = 0;
+{`// analyzeTexture() - imageAnalyzer.ts Lines 344-365
+const neighbors = [
+  getGray(x-1,y-1), getGray(x,y-1), getGray(x+1,y-1),
+  getGray(x-1,y), getGray(x+1,y),
+  getGray(x-1,y+1), getGray(x,y+1), getGray(x+1,y+1)
+];
+
+let pattern = 0;
 for (let i = 0; i < 8; i++) {
-  const neighbor = getNeighbor(x, y, i);
-  if (neighbor >= centerPixel) {
-    lbpCode |= (1 << i);
-  }
+  if (neighbors[i] > center) pattern |= (1 << i);
 }
-// Build histogram of LBP codes
-histogram[lbpCode]++;`}</pre>
-              <p className="text-xs text-muted-foreground">Detects texture inconsistencies in skin regions</p>
+let transitions = 0;
+for (let i = 0; i < 8; i++) {
+  if (((pattern >> i) & 1) !== 
+      ((pattern >> ((i+1) % 8)) & 1)) transitions++;
+}
+// avgTransitions < 2.0 + smoothRatio > 0.5 = AI`}</pre>
+              <p className="text-xs text-muted-foreground">Counts bit transitions in 8-neighbor LBP code</p>
             </div>
 
             {/* Color Histogram Analysis */}
             <div className="p-4 bg-card border border-amber-500/40 rounded-xl space-y-3">
               <h3 className="text-xl font-bold text-amber-400 flex items-center gap-2">
                 <Eye className="w-5 h-5" />
-                Color Histogram Analysis
+                Color Histogram (Lines 185-212)
               </h3>
               <pre className="p-3 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Build color histograms per channel
-const histR = new Array(256).fill(0);
-const histG = new Array(256).fill(0);
-const histB = new Array(256).fill(0);
-
-for (let i = 0; i < data.length; i += 4) {
-  histR[data[i]]++;
-  histG[data[i+1]]++;
-  histB[data[i+2]]++;
-}`}</pre>
-              <p className="text-xs text-muted-foreground">Analyzes color distribution for AI patterns</p>
+{`// analyzeColors() - imageAnalyzer.ts Lines 199-212
+const findSpikes = (hist) => {
+  const total = hist.reduce((a, b) => a + b, 0);
+  const mean = total / 256;
+  let spikes = 0;
+  for (const count of hist) {
+    if (count > mean * 6) spikes++;
+  }
+  return spikes;
+};
+const rSpikes = findSpikes(colorHistogram.r);
+const gSpikes = findSpikes(colorHistogram.g);
+const bSpikes = findSpikes(colorHistogram.b);
+const totalSpikes = rSpikes + gSpikes + bSpikes;
+// totalSpikes > 20 = unnatural color distribution`}</pre>
+              <p className="text-xs text-muted-foreground">Spike detection: count &gt; mean×6 = unnatural</p>
             </div>
           </div>
 
@@ -465,11 +487,12 @@ for (let i = 0; i < data.length; i += 4) {
               
               {/* FFT Code */}
               <div className="p-3 bg-card border border-purple-500/40 rounded-xl">
-                <h4 className="text-lg font-bold text-purple-400 mb-2">FFT Spectral Analysis</h4>
+                <h4 className="text-lg font-bold text-purple-400 mb-2">FFT Spectral Analysis (Lines 71-97)</h4>
                 <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Discrete Fourier Transform
+{`// computeFFT() - audioAnalyzer.ts Lines 71-97
 const computeFFT = (samples, fftSize = 2048) => {
   const magnitudes = new Float32Array(fftSize / 2);
+  
   for (let k = 0; k < fftSize / 2; k++) {
     let realSum = 0, imagSum = 0;
     for (let n = 0; n < fftSize; n++) {
@@ -477,7 +500,9 @@ const computeFFT = (samples, fftSize = 2048) => {
       realSum += real[n] * Math.cos(angle);
       imagSum -= real[n] * Math.sin(angle);
     }
-    magnitudes[k] = Math.sqrt(realSum² + imagSum²);
+    magnitudes[k] = Math.sqrt(
+      realSum * realSum + imagSum * imagSum
+    ) / fftSize;
   }
   return magnitudes;
 };`}</pre>
@@ -485,13 +510,24 @@ const computeFFT = (samples, fftSize = 2048) => {
 
               {/* Pitch Tracking */}
               <div className="p-3 bg-card border border-purple-500/40 rounded-xl">
-                <h4 className="text-lg font-bold text-purple-400 mb-2">Pitch Autocorrelation</h4>
+                <h4 className="text-lg font-bold text-purple-400 mb-2">Pitch Autocorrelation (Lines 168-205)</h4>
                 <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Autocorrelation for pitch detection
-// R(τ) = Σ x(n) × x(n + τ)
-const R_tau = computeAutocorrelation(samples);
-const pitchVariance = calculateVariance(pitches);
-// TTS: low variance = synthetic voice`}</pre>
+{`// analyzePitch() - Lines 179-200
+const autocorr = new Float32Array(frameSize);
+for (let lag = 20; lag < frameSize / 2; lag++) {
+  let sum = 0;
+  for (let i = 0; i < frameSize - lag; i++) {
+    sum += frame[i] * frame[i + lag];
+  }
+  autocorr[lag] = sum;
+}
+// Find peak lag
+let maxLag = 0;
+for (let lag = 50; lag < 400; lag++) {
+  if (autocorr[lag] > maxVal) maxLag = lag;
+}
+const freq = sampleRate / maxLag; // Hz
+// pitchCV < 5% = unnaturally stable (TTS)`}</pre>
               </div>
             </div>
 
@@ -504,29 +540,40 @@ const pitchVariance = calculateVariance(pitches);
               
               {/* Frame Extraction */}
               <div className="p-3 bg-card border border-cyan-500/40 rounded-xl">
-                <h4 className="text-lg font-bold text-cyan-400 mb-2">Frame Extraction & Analysis</h4>
+                <h4 className="text-lg font-bold text-cyan-400 mb-2">Frame Extraction (Lines 24-57)</h4>
                 <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Extract frames at intervals
-video.currentTime = i * interval;
-await new Promise(r => video.onseeked = r);
-ctx.drawImage(video, 0, 0, width, height);
-const frameData = ctx.getImageData(0, 0, w, h);
+{`// extractFrames() - videoAnalyzer.ts Lines 24-56
+const interval = video.duration / (numFrames + 1);
+canvas.width = Math.min(256, video.videoWidth);
+canvas.height = Math.min(256, video.videoHeight);
 
-// Inter-frame difference analysis
-for (let p = 0; p < curr.length; p += 4) {
-  diff += Math.abs(curr[p] - prev[p]);
-}
-const avgDiff = diff / (w * h);`}</pre>
+video.onseeked = () => {
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const imageData = ctx.getImageData(0, 0, w, h);
+  frames.push(imageData);
+  currentFrame++;
+  video.currentTime = interval * (currentFrame + 1);
+};
+video.currentTime = interval; // Start capture`}</pre>
               </div>
 
               {/* Flicker Detection */}
               <div className="p-3 bg-card border border-cyan-500/40 rounded-xl">
-                <h4 className="text-lg font-bold text-cyan-400 mb-2">Flicker Detection</h4>
+                <h4 className="text-lg font-bold text-cyan-400 mb-2">Frame Consistency (Lines 60-106)</h4>
                 <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Detect high-frequency brightness changes
-const flickerScore = detectFlicker(diffs);
-// High variance = temporal inconsistency
-// Deepfakes often have frame-level glitches`}</pre>
+{`// analyzeFrameConsistency() - Lines 67-89
+for (let i = 1; i < frames.length; i++) {
+  let diff = 0;
+  for (let p = 0; p < prev.length; p += 16) {
+    diff += Math.abs(prev[p] - curr[p]) +
+            Math.abs(prev[p+1] - curr[p+1]) +
+            Math.abs(prev[p+2] - curr[p+2]);
+  }
+  inconsistencies.push(diff / pixelCount);
+}
+const avgDiff = inconsistencies.reduce((a,b)=>a+b,0)/len;
+const cv = (stdDev / avgDiff) * 100;
+// CV > 80% = frame interpolation detected`}</pre>
               </div>
             </div>
           </div>
@@ -545,8 +592,8 @@ const flickerScore = detectFlicker(diffs);
               </div>
               <div className="h-8 w-px bg-border" />
               <div className="text-center">
-                <div className="font-mono text-lg text-cyan-400">Δf = |F(t) - F(t-1)|</div>
-                <div className="text-xs text-muted-foreground">Inter-Frame Difference</div>
+                <div className="font-mono text-lg text-cyan-400">CV = (σ/μ) × 100</div>
+                <div className="text-xs text-muted-foreground">Frame Consistency Metric</div>
               </div>
             </div>
           </div>
@@ -869,22 +916,33 @@ const isPNG = pngMagic.every(
           </h2>
 
           <div className="grid grid-cols-2 gap-4">
-            {/* Filename Pattern Detection */}
+            {/* AI Filename Pattern Matching */}
             <div className="p-4 bg-card border border-red-500/40 rounded-xl space-y-3">
               <h3 className="text-xl font-bold text-red-400 flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5" />
-                50+ AI Tool Patterns
+                50+ AI Tool Patterns (Lines 18-71)
               </h3>
               <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Filename pattern matching
-const AI_PATTERNS = [
+{`// AI_FILENAME_PATTERNS - metadataAnalyzer.ts Lines 18-71
+const AI_FILENAME_PATTERNS = [
+  // Video AI generators
   { pattern: /kling/i, tool: 'Kling AI', weight: 95 },
   { pattern: /sora/i, tool: 'OpenAI Sora', weight: 95 },
-  { pattern: /midjourney/i, tool: 'Midjourney', weight: 95 },
+  { pattern: /runway/i, tool: 'Runway ML', weight: 90 },
+  { pattern: /pika/i, tool: 'Pika Labs', weight: 90 },
+  { pattern: /synthesia/i, tool: 'Synthesia', weight: 95 },
+  { pattern: /heygen/i, tool: 'HeyGen', weight: 95 },
+  // Image AI generators
+  { pattern: /midjourney|mj_/i, tool: 'Midjourney', weight: 95 },
   { pattern: /dall-?e/i, tool: 'DALL-E', weight: 95 },
-  { pattern: /elevenlabs/i, tool: 'ElevenLabs', weight: 95 },
-  { pattern: /stable[_-]?diffusion/i, tool: 'SD', weight: 90 },
-  // ... 50+ more patterns
+  { pattern: /stable[_-]?diffusion|sdxl/i, tool: 'SD', weight: 90 },
+  { pattern: /flux/i, tool: 'Flux AI', weight: 90 },
+  // Audio AI generators
+  { pattern: /elevenlabs|11labs/i, tool: 'ElevenLabs', weight: 95 },
+  { pattern: /suno/i, tool: 'Suno AI', weight: 90 },
+  // Deepfake specific
+  { pattern: /deepfake/i, tool: 'Deepfake Tool', weight: 100 },
+  // ... 50+ patterns total
 ];`}</pre>
             </div>
 
@@ -892,23 +950,28 @@ const AI_PATTERNS = [
             <div className="p-4 bg-card border border-red-500/40 rounded-xl space-y-3">
               <h3 className="text-xl font-bold text-red-400 flex items-center gap-2">
                 <Eye className="w-5 h-5" />
-                Watermark Corner Scanning
+                Watermark Scanning (Lines 127-237)
               </h3>
               <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Scan corners for AI watermarks
+{`// analyzeWatermarkRegions() - Lines 137-224
 const corners = [
   { name: 'top-left', x: 0, y: 0 },
-  { name: 'bottom-right', x: width-100, y: height-60 }
+  { name: 'top-right', x: width - cornerWidth, y: 0 },
+  { name: 'bottom-left', x: 0, y: height - cornerHeight },
+  { name: 'bottom-right', x: width - cornerWidth, y: height - cornerHeight }
 ];
 
 for (const corner of corners) {
-  // Analyze region for:
-  // - High contrast elements (logos)
-  // - Consistent color patterns
-  // - Sharp edges (text)
-  const contrastRatio = highContrastPixels / total;
-  if (contrastRatio > 0.15) {
-    watermarkScore = 70; // Watermark detected!
+  const brightness = (r + g + b) / 3;
+  if (brightness > 235 || brightness < 20) highContrastPixels++;
+  if (r > 200 && g > 200 && b > 200) whitePixels++;
+  
+  const contrastRatio = highContrastPixels / totalPixels;
+  const edgeRatio = textLikeEdges / totalPixels;
+  
+  if ((contrastRatio > 0.10 && whiteRatio > 0.03) ||
+      (edgeRatio > 0.05 && whiteRatio > 0.02)) {
+    watermarkScore = Math.max(watermarkScore, 75);
   }
 }`}</pre>
             </div>
@@ -917,24 +980,29 @@ for (const corner of corners) {
             <div className="p-4 bg-card border border-red-500/40 rounded-xl space-y-3">
               <h3 className="text-xl font-bold text-red-400 flex items-center gap-2">
                 <Zap className="w-5 h-5" />
-                Dynamic Weight Override (10% → 80%)
+                Critical Overrides (Lines 418-441)
               </h3>
               <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// STEP 8: DYNAMIC WEIGHTING (imageAnalyzer.ts)
-if (metadataResult.score >= 85) {
-  metadataWeight = 0.80;  // AI FOUND = 80%!
-  pixelWeight = 0.20;
-} else if (metadataResult.score >= 70) {
-  metadataWeight = 0.60;  // Strong indicator
-  pixelWeight = 0.40;
-} else {
-  metadataWeight = 0.15;  // Default
-  pixelWeight = 0.85;
+{`// CRITICAL OVERRIDES - metadataAnalyzer.ts Lines 418-441
+// If filename clearly indicates AI tool = THIS IS AI
+if (filenameResult.score >= 85) {
+  overallScore = Math.max(overallScore, 92); // Near-certain
+}
+if (filenameResult.score >= 70) {
+  overallScore = Math.max(overallScore, 80); // Highly likely
+}
+if (filenameResult.score >= 50) {
+  overallScore = Math.max(overallScore, 65); // Probable
 }
 
-// STEP 11: HARD OVERRIDES - Ensure correct verdict
-if (metadataResult.detectedAITool && score >= 85) {
-  overallScore = Math.max(overallScore, 88);
+// If watermark detected (Kling, Midjourney add watermarks)
+if (watermarkResult.score >= 70) {
+  overallScore = Math.max(overallScore, 78);
+}
+
+// BOTH filename AND watermark = DEFINITIVE
+if (filenameResult.score >= 70 && watermarkResult.score >= 50) {
+  overallScore = Math.max(overallScore, 95);
 }`}</pre>
             </div>
 
@@ -1046,40 +1114,49 @@ if (metadataResult.detectedAITool && score >= 85) {
           {/* Code Implementation */}
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 bg-card border border-purple-500/40 rounded-xl">
-              <h4 className="text-lg font-bold text-purple-400 mb-2">src/lib/quantumEntropyAnalyzer.ts</h4>
+              <h4 className="text-lg font-bold text-purple-400 mb-2">Density Matrix (Lines 51-78)</h4>
               <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Construct density matrix ρ = |ψ⟩⟨ψ|
-const densityMatrix = [];
-for (let i = 0; i < dimension; i++) {
-  densityMatrix[i] = [];
-  for (let j = 0; j < dimension; j++) {
-    densityMatrix[i][j] = normalized[i] * normalized[j];
-  }
+{`// constructDensityMatrix() - Lines 51-78
+for (let i = 0; i < sampleSize; i++) {
+  const idx = i * step * 4;
+  // Extract luminance as quantum amplitude proxy
+  const luminance = (pixelData[idx] * 0.299 +
+                     pixelData[idx+1] * 0.587 +
+                     pixelData[idx+2] * 0.114) / 255;
+  samples.push(luminance);
 }
+// Normalize: Σ|ψ|² = 1
+const sumSq = samples.reduce((s, v) => s + v*v, 0);
+const normalized = samples.map(v => v / Math.sqrt(sumSq));
 
-// Von Neumann Entropy: S(ρ) = -Σᵢ λᵢ log₂(λᵢ)
-let vonNeumann = 0;
-for (const λ of eigenvalues) {
-  if (λ > 1e-10) {
-    vonNeumann -= λ * Math.log2(λ);
+// Density matrix: ρ = |ψ⟩⟨ψ| (outer product)
+for (let i = 0; i < dim; i++) {
+  for (let j = 0; j < dim; j++) {
+    densityMatrix[i][j] = normalized[i] * normalized[j];
   }
 }`}</pre>
             </div>
             <div className="p-4 bg-card border border-cyan-500/40 rounded-xl">
-              <h4 className="text-lg font-bold text-cyan-400 mb-2">Entropy Calculations</h4>
+              <h4 className="text-lg font-bold text-cyan-400 mb-2">Entropy Calculations (Lines 115-157)</h4>
               <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Min-Entropy: H_min = -log₂(max λᵢ)
-const maxEigenvalue = Math.max(...eigenvalues);
-const minEntropy = -Math.log2(maxEigenvalue);
+{`// Von Neumann Entropy: S(ρ) = -Σᵢ λᵢ log₂(λᵢ)
+// Lines 115-123
+function calculateVonNeumannEntropy(eigenvalues) {
+  let entropy = 0;
+  for (const lambda of eigenvalues) {
+    if (lambda > 1e-10) {
+      entropy -= lambda * Math.log2(lambda);
+    }
+  }
+  return entropy;
+}
 
-// Rényi Entropy (α=2): H₂ = -log₂(Σᵢ λᵢ²)
-const sumSquares = eigenvalues.reduce(
-  (sum, λ) => sum + λ * λ, 0
-);
-const renyiEntropy = -Math.log2(sumSquares);
+// Min-Entropy: H_min = -log₂(max λᵢ) - Lines 131-135
+const minEntropy = -Math.log2(Math.max(...eigenvalues));
 
-// Purity: Tr(ρ²) - pure state = 1
-const purity = sumSquares;`}</pre>
+// Rényi (α=2): H₂ = (1/(1-α)) log₂(Σᵢ λᵢ^α) - Lines 145-157
+const sum = eigenvalues.reduce((s,λ) => s + Math.pow(λ,alpha), 0);
+const renyiEntropy = (1 / (1 - alpha)) * Math.log2(sum);`}</pre>
             </div>
           </div>
 
@@ -1131,27 +1208,27 @@ const purity = sumSquares;`}</pre>
             <div className="p-4 bg-card border border-primary/40 rounded-xl space-y-3">
               <h3 className="text-xl font-bold text-primary flex items-center gap-2">
                 <Brain className="w-5 h-5" />
-                Dempster-Shafer Combination Rule
+                Dempster-Shafer Belief Fusion
               </h3>
               <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Dempster-Shafer Belief Fusion
+{`// Dempster-Shafer Combination Rule (Conceptual)
 // m₁₂(A) = Σ m₁(B)×m₂(C) / (1 - K)
-// K = conflict measure
+// K = conflict measure between agents
 
 const combineBeliefs = (agents) => {
   let belief_fake = 1, belief_real = 1;
   
   for (const agent of agents) {
-    belief_fake *= agent.fakeScore;
-    belief_real *= agent.realScore;
+    belief_fake *= agent.fakeScore / 100;
+    belief_real *= (100 - agent.fakeScore) / 100;
   }
   
-  // Normalize
+  // Normalize with conflict factor
   const K = 1 - (belief_fake + belief_real);
   return {
     fake: belief_fake / (1 - K),
     real: belief_real / (1 - K),
-    conflict: K
+    conflict: K  // High K = agents disagree!
   };
 };`}</pre>
             </div>
@@ -1160,46 +1237,50 @@ const combineBeliefs = (agents) => {
             <div className="p-4 bg-card border border-primary/40 rounded-xl space-y-3">
               <h3 className="text-xl font-bold text-primary flex items-center gap-2">
                 <Target className="w-5 h-5" />
-                Balanced Dynamic Weighting
+                Dynamic Weighting (videoAnalyzer.ts Lines 429-450)
               </h3>
               <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// BALANCED WEIGHTING (imageAnalyzer.ts)
-// Only aggressive when we have CONCRETE evidence
-if (metadataResult.score >= 85) {
-  metadataWeight = 0.80;  // AI tool CONFIRMED
-  pixelWeight = 0.20;
-} else if (metadataResult.score >= 70) {
-  metadataWeight = 0.60;  // Strong indicator
-  pixelWeight = 0.40;
-} else {
-  metadataWeight = 0.15;  // No AI evidence
-  pixelWeight = 0.85;     // Pixel primary
-}
+{`// NEW WEIGHTING - Lines 429-450
+// If metadata score is very high = AI tool detected = DOMINATE
+const metadataScore = metadataResult?.score || 0;
+const metadataWeight = metadataScore >= 70 ? 0.50 
+                     : metadataScore >= 40 ? 0.30 : 0.15;
+const pixelWeight = 1 - metadataWeight - 0.05; // Reserve 5% quantum
 
-// Authentic boost: dampen score for clean images
-if (metadataScore < 25 && highCount === 0) {
-  overallScore *= 0.80;  // Reduce false positives
-}`}</pre>
+const pixelScore = (
+  frameConsistency.score * 0.20 +
+  temporalCoherence.score * 0.20 +
+  faceTracking.score * 0.20 +
+  compressionAnalysis.score * 0.15 +
+  motionAnalysis.score * 0.15 +
+  audioVideoSync.score * 0.10
+);
+
+// Combined score with dynamic metadata weighting
+const overallScore = 
+  metadataScore * metadataWeight +
+  pixelScore * pixelWeight +
+  quantumScore * 0.05;`}</pre>
               <div className="mt-3 space-y-1">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-red-400" />
-                  <span className="text-xs text-muted-foreground">AI Detected: <strong className="text-red-400">15% → 80%</strong></span>
+                  <span className="text-xs text-muted-foreground">AI Detected (≥70): <strong className="text-red-400">15% → 50%</strong></span>
                   <div className="flex-1 h-1 bg-red-400/30 rounded">
-                    <div className="h-1 bg-red-400 rounded" style={{ width: '80%' }} />
+                    <div className="h-1 bg-red-400 rounded" style={{ width: '50%' }} />
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-400" />
-                  <span className="text-xs text-muted-foreground">Pixel Analysis: 20% → 85%</span>
+                  <span className="text-xs text-muted-foreground">Pixel Analysis: 45% → 80%</span>
                   <div className="flex-1 h-1 bg-blue-400/30 rounded">
                     <div className="h-1 bg-blue-400 rounded" style={{ width: '70%' }} />
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-400" />
-                  <span className="text-xs text-muted-foreground">Authentic Boost: Dampen false positives</span>
-                  <div className="flex-1 h-1 bg-green-400/30 rounded">
-                    <div className="h-1 bg-green-400 rounded" style={{ width: '20%' }} />
+                  <div className="w-2 h-2 rounded-full bg-purple-400" />
+                  <span className="text-xs text-muted-foreground">Quantum Entropy: 5% (always)</span>
+                  <div className="flex-1 h-1 bg-purple-400/30 rounded">
+                    <div className="h-1 bg-purple-400 rounded" style={{ width: '5%' }} />
                   </div>
                 </div>
               </div>
