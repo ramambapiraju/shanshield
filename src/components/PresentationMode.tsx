@@ -205,88 +205,123 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
     {
       id: "architecture",
       title: "Multi-Agent Architecture",
-      subtitle: "Five Specialized AI Agents That Collaborate",
+      subtitle: "Six Specialized AI Agents That Collaborate",
       duration: "1 min 30 sec",
       icon: Brain,
       content: (
-        <div className="space-y-6">
-          <h2 className="text-4xl font-bold text-center font-display text-foreground mb-8">
+        <div className="space-y-4">
+          <h2 className="text-3xl font-bold text-center font-display text-foreground mb-4">
             Agentic AI Defense System
           </h2>
           
-          <div className="grid grid-cols-2 gap-6 mb-6">
-            <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-2 border-blue-500/40 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Eye className="w-10 h-10 text-blue-400" />
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-2 border-blue-500/40 rounded-xl">
+              <div className="flex items-center gap-2 mb-2">
+                <Eye className="w-8 h-8 text-blue-400" />
                 <div>
-                  <h3 className="text-2xl font-bold text-foreground">Visual Agent</h3>
-                  <span className="text-blue-400 font-semibold">25-35% dynamic</span>
+                  <h3 className="text-lg font-bold text-foreground">Visual Agent</h3>
+                  <span className="text-blue-400 text-xs font-semibold">25-35% weight</span>
                 </div>
               </div>
-              <ul className="text-muted-foreground space-y-2">
-                <li>• <span className="text-blue-400 font-semibold">Noise Pattern Analysis</span> — GAN uniformity detection</li>
-                <li>• Sobel Edge Detection for artificial sharpening</li>
-                <li>• Color histogram & channel decorrelation</li>
-                <li>• JPEG double compression artifacts</li>
+              <ul className="text-muted-foreground text-xs space-y-1">
+                <li>• <span className="text-blue-400">Noise Pattern</span> — GAN uniformity</li>
+                <li>• Sobel Edge Detection</li>
+                <li>• Color histogram analysis</li>
               </ul>
             </div>
 
-            <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-2 border-purple-500/40 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Mic className="w-10 h-10 text-purple-400" />
+            <div className="p-4 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-2 border-purple-500/40 rounded-xl">
+              <div className="flex items-center gap-2 mb-2">
+                <Mic className="w-8 h-8 text-purple-400" />
                 <div>
-                  <h3 className="text-2xl font-bold text-foreground">Audio Agent</h3>
-                  <span className="text-purple-400 font-semibold">20-25% dynamic</span>
+                  <h3 className="text-lg font-bold text-foreground">Audio Agent</h3>
+                  <span className="text-purple-400 text-xs font-semibold">20-25% weight</span>
                 </div>
               </div>
-              <ul className="text-muted-foreground space-y-2">
-                <li>• <span className="text-purple-400 font-semibold">FFT Spectral Analysis</span> — TTS detection</li>
-                <li>• Autocorrelation pitch consistency</li>
-                <li>• Noise floor anomaly detection</li>
-                <li>• Voice envelope naturalness scoring</li>
+              <ul className="text-muted-foreground text-xs space-y-1">
+                <li>• <span className="text-purple-400">FFT Spectral</span> — TTS detection</li>
+                <li>• Autocorrelation pitch</li>
+                <li>• Noise floor anomaly</li>
               </ul>
             </div>
 
-            <div className="p-6 bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border-2 border-cyan-500/40 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Activity className="w-10 h-10 text-cyan-400" />
+            <div className="p-4 bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border-2 border-cyan-500/40 rounded-xl">
+              <div className="flex items-center gap-2 mb-2">
+                <Activity className="w-8 h-8 text-cyan-400" />
                 <div>
-                  <h3 className="text-2xl font-bold text-foreground">Temporal Agent</h3>
-                  <span className="text-cyan-400 font-semibold">20-25% dynamic</span>
+                  <h3 className="text-lg font-bold text-foreground">Temporal Agent</h3>
+                  <span className="text-cyan-400 text-xs font-semibold">20-25% weight</span>
                 </div>
               </div>
-              <ul className="text-muted-foreground space-y-2">
-                <li>• <span className="text-cyan-400 font-semibold">Frame Consistency</span> — Flicker detection</li>
-                <li>• Motion vector coherence analysis</li>
-                <li>• Face vs background change ratios</li>
-                <li>• Compression artifact variance</li>
+              <ul className="text-muted-foreground text-xs space-y-1">
+                <li>• <span className="text-cyan-400">Frame Consistency</span> — Flicker</li>
+                <li>• Motion vector coherence</li>
+                <li>• Face vs background ratio</li>
               </ul>
             </div>
 
-            <div className="p-6 bg-gradient-to-br from-red-500/10 to-red-600/5 border-2 border-red-500/40 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <AlertTriangle className="w-10 h-10 text-red-400" />
+            <div className="p-4 bg-gradient-to-br from-red-500/10 to-red-600/5 border-2 border-red-500/40 rounded-xl">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="w-8 h-8 text-red-400" />
                 <div>
-                  <h3 className="text-2xl font-bold text-foreground">AI Signature Agent</h3>
-                  <span className="text-red-400 font-semibold">10-50% DYNAMIC</span>
+                  <h3 className="text-lg font-bold text-foreground">AI Signature Agent</h3>
+                  <span className="text-red-400 text-xs font-semibold">10-50% DYNAMIC</span>
                 </div>
               </div>
-              <ul className="text-muted-foreground space-y-2">
-                <li>• <span className="text-red-400 font-semibold">Filename Pattern Matching</span> — 50+ AI tools</li>
-                <li>• Watermark detection (Kling, Sora, DALL-E)</li>
-                <li>• Corner overlay scanning for logos</li>
-                <li>• <strong className="text-red-400">HIGHEST weight when AI tool found!</strong></li>
+              <ul className="text-muted-foreground text-xs space-y-1">
+                <li>• <span className="text-red-400">Filename Pattern</span> — 50+ AI tools</li>
+                <li>• Watermark detection</li>
+                <li>• <strong className="text-red-400">Dominates when AI found!</strong></li>
+              </ul>
+            </div>
+
+            <div className="p-4 bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-2 border-amber-500/40 rounded-xl">
+              <div className="flex items-center gap-2 mb-2">
+                <Database className="w-8 h-8 text-amber-400" />
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">Metadata Agent</h3>
+                  <span className="text-amber-400 text-xs font-semibold">10% weight</span>
+                </div>
+              </div>
+              <ul className="text-muted-foreground text-xs space-y-1">
+                <li>• <span className="text-amber-400">SHA-256</span> — File hashing</li>
+                <li>• Shannon Entropy</li>
+                <li>• EXIF/XMP extraction</li>
+              </ul>
+            </div>
+
+            <div className="p-4 bg-gradient-to-br from-violet-500/10 to-violet-600/5 border-2 border-violet-500/40 rounded-xl">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="w-8 h-8 text-violet-400" />
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">Quantum Agent</h3>
+                  <span className="text-violet-400 text-xs font-semibold">5-8% weight</span>
+                </div>
+              </div>
+              <ul className="text-muted-foreground text-xs space-y-1">
+                <li>• <span className="text-violet-400">Von Neumann</span> Entropy</li>
+                <li>• Min-Entropy & Rényi</li>
+                <li>• Density matrix analysis</li>
               </ul>
             </div>
           </div>
 
-          <div className="p-6 bg-gradient-to-r from-primary/20 to-primary/5 border-2 border-primary/50 rounded-2xl">
+          <div className="p-4 bg-gradient-to-r from-primary/20 to-primary/5 border-2 border-primary/50 rounded-xl">
             <div className="flex items-center gap-4">
-              <Brain className="w-12 h-12 text-primary" />
+              <Brain className="w-10 h-10 text-primary" />
               <div>
-                <h3 className="text-2xl font-bold text-foreground">Arbiter Agent — The Judge</h3>
-                <p className="text-muted-foreground">Dempster-Shafer belief fusion • <strong className="text-primary">Dynamic Weighting</strong> • Conflict detection</p>
+                <h3 className="text-xl font-bold text-foreground">Arbiter Agent — The Judge</h3>
+                <p className="text-sm text-muted-foreground">Dempster-Shafer belief fusion • <strong className="text-primary">Dynamic Weighting</strong> • Conflict detection</p>
               </div>
+            </div>
+          </div>
+
+          {/* Browser APIs Banner */}
+          <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+            <div className="flex items-center justify-center gap-6 text-xs">
+              <span className="text-green-400 font-bold">✓ 100% Browser-Native APIs:</span>
+              <span className="text-muted-foreground"><strong>Canvas API</strong> • <strong>Web Audio API</strong> • <strong>Web Crypto API</strong> • <strong>FileReader API</strong></span>
+              <span className="text-green-400 font-bold">• Zero External API Calls</span>
             </div>
           </div>
         </div>
