@@ -129,36 +129,33 @@ const analyzeWatermarkRegions = (
 ): { score: number; description: string } => {
   const { data, width, height } = imageData;
   
-  // Check corners for watermark patterns
-  // AI tools typically add watermarks in corners
+  // Adaptive corner region sizes based on image dimensions
+  const cornerWidth = Math.max(80, Math.min(200, Math.floor(width * 0.15)));
+  const cornerHeight = Math.max(50, Math.min(120, Math.floor(height * 0.12)));
+  
+  // Check all corners for watermark patterns
   const corners = [
     { name: 'top-left', x: 0, y: 0 },
-    { name: 'top-right', x: width - 100, y: 0 },
-    { name: 'bottom-left', x: 0, y: height - 60 },
-    { name: 'bottom-right', x: width - 100, y: height - 60 }
+    { name: 'top-right', x: width - cornerWidth, y: 0 },
+    { name: 'bottom-left', x: 0, y: height - cornerHeight },
+    { name: 'bottom-right', x: width - cornerWidth, y: height - cornerHeight }
   ];
   
   let watermarkScore = 0;
   const detectedCorners: string[] = [];
   
   for (const corner of corners) {
-    const regionWidth = Math.min(100, width / 4);
-    const regionHeight = Math.min(60, height / 8);
-    
-    // Analyze region for:
-    // 1. High contrast elements (logos)
-    // 2. Consistent color patterns
-    // 3. Sharp edges (text)
-    
     let highContrastPixels = 0;
     let whitePixels = 0;
+    let darkPixels = 0;
     let semiTransparentPixels = 0;
+    let textLikeEdges = 0;
     let totalPixels = 0;
     
     const startX = Math.max(0, corner.x);
     const startY = Math.max(0, corner.y);
-    const endX = Math.min(width, startX + regionWidth);
-    const endY = Math.min(height, startY + regionHeight);
+    const endX = Math.min(width, startX + cornerWidth);
+    const endY = Math.min(height, startY + cornerHeight);
     
     for (let y = startY; y < endY; y++) {
       for (let x = startX; x < endX; x++) {
@@ -170,36 +167,60 @@ const analyzeWatermarkRegions = (
         
         totalPixels++;
         
-        // Check for high contrast (potential logo/text)
         const brightness = (r + g + b) / 3;
-        if (brightness > 240 || brightness < 15) {
+        
+        // High contrast detection (watermark text/logos)
+        if (brightness > 235 || brightness < 20) {
           highContrastPixels++;
         }
         
-        // Check for white/light pixels (common in watermarks)
+        // White pixels (common in watermarks)
         if (r > 200 && g > 200 && b > 200) {
           whitePixels++;
         }
         
-        // Semi-transparent overlay detection
-        if (a < 250 && a > 50) {
+        // Dark pixels (dark watermarks)
+        if (r < 60 && g < 60 && b < 60) {
+          darkPixels++;
+        }
+        
+        // Semi-transparent overlay
+        if (a < 250 && a > 30) {
           semiTransparentPixels++;
+        }
+        
+        // Edge detection for text-like patterns
+        if (x > startX && y > startY) {
+          const prevIdx = (y * width + x - 1) * 4;
+          const prevBrightness = (data[prevIdx] + data[prevIdx + 1] + data[prevIdx + 2]) / 3;
+          if (Math.abs(brightness - prevBrightness) > 80) {
+            textLikeEdges++;
+          }
         }
       }
     }
     
+    if (totalPixels === 0) continue;
+    
     const contrastRatio = highContrastPixels / totalPixels;
     const whiteRatio = whitePixels / totalPixels;
+    const darkRatio = darkPixels / totalPixels;
     const transparentRatio = semiTransparentPixels / totalPixels;
+    const edgeRatio = textLikeEdges / totalPixels;
     
-    // Watermark detection thresholds
-    // Kling and other AI tools have distinctive corner watermarks
-    if (contrastRatio > 0.15 && whiteRatio > 0.05) {
-      watermarkScore = Math.max(watermarkScore, 70);
+    // More sensitive watermark detection with multiple criteria
+    // Kling, Midjourney, etc. have corner watermarks
+    if ((contrastRatio > 0.10 && (whiteRatio > 0.03 || darkRatio > 0.03)) ||
+        (edgeRatio > 0.05 && (whiteRatio > 0.02 || darkRatio > 0.02))) {
+      watermarkScore = Math.max(watermarkScore, 75);
       detectedCorners.push(corner.name);
-    } else if (transparentRatio > 0.1 || (contrastRatio > 0.08 && whiteRatio > 0.02)) {
+    } else if (transparentRatio > 0.08 || 
+               (contrastRatio > 0.06 && (whiteRatio > 0.01 || darkRatio > 0.01)) ||
+               edgeRatio > 0.03) {
       watermarkScore = Math.max(watermarkScore, 50);
-      detectedCorners.push(corner.name);
+      if (!detectedCorners.includes(corner.name)) {
+        detectedCorners.push(corner.name);
+      }
     }
   }
   

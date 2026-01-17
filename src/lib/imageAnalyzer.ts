@@ -21,7 +21,7 @@ export interface AnalysisFindings {
   metadata?: MetadataAnalysisResult;
 }
 
-// Load image and get pixel data
+// Load image and get pixel data - higher resolution for watermark detection
 const loadImageData = (file: File): Promise<ImageData> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -29,8 +29,8 @@ const loadImageData = (file: File): Promise<ImageData> => {
     const ctx = canvas.getContext('2d');
     
     img.onload = () => {
-      // Use reasonable size for analysis
-      const maxDim = 512;
+      // Use larger size for better watermark detection in corners
+      const maxDim = 1024;
       let width = img.width;
       let height = img.height;
       
@@ -46,13 +46,17 @@ const loadImageData = (file: File): Promise<ImageData> => {
       
       const imageData = ctx?.getImageData(0, 0, width, height);
       if (imageData) {
+        URL.revokeObjectURL(img.src);
         resolve(imageData);
       } else {
         reject(new Error('Failed to get image data'));
       }
     };
     
-    img.onerror = () => reject(new Error('Failed to load image'));
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error('Failed to load image'));
+    };
     img.src = URL.createObjectURL(file);
   });
 };
