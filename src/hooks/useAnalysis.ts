@@ -236,14 +236,19 @@ export const useAnalysis = () => {
       const analysisEndTime = performance.now();
       setProcessingTimeMs(analysisEndTime - analysisStartTime);
       setRealAnalysisResult(analysis);
+      // Signal that analysis computation is done - pipeline will call handleAnalysisComplete
+      setIsAnalyzing(false);
     } catch (error) {
       console.error('Analysis failed:', error);
+      const analysisEndTime = performance.now();
+      setProcessingTimeMs(analysisEndTime - analysisStartTime);
       setRealAnalysisResult({
         score: 30,
         signals: ['Analysis encountered an error'],
         details: { error: { score: 30, description: 'Could not complete analysis' } },
         mediaType: file.type
       });
+      setIsAnalyzing(false);
     }
   }, [files]);
 
@@ -253,7 +258,6 @@ export const useAnalysis = () => {
     const timeInSeconds = processingTimeMs / 1000;
     const analysisResult = generateAnalysisResult(files[0], isFieldMode, realAnalysisResult, timeInSeconds);
     setResult(analysisResult);
-    setIsAnalyzing(false);
     setAnalysisComplete(true);
   }, [files, isFieldMode, realAnalysisResult, processingTimeMs]);
 
