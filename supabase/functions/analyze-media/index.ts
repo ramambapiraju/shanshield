@@ -136,12 +136,12 @@ const THRESHOLDS = {
   facial_landmark: { low: 0.48, medium: 0.65, high: 0.82 },
   spectral_analysis: { low: 0.38, medium: 0.55, high: 0.72 },
   
-  // Final verdict thresholds - CONSERVATIVE to avoid false positives
+  // Final verdict thresholds - VERY CONSERVATIVE to avoid false positives
   verdict: {
-    authentic: { max: 30 },           // Below 30 = authentic
-    likely_authentic: { min: 30, max: 50 },  // 30-50 = likely authentic  
-    suspicious: { min: 50, max: 75 },        // 50-75 = suspicious
-    deepfake: { min: 75 },                   // Above 75 = deepfake
+    authentic: { max: 35 },           // Below 35 = authentic
+    likely_authentic: { min: 35, max: 55 },  // 35-55 = likely authentic  
+    suspicious: { min: 55, max: 80 },        // 55-80 = suspicious
+    deepfake: { min: 80 },                   // Above 80 = deepfake (higher threshold)
   },
 };
 
@@ -294,7 +294,7 @@ interface DetectionResult {
  */
 function analyzeFrequencyDomain(features: FeatureVector, offlineData: OfflineAnalysisData): DetectionResult {
   const signals: string[] = [];
-  let score = 40; // Start lower for balance
+  let score = 20; // Start very low - camera photos have natural frequency variations
   let bestMatch = { tool: '', similarity: 0 };
   
   // Compare against known AI generator frequency signatures
@@ -329,15 +329,15 @@ function analyzeFrequencyDomain(features: FeatureVector, offlineData: OfflineAna
     Math.abs(observedPattern.peak - authenticSig.peak) / 200 * 0.15
   );
   
-  if (authenticSimilarity < 0.55) {
+  if (authenticSimilarity < 0.45) {
     score += 25;
     signals.push('Abnormal frequency spectrum detected');
   }
   
-  if (bestMatch.similarity > 0.72) {
-    score += 20;
+  if (bestMatch.similarity > 0.80) {
+    score += 25;
     signals.push(`DCT pattern matches ${formatToolName(bestMatch.tool)} signature (${Math.round(bestMatch.similarity * 100)}%)`);
-  } else if (bestMatch.similarity > 0.65) {
+  } else if (bestMatch.similarity > 0.72) {
     score += 12;
     signals.push('Suspicious frequency domain characteristics');
   }
@@ -363,7 +363,7 @@ function analyzeFrequencyDomain(features: FeatureVector, offlineData: OfflineAna
  */
 function detectGANFingerprints(features: FeatureVector, offlineData: OfflineAnalysisData): DetectionResult {
   const signals: string[] = [];
-  let score = 35; // Start lower for balance
+  let score = 15; // Start very low - real photos have natural noise patterns
   let bestMatch = { tool: '', similarity: 0 };
   
   // Analyze noise patterns for GAN signatures
@@ -380,17 +380,17 @@ function detectGANFingerprints(features: FeatureVector, offlineData: OfflineAnal
     }
   }
   
-  if (bestMatch.similarity > 0.75) {
-    score += 30;
+  if (bestMatch.similarity > 0.82) {
+    score += 35;
     signals.push(`GAN fingerprint detected: ${formatToolName(bestMatch.tool)} pattern`);
     signals.push('Upsampling artifact characteristics identified');
-  } else if (bestMatch.similarity > 0.65) {
+  } else if (bestMatch.similarity > 0.72) {
     score += 18;
     signals.push('GAN-like noise pattern detected');
   }
   
-  // Check for checkerboard artifacts
-  if (offlineData.details?.noiseAnalysis?.score > 55) {
+  // Check for checkerboard artifacts - higher threshold
+  if (offlineData.details?.noiseAnalysis?.score > 70) {
     score += 12;
     signals.push('Checkerboard artifact pattern (generator upsampling)');
   }
@@ -416,7 +416,7 @@ function detectGANFingerprints(features: FeatureVector, offlineData: OfflineAnal
  */
 function analyzeFacialManipulation(features: FeatureVector, offlineData: OfflineAnalysisData): DetectionResult {
   const signals: string[] = [];
-  let score = 30; // Start lower - real faces vary a lot
+  let score = 10; // Start very low - real faces have natural variations
   let bestMatch = { tool: '', similarity: 0 };
   
   const facialScore = (features.facial + 1) / 2;
@@ -434,23 +434,23 @@ function analyzeFacialManipulation(features: FeatureVector, offlineData: Offline
     }
   }
   
-  if (bestMatch.similarity > 0.72) {
-    score += 35;
+  if (bestMatch.similarity > 0.80) {
+    score += 40;
     signals.push(`Face manipulation detected: ${formatToolName(bestMatch.tool)} signature`);
     signals.push('Facial boundary blending artifacts identified');
-  } else if (bestMatch.similarity > 0.62) {
+  } else if (bestMatch.similarity > 0.70) {
     score += 20;
     signals.push('Suspicious facial region detected');
   }
   
-  // Check for lighting inconsistency
-  if (offlineData.details?.lightingConsistency?.score > 55) {
+  // Check for lighting inconsistency - higher threshold
+  if (offlineData.details?.lightingConsistency?.score > 70) {
     score += 15;
     signals.push('Lighting direction mismatch on facial features');
   }
   
-  // Skin texture analysis
-  if (offlineData.details?.facialSymmetry?.score > 65) {
+  // Skin texture analysis - higher threshold
+  if (offlineData.details?.facialSymmetry?.score > 80) {
     score += 12;
     signals.push('Synthetic skin texture pattern detected');
   }
@@ -470,7 +470,7 @@ function analyzeFacialManipulation(features: FeatureVector, offlineData: Offline
  */
 function analyzeAudioDeepfake(features: FeatureVector, offlineData: OfflineAnalysisData): DetectionResult {
   const signals: string[] = [];
-  let score = 32; // Start lower for balance
+  let score = 15; // Start very low - natural voice has variations
   let bestMatch = { tool: '', similarity: 0 };
   
   // Use available features as proxies for audio analysis
@@ -489,11 +489,11 @@ function analyzeAudioDeepfake(features: FeatureVector, offlineData: OfflineAnaly
     }
   }
   
-  if (bestMatch.similarity > 0.70) {
-    score += 32;
+  if (bestMatch.similarity > 0.78) {
+    score += 35;
     signals.push(`Voice cloning detected: ${formatToolName(bestMatch.tool)} signature`);
     signals.push('Synthetic speech patterns identified');
-  } else if (bestMatch.similarity > 0.58) {
+  } else if (bestMatch.similarity > 0.68) {
     score += 18;
     signals.push('Suspicious audio spectral characteristics');
   }
@@ -513,22 +513,22 @@ function analyzeAudioDeepfake(features: FeatureVector, offlineData: OfflineAnaly
  */
 function analyzeCompressionArtifacts(features: FeatureVector, offlineData: OfflineAnalysisData): DetectionResult {
   const signals: string[] = [];
-  let score = 35; // Start lower - compression is normal
+  let score = 10; // Start very low - all camera photos have compression
   
   const compressionScore = (features.compression + 1) / 2;
   
-  if (compressionScore > 0.65) {
+  if (compressionScore > 0.75) {
     score += 22;
     signals.push('Multiple compression cycles detected');
   }
   
-  if (offlineData.details?.jpegQuality?.score > 50) {
+  if (offlineData.details?.jpegQuality?.score > 70) {
     score += 15;
     signals.push('JPEG quality inconsistency across regions');
   }
   
-  // Check for block boundary artifacts
-  if (compressionScore > 0.55 && offlineData.details?.noiseAnalysis?.score > 45) {
+  // Check for block boundary artifacts - higher threshold
+  if (compressionScore > 0.70 && offlineData.details?.noiseAnalysis?.score > 60) {
     score += 10;
     signals.push('Block boundary discontinuity detected');
   }
