@@ -547,10 +547,13 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
   const imageData = await loadImageData(file);
   const { data, width, height } = imageData;
 
-  // Run metadata analysis first (catches filename patterns like "midjourney_", "dalle_")
+  // =====================================================================
+  // STEP 1: RUN METADATA ANALYSIS FIRST (catches filename, watermarks)
+  // This is the MOST RELIABLE signal - humans don't name files "kling_xxx"
+  // =====================================================================
   const metadataResult = await analyzeMetadata(file, imageData);
 
-  // Run all classical analyses
+  // Run all pixel-based analyses
   const noiseAnalysis = analyzeNoise(data, width, height);
   const edgeAnalysis = analyzeEdges(data, width, height);
   const colorAnalysis = analyzeColors(data);
@@ -560,42 +563,56 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
   const repetitionAnalysis = analyzeRepetition(data, width, height);
   const gradientAnalysis = analyzeGradient(data, width, height);
 
-  // Run Quantum Entropy Analysis (von Neumann, Rényi, min-entropy)
+  // Run Quantum Entropy Analysis
   const quantumEntropy = analyzeQuantumEntropy(imageData);
   const quantumEntropyAnalysis = {
     score: Math.round(quantumEntropy.anomalyScore * 100),
     description: quantumEntropy.entropyAnomaly 
-      ? `Quantum entropy anomaly detected (von Neumann: ${quantumEntropy.vonNeumannEntropy.toFixed(3)}, coherence: ${(quantumEntropy.quantumCoherence * 100).toFixed(1)}%)`
-      : `Normal quantum entropy patterns (von Neumann: ${quantumEntropy.vonNeumannEntropy.toFixed(3)})`
+      ? `Quantum entropy anomaly (vN: ${quantumEntropy.vonNeumannEntropy.toFixed(3)}, coherence: ${(quantumEntropy.quantumCoherence * 100).toFixed(1)}%)`
+      : `Normal quantum entropy (vN: ${quantumEntropy.vonNeumannEntropy.toFixed(3)})`
   };
 
   const metadataAnalysis = {
     score: metadataResult.score,
     description: metadataResult.detectedAITool 
-      ? `AI Tool Detected: ${metadataResult.detectedAITool}`
+      ? `🚨 AI Tool Detected: ${metadataResult.detectedAITool}`
       : 'No AI tool signatures found'
   };
 
-  // Collect signals - add metadata signals first (strongest)
+  // =====================================================================
+  // STEP 2: COLLECT SIGNALS - Metadata signals are HIGHEST PRIORITY
+  // =====================================================================
   const signals: string[] = [];
+  
+  // Add metadata signals FIRST (most important)
   if (metadataResult.signals.length > 0) {
     signals.push(...metadataResult.signals);
   }
   
-  const threshold = 45; // Lowered threshold
+  // Add detected AI tool as explicit signal
+  if (metadataResult.detectedAITool) {
+    const toolSignal = `AI Generation Tool: ${metadataResult.detectedAITool}`;
+    if (!signals.some(s => s.includes(metadataResult.detectedAITool!))) {
+      signals.unshift(toolSignal);
+    }
+  }
+  
+  const threshold = 40; // Signal threshold for pixel-based analyses
 
   if (noiseAnalysis.score > threshold) signals.push(noiseAnalysis.description);
   if (edgeAnalysis.score > threshold) signals.push(edgeAnalysis.description);
   if (colorAnalysis.score > threshold) signals.push(colorAnalysis.description);
-  if (compressionAnalysis.score > threshold) signals.push(compressionAnalysis.description);
   if (symmetryAnalysis.score > threshold) signals.push(symmetryAnalysis.description);
   if (textureAnalysis.score > threshold) signals.push(textureAnalysis.description);
   if (repetitionAnalysis.score > threshold) signals.push(repetitionAnalysis.description);
   if (gradientAnalysis.score > threshold) signals.push(gradientAnalysis.description);
   if (quantumEntropyAnalysis.score > threshold) signals.push(quantumEntropyAnalysis.description);
+  if (compressionAnalysis.score > 50) signals.push(compressionAnalysis.description);
 
-  // Count how many indicators are elevated (> 35)
-  const allScores = [
+  // =====================================================================
+  // STEP 3: COUNT ELEVATED INDICATORS
+  // =====================================================================
+  const allPixelScores = [
     noiseAnalysis.score,
     edgeAnalysis.score,
     colorAnalysis.score,
@@ -606,75 +623,129 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
     gradientAnalysis.score,
     quantumEntropyAnalysis.score
   ];
-  const elevatedCount = allScores.filter((s) => s > 35).length;
+  const elevatedCount = allPixelScores.filter((s) => s > 35).length;
+  const highCount = allPixelScores.filter((s) => s > 60).length;
 
-  // Dynamic weighting based on metadata detection
-  // If AI tool found in filename, metadata weight is HIGH
-  const metadataWeight = metadataResult.score >= 70 ? 0.40 : metadataResult.score >= 40 ? 0.25 : 0.10;
-  const pixelWeight = 1 - metadataWeight;
+  // =====================================================================
+  // STEP 4: CALCULATE FINAL SCORE WITH DYNAMIC WEIGHTING
+  // =====================================================================
+  
+  // If AI tool detected in filename/watermark, metadata DOMINATES
+  // This is the key fix: filename "kling_xxx" = 85%+ metadata weight
+  let metadataWeight: number;
+  let pixelWeight: number;
+  
+  if (metadataResult.score >= 85) {
+    // DEFINITE AI TOOL DETECTED - Metadata is DOMINANT
+    metadataWeight = 0.85;
+    pixelWeight = 0.15;
+  } else if (metadataResult.score >= 70) {
+    // Strong AI indicator - Metadata is primary
+    metadataWeight = 0.70;
+    pixelWeight = 0.30;
+  } else if (metadataResult.score >= 50) {
+    // Moderate AI indicator
+    metadataWeight = 0.55;
+    pixelWeight = 0.45;
+  } else if (metadataResult.score >= 30) {
+    // Weak AI indicator - balanced
+    metadataWeight = 0.35;
+    pixelWeight = 0.65;
+  } else {
+    // No AI indicator - pixel analysis is primary
+    metadataWeight = 0.15;
+    pixelWeight = 0.85;
+  }
 
-  // Calculate pixel-based score
-  let pixelScore = (
-    noiseAnalysis.score * 0.14 +
+  // Calculate weighted pixel-based score
+  const pixelScore = (
+    noiseAnalysis.score * 0.16 +
     edgeAnalysis.score * 0.08 +
-    colorAnalysis.score * 0.08 +
-    compressionAnalysis.score * 0.06 +
-    symmetryAnalysis.score * 0.11 +
-    textureAnalysis.score * 0.13 +
+    colorAnalysis.score * 0.10 +
+    compressionAnalysis.score * 0.05 +
+    symmetryAnalysis.score * 0.12 +
+    textureAnalysis.score * 0.15 +
     repetitionAnalysis.score * 0.06 +
-    gradientAnalysis.score * 0.13 +
-    quantumEntropyAnalysis.score * 0.11
-  ) / 0.90; // Normalize since weights don't sum to 1 for pixel portion
-
-  // Find strongest AI indicator (including quantum entropy)
-  const strongAiIndicator = Math.max(
-    noiseAnalysis.score,
-    textureAnalysis.score,
-    symmetryAnalysis.score,
-    colorAnalysis.score,
-    repetitionAnalysis.score,
-    gradientAnalysis.score,
-    quantumEntropyAnalysis.score
+    gradientAnalysis.score * 0.14 +
+    quantumEntropyAnalysis.score * 0.14
   );
-  const hasStrongAiIndicator = strongAiIndicator >= 70;
-  const hasVeryStrongIndicator = strongAiIndicator >= 85;
 
   // Multi-signal boost: AI images trigger multiple detectors
-  if (elevatedCount >= 5) {
-    pixelScore = pixelScore * 1.35;
+  let boostedPixelScore = pixelScore;
+  if (elevatedCount >= 6) {
+    boostedPixelScore = pixelScore * 1.40;
+  } else if (elevatedCount >= 5) {
+    boostedPixelScore = pixelScore * 1.30;
   } else if (elevatedCount >= 4) {
-    pixelScore = pixelScore * 1.20;
+    boostedPixelScore = pixelScore * 1.20;
   } else if (elevatedCount >= 3) {
-    pixelScore = pixelScore * 1.10;
-  } else if (elevatedCount >= 2) {
-    pixelScore = pixelScore * 1.05;
+    boostedPixelScore = pixelScore * 1.10;
   }
 
-  // Combined score with metadata weighting
-  let overallScore = metadataResult.score * metadataWeight + pixelScore * pixelWeight;
-
-  // Guardrail: strong AI signature = at least suspicious
-  if (hasVeryStrongIndicator) {
-    overallScore = Math.max(overallScore, 55);
-  } else if (hasStrongAiIndicator) {
-    overallScore = Math.max(overallScore, 42);
+  // High-score boost
+  if (highCount >= 3) {
+    boostedPixelScore = Math.max(boostedPixelScore, 55);
   }
 
-  // Metadata override: if AI tool detected in filename, ensure high score
+  // =====================================================================
+  // STEP 5: COMBINE SCORES
+  // =====================================================================
+  let overallScore = metadataResult.score * metadataWeight + boostedPixelScore * pixelWeight;
+
+  // =====================================================================
+  // STEP 6: CRITICAL OVERRIDES - ENSURE CORRECT VERDICTS
+  // =====================================================================
+  
+  // OVERRIDE 1: If AI tool detected by name, FORCE high score
+  // Files named "kling_xxx", "midjourney_xxx" are DEFINITELY AI
   if (metadataResult.score >= 90) {
-    overallScore = Math.max(overallScore, 75);
+    overallScore = Math.max(overallScore, 90);
+  } else if (metadataResult.score >= 80) {
+    overallScore = Math.max(overallScore, 80);
   } else if (metadataResult.score >= 70) {
+    overallScore = Math.max(overallScore, 70);
+  } else if (metadataResult.score >= 60) {
+    overallScore = Math.max(overallScore, 60);
+  } else if (metadataResult.score >= 50) {
+    overallScore = Math.max(overallScore, 52);
+  }
+
+  // OVERRIDE 2: Strong pixel-based AI indicators
+  const strongestPixelScore = Math.max(...allPixelScores);
+  if (strongestPixelScore >= 85) {
+    overallScore = Math.max(overallScore, 65);
+  } else if (strongestPixelScore >= 75) {
     overallScore = Math.max(overallScore, 55);
+  } else if (strongestPixelScore >= 65) {
+    overallScore = Math.max(overallScore, 48);
   }
 
-  // Special case: animated/cartoon style (gradient + texture + low noise variance)
-  if (gradientAnalysis.score > 60 && textureAnalysis.score > 40) {
-    overallScore = Math.max(overallScore, 50);
+  // OVERRIDE 3: Multiple high-scoring pixel analyses
+  if (highCount >= 4) {
+    overallScore = Math.max(overallScore, 70);
+  } else if (highCount >= 3) {
+    overallScore = Math.max(overallScore, 58);
+  } else if (highCount >= 2) {
+    overallScore = Math.max(overallScore, 48);
   }
 
-  // Mild dampening only when everything looks clean
-  if (!hasStrongAiIndicator && elevatedCount <= 1 && overallScore < 25 && metadataResult.score < 30) {
-    overallScore = overallScore * 0.85;
+  // OVERRIDE 4: Watermark detected = likely AI
+  if (metadataResult.details.watermarkDetection.score >= 70) {
+    overallScore = Math.max(overallScore, 72);
+  } else if (metadataResult.details.watermarkDetection.score >= 50) {
+    overallScore = Math.max(overallScore, 58);
+  }
+
+  // =====================================================================
+  // STEP 7: Only dampen when EVERYTHING looks clean
+  // =====================================================================
+  if (metadataResult.score < 20 && 
+      elevatedCount <= 1 && 
+      highCount === 0 && 
+      strongestPixelScore < 40 &&
+      overallScore < 30) {
+    // Genuine authentic-looking content
+    overallScore = overallScore * 0.90;
   }
 
   return {

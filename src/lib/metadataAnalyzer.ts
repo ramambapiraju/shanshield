@@ -391,19 +391,58 @@ export const analyzeMetadata = async (
   
   const signals: string[] = [];
   
-  if (filenameResult.score >= 70) signals.push(filenameResult.description);
-  if (watermarkResult.score >= 50) signals.push(watermarkResult.description);
-  if (signatureResult.score >= 40) signals.push(signatureResult.description);
-  if (metadataResult.score >= 20) signals.push(metadataResult.description);
+  // CRITICAL: Add signals based on detection (lower thresholds for sensitivity)
+  if (filenameResult.score >= 35) signals.push(filenameResult.description);
+  if (watermarkResult.score >= 40) signals.push(watermarkResult.description);
+  if (signatureResult.score >= 35) signals.push(signatureResult.description);
+  if (metadataResult.score >= 15) signals.push(metadataResult.description);
   
-  // Calculate overall score with weights
-  // Filename is VERY strong evidence (humans don't name files "kling_xxx")
-  const overallScore = Math.round(
-    filenameResult.score * 0.45 +  // Filename is strongest signal
+  // =====================================================================
+  // WEIGHTED SCORING WITH STRONG OVERRIDES
+  // =====================================================================
+  // Filename is STRONGEST signal - "kling_xxx", "midjourney_xxx" = definitely AI
+  // Watermark is STRONG signal - visible AI tool watermark
+  // Humans don't name files with AI tool names!
+  
+  let overallScore = Math.round(
+    filenameResult.score * 0.50 +  // Filename is DOMINANT signal
     watermarkResult.score * 0.25 + // Visible watermark is strong
-    signatureResult.score * 0.20 + // AI visual signatures
+    signatureResult.score * 0.15 + // AI visual signatures
     metadataResult.score * 0.10    // Metadata patterns
   );
+  
+  // =====================================================================
+  // CRITICAL OVERRIDES - If AI tool detected, FORCE HIGH SCORE
+  // =====================================================================
+  
+  // If filename clearly indicates AI tool (score >= 85), THIS IS AI CONTENT
+  if (filenameResult.score >= 85) {
+    overallScore = Math.max(overallScore, 92); // Near-certain AI
+    if (!signals.includes(`AI TOOL CONFIRMED: ${filenameResult.tool}`)) {
+      signals.unshift(`AI TOOL CONFIRMED: ${filenameResult.tool}`);
+    }
+  } else if (filenameResult.score >= 70) {
+    overallScore = Math.max(overallScore, 80); // Highly likely AI
+  } else if (filenameResult.score >= 50) {
+    overallScore = Math.max(overallScore, 65); // Probable AI
+  }
+  
+  // If watermark detected (AI tools like Kling, Midjourney add watermarks)
+  if (watermarkResult.score >= 70) {
+    overallScore = Math.max(overallScore, 78);
+  } else if (watermarkResult.score >= 50) {
+    overallScore = Math.max(overallScore, 60);
+  }
+  
+  // If BOTH filename and watermark indicate AI = definitive
+  if (filenameResult.score >= 70 && watermarkResult.score >= 50) {
+    overallScore = Math.max(overallScore, 95);
+  }
+  
+  // If strong AI visual signatures detected
+  if (signatureResult.score >= 60) {
+    overallScore = Math.max(overallScore, 55);
+  }
   
   return {
     score: Math.min(100, overallScore),
@@ -415,7 +454,11 @@ export const analyzeMetadata = async (
       aiSignatures: { score: signatureResult.score, description: signatureResult.description }
     },
     detectedAITool: filenameResult.tool,
-    confidence: filenameResult.score >= 90 ? 95 : filenameResult.score >= 70 ? 80 : 60
+    // Confidence based on what was detected
+    confidence: filenameResult.score >= 85 ? 98 : 
+                filenameResult.score >= 70 ? 92 : 
+                watermarkResult.score >= 70 ? 85 :
+                filenameResult.score >= 50 ? 75 : 60
   };
 };
 
