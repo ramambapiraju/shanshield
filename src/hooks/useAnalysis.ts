@@ -5,6 +5,8 @@ import { analyzeVideo, type VideoAnalysisFindings } from "@/lib/videoAnalyzer";
 import { analyzeAudio, type AudioAnalysisFindings } from "@/lib/audioAnalyzer";
 import { analyzeDocument, type DocumentAnalysisFindings } from "@/lib/documentAnalyzer";
 import { type QuantumEntropyResult } from "@/lib/quantumEntropyAnalyzer";
+import { analyzeWithCloud, type CloudAnalysisResult } from "@/lib/cloudAnalyzer";
+import { toast } from "sonner";
 
 interface UploadedFile {
   file: File;
@@ -56,6 +58,9 @@ interface AnalysisResult {
   mediaHash: string;
   detectionMethods: string[];
   quantumEntropy?: QuantumEntropyResult;
+  analysisMode?: 'offline' | 'cloud_ml';
+  mlSignals?: string[];
+  aiToolDetected?: string | null;
 }
 
 type UnifiedAnalysis = {
@@ -193,6 +198,7 @@ export const useAnalysis = () => {
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [isFieldMode, setIsFieldMode] = useState(false);
+  const [isOnlineMode, setIsOnlineMode] = useState(false);
   const [currentProgress, setCurrentProgress] = useState({ step: '', progress: 0 });
   const [realAnalysisResult, setRealAnalysisResult] = useState<UnifiedAnalysis | null>(null);
   // Timing state for real processing time measurement
@@ -219,6 +225,7 @@ export const useAnalysis = () => {
     try {
       let analysis: UnifiedAnalysis;
       
+      // Step 1: Always run offline analysis first
       if (file.type === 'image') {
         const result = await analyzeImage(file.file);
         analysis = toUnifiedAnalysis(result, 'image', result.quantumEntropy);
@@ -233,19 +240,73 @@ export const useAnalysis = () => {
         analysis = toUnifiedAnalysis(result, 'document');
       }
       
+      setRealAnalysisResult(analysis);
+      
+      // Step 2: If online mode, also run cloud ML analysis
+      let cloudResult: CloudAnalysisResult | null = null;
+      if (isOnlineMode) {
+        try {
+          setCurrentProgress({ step: 'Cloud ML Analysis', progress: 50 });
+          cloudResult = await analyzeWithCloud(file.file, file.type, {
+            score: analysis.score,
+            signals: analysis.signals,
+            details: analysis.details
+          });
+          toast.success("Cloud ML analysis complete!");
+        } catch (cloudError) {
+          console.error('Cloud analysis failed:', cloudError);
+          toast.error(cloudError instanceof Error ? cloudError.message : 'Cloud analysis failed. Using offline results.');
+        }
+      }
+      
       const analysisEndTime = performance.now();
       const timeMs = analysisEndTime - analysisStartTime;
       setProcessingTimeMs(timeMs);
-      setRealAnalysisResult(analysis);
       
-      // Generate result directly here instead of relying on pipeline callback
+      // Generate result - merge cloud results if available
       const timeInSeconds = timeMs / 1000;
-      const analysisResult = generateAnalysisResult(file, isFieldMode, analysis, timeInSeconds);
+      let analysisResult = generateAnalysisResult(file, isFieldMode, analysis, timeInSeconds);
+      
+      // If we have cloud results, enhance the analysis
+      if (cloudResult) {
+        analysisResult = {
+          ...analysisResult,
+          verdict: cloudResult.verdict,
+          confidence: cloudResult.combinedConfidence,
+          analysisMode: 'cloud_ml',
+          mlSignals: cloudResult.mlSignals,
+          aiToolDetected: cloudResult.aiToolDetected,
+          reasoning: [
+            `🤖 Cloud ML Analysis (${cloudResult.modelUsed})`,
+            cloudResult.reasoning,
+            `ML Confidence: ${cloudResult.mlScore}%`,
+            `Offline Score: ${cloudResult.offlineScore}%`,
+            `Combined Confidence: ${cloudResult.combinedConfidence}%`,
+            ...(cloudResult.aiToolDetected ? [`⚠️ AI Tool Detected: ${cloudResult.aiToolDetected}`] : []),
+            ...(cloudResult.mlSignals.length > 0 ? [`ML Signals: ${cloudResult.mlSignals.join(', ')}`] : []),
+            '---',
+            ...analysisResult.reasoning
+          ],
+          indicators: [
+            ...(cloudResult.mlSignals.map((signal, i) => ({
+              name: `ML Signal ${i + 1}`,
+              detected: true,
+              confidence: cloudResult.mlScore,
+              description: signal
+            }))),
+            ...analysisResult.indicators
+          ]
+        };
+      } else {
+        analysisResult.analysisMode = 'offline';
+      }
+      
       setResult(analysisResult);
       setIsAnalyzing(false);
       setAnalysisComplete(true);
     } catch (error) {
       console.error('Analysis failed:', error);
+      toast.error('Analysis failed. Please try again.');
       const analysisEndTime = performance.now();
       const timeMs = analysisEndTime - analysisStartTime;
       setProcessingTimeMs(timeMs);
@@ -263,7 +324,7 @@ export const useAnalysis = () => {
       setIsAnalyzing(false);
       setAnalysisComplete(true);
     }
-  }, [files, isFieldMode]);
+  }, [files, isFieldMode, isOnlineMode]);
 
   const handleAnalysisComplete = useCallback(() => {
     if (files.length === 0 || !realAnalysisResult) return;
@@ -282,6 +343,10 @@ export const useAnalysis = () => {
     setIsFieldMode(enabled);
   }, []);
 
+  const handleOnlineModeChange = useCallback((enabled: boolean) => {
+    setIsOnlineMode(enabled);
+  }, []);
+
   const resetAnalysis = useCallback(() => {
     setFiles([]);
     setIsAnalyzing(false);
@@ -297,12 +362,14 @@ export const useAnalysis = () => {
     analysisComplete,
     result,
     isFieldMode,
+    isOnlineMode,
     currentProgress,
     handleFilesSelected,
     startAnalysis,
     handleAnalysisComplete,
     handleProgress,
     handleFieldModeChange,
+    handleOnlineModeChange,
     resetAnalysis
   };
 };
