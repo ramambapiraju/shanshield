@@ -82,6 +82,13 @@ const [showPresentation, setShowPresentation] = useState(false);
       </header>
 
       <main className="relative container mx-auto px-6 py-8">
+        {/* Disclaimer Banner */}
+        <div className="mb-4 px-4 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg text-center">
+          <p className="text-xs text-amber-400 font-medium">
+            ⚠️ EXPERIMENTAL PROTOTYPE — Unofficial research project. Results are indicative only, not for critical decisions.
+          </p>
+        </div>
+        
         {/* Title */}
         <section className="text-center mb-8">
           <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2 tracking-tight">
@@ -223,30 +230,35 @@ const [showPresentation, setShowPresentation] = useState(false);
       {/* Footer */}
       <footer className="relative border-t border-border/50 bg-card/30 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span className="font-display tracking-wider">SHANSHIELD v4.2.0</span>
-            <div className="flex items-center gap-3">
-              <span className="uppercase tracking-widest">IIT Delhi ERAKSHA Hackathon 2026</span>
-              <Button 
-                onClick={() => setShowTechSummary(true)}
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-xs gap-1 text-muted-foreground hover:text-primary"
-              >
-                <FileText className="w-3 h-3" />
-                Tech PDF
-              </Button>
-              <Button
-                onClick={() => setShowPresentation(true)}
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-xs gap-1 text-muted-foreground hover:text-primary"
-              >
-                <Presentation className="w-3 h-3" />
-                Present
-              </Button>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span className="font-display tracking-wider">SHANSHIELD v4.2.0 (Experimental)</span>
+              <div className="flex items-center gap-3">
+                <span className="uppercase tracking-widest">IIT Delhi ERAKSHA Hackathon 2026</span>
+                <Button 
+                  onClick={() => setShowTechSummary(true)}
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs gap-1 text-muted-foreground hover:text-primary"
+                >
+                  <FileText className="w-3 h-3" />
+                  Tech PDF
+                </Button>
+                <Button
+                  onClick={() => setShowPresentation(true)}
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs gap-1 text-muted-foreground hover:text-primary"
+                >
+                  <Presentation className="w-3 h-3" />
+                  Present
+                </Button>
+              </div>
+              <span className="font-display tracking-wider">PROTOTYPE // UNOFFICIAL</span>
             </div>
-            <span className="font-display tracking-wider">CLASSIFIED // FOR OFFICIAL USE</span>
+            <p className="text-center text-[10px] text-muted-foreground/60">
+              Built with Lovable AI • This is an experimental research prototype, not an official product
+            </p>
           </div>
         </div>
       </footer>
