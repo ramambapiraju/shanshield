@@ -85,7 +85,8 @@ const toUnifiedAnalysis = (
 const generateAnalysisResult = (
   file: UploadedFile, 
   isFieldMode: boolean,
-  analysis: UnifiedAnalysis
+  analysis: UnifiedAnalysis,
+  actualProcessingTime: number
 ): AnalysisResult => {
   const { score, signals, details, mediaType } = analysis;
   
@@ -174,7 +175,7 @@ const generateAnalysisResult = (
     confidence: Math.round(confidence),
     indicators,
     notDetected,
-    processingTime: isFieldMode ? 1.5 + (file.file.size / 1024 / 1000) : 3 + (file.file.size / 1024 / 500),
+    processingTime: actualProcessingTime,
     heatmapRegions,
     timelineMarkers,
     audioSegments,
@@ -193,6 +194,8 @@ export const useAnalysis = () => {
   const [isFieldMode, setIsFieldMode] = useState(false);
   const [currentProgress, setCurrentProgress] = useState({ step: '', progress: 0 });
   const [realAnalysisResult, setRealAnalysisResult] = useState<UnifiedAnalysis | null>(null);
+  const [analysisStartTime, setAnalysisStartTime] = useState<number>(0);
+  const [actualProcessingTime, setActualProcessingTime] = useState<number>(0);
 
   const handleFilesSelected = useCallback((selectedFiles: UploadedFile[]) => {
     setFiles(selectedFiles);
@@ -204,6 +207,8 @@ export const useAnalysis = () => {
   const startAnalysis = useCallback(async () => {
     if (files.length === 0) return;
     
+    const startTime = performance.now();
+    setAnalysisStartTime(startTime);
     setIsAnalyzing(true);
     setAnalysisComplete(false);
     setResult(null);
@@ -228,6 +233,8 @@ export const useAnalysis = () => {
         analysis = toUnifiedAnalysis(result, 'document');
       }
       
+      const endTime = performance.now();
+      setActualProcessingTime((endTime - startTime) / 1000); // Convert to seconds
       setRealAnalysisResult(analysis);
     } catch (error) {
       console.error('Analysis failed:', error);
@@ -243,11 +250,11 @@ export const useAnalysis = () => {
   const handleAnalysisComplete = useCallback(() => {
     if (files.length === 0 || !realAnalysisResult) return;
     
-    const analysisResult = generateAnalysisResult(files[0], isFieldMode, realAnalysisResult);
+    const analysisResult = generateAnalysisResult(files[0], isFieldMode, realAnalysisResult, actualProcessingTime);
     setResult(analysisResult);
     setIsAnalyzing(false);
     setAnalysisComplete(true);
-  }, [files, isFieldMode, realAnalysisResult]);
+  }, [files, isFieldMode, realAnalysisResult, actualProcessingTime]);
 
   const handleProgress = useCallback((step: string, progress: number) => {
     setCurrentProgress({ step, progress });
