@@ -137,7 +137,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
               <div className="text-sm text-muted-foreground">Avg Analysis Time</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-primary">4+1</div>
+              <div className="text-4xl font-bold text-primary">6+1</div>
               <div className="text-sm text-muted-foreground">AI Agents + Arbiter</div>
             </div>
             <div className="text-center">
@@ -284,9 +284,9 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
                 </div>
               </div>
               <ul className="text-muted-foreground text-xs space-y-1">
-                <li>• <span className="text-amber-400">SHA-256</span> — File hashing</li>
+                <li>• <span className="text-amber-400">SHA-256</span> — Web Crypto API</li>
                 <li>• Shannon Entropy</li>
-                <li>• EXIF/XMP extraction</li>
+                <li>• PDF metadata parsing</li>
               </ul>
             </div>
 
@@ -633,24 +633,28 @@ const flickerScore = detectFlicker(diffs);
           <div className="p-6 bg-primary/10 border border-primary/30 rounded-xl">
             <h4 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2">
               <Lock className="w-6 h-6 text-primary" />
-              Chain of Custody — Cryptographic Evidence Trail
+              Chain of Custody — Evidence Trail (Implemented)
             </h4>
             <div className="grid grid-cols-4 gap-4 text-center text-sm text-muted-foreground">
-              <div className="p-3 bg-background/50 rounded-lg">
-                <div className="text-primary font-bold">SHA-256</div>
-                <div>File hashing</div>
+              <div className="p-3 bg-background/50 rounded-lg border border-green-500/30">
+                <div className="text-green-400 font-bold">SHA-256</div>
+                <div>Web Crypto API hashing</div>
+                <div className="text-xs text-green-400 mt-1">✓ Implemented</div>
               </div>
-              <div className="p-3 bg-background/50 rounded-lg">
-                <div className="text-primary font-bold">Timestamps</div>
-                <div>Analysis time</div>
+              <div className="p-3 bg-background/50 rounded-lg border border-green-500/30">
+                <div className="text-green-400 font-bold">Timestamps</div>
+                <div>ISO 8601 format</div>
+                <div className="text-xs text-green-400 mt-1">✓ Implemented</div>
               </div>
-              <div className="p-3 bg-background/50 rounded-lg">
-                <div className="text-primary font-bold">EXIF Parse</div>
-                <div>Metadata extraction</div>
+              <div className="p-3 bg-background/50 rounded-lg border border-green-500/30">
+                <div className="text-green-400 font-bold">PDF Metadata</div>
+                <div>Producer/Creator/Dates</div>
+                <div className="text-xs text-green-400 mt-1">✓ Implemented</div>
               </div>
-              <div className="p-3 bg-background/50 rounded-lg">
-                <div className="text-primary font-bold">Audit Logs</div>
-                <div>Immutable records</div>
+              <div className="p-3 bg-background/50 rounded-lg border border-green-500/30">
+                <div className="text-green-400 font-bold">Text Reports</div>
+                <div>Downloadable forensic report</div>
+                <div className="text-xs text-green-400 mt-1">✓ Implemented</div>
               </div>
             </div>
           </div>
@@ -1403,7 +1407,7 @@ if (conflict > 0.7) {
             <div className="p-4 bg-gradient-to-br from-amber-500/15 to-amber-600/5 border border-amber-500/40 rounded-xl text-center">
               <Database className="w-8 h-8 text-amber-400 mx-auto mb-2" />
               <h4 className="font-bold text-foreground text-sm">Metadata Agent</h4>
-              <p className="text-xs text-muted-foreground mt-1">EXIF, Hashing, Entropy</p>
+              <p className="text-xs text-muted-foreground mt-1">PDF Parse, SHA-256, Entropy</p>
             </div>
             <div className="p-4 bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/40 rounded-xl text-center">
               <Brain className="w-8 h-8 text-primary mx-auto mb-2" />
@@ -1551,8 +1555,8 @@ if (conflict > 0.7) {
 
           <div className="grid grid-cols-4 gap-6 mt-8">
             <div className="text-center p-4 bg-card border border-border rounded-lg">
-              <div className="text-2xl font-bold text-primary">4+1</div>
-              <div className="text-sm text-muted-foreground">AI Agents</div>
+              <div className="text-2xl font-bold text-primary">6+1</div>
+              <div className="text-sm text-muted-foreground">AI Agents + Arbiter</div>
             </div>
             <div className="text-center p-4 bg-card border border-border rounded-lg">
               <div className="text-2xl font-bold text-primary">100%</div>
