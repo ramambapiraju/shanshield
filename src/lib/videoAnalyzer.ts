@@ -1,5 +1,6 @@
 // Real Video Analysis - Frame-by-frame analysis for deepfake detection
 import { analyzeQuantumEntropy, type QuantumEntropyResult } from './quantumEntropyAnalyzer';
+import { analyzeMetadata, extractFirstFrame, type MetadataAnalysisResult } from './metadataAnalyzer';
 
 export interface VideoAnalysisFindings {
   score: number;
@@ -11,10 +12,12 @@ export interface VideoAnalysisFindings {
     compressionAnalysis: { score: number; description: string };
     motionAnalysis: { score: number; description: string };
     audioVideoSync: { score: number; description: string };
+    metadataAnalysis: { score: number; description: string };
   };
   frameCount: number;
   duration: number;
   quantumEntropy?: QuantumEntropyResult;
+  metadata?: MetadataAnalysisResult;
 }
 
 // Extract frames from video
@@ -371,6 +374,18 @@ const analyzeAudioVideoSync = (): { score: number; description: string } => {
 
 // Main video analysis function
 export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> => {
+  // First, analyze metadata (filename, watermarks) - this catches obvious AI content
+  let metadataResult: MetadataAnalysisResult | undefined;
+  let firstFrameData: ImageData | undefined;
+  
+  try {
+    firstFrameData = await extractFirstFrame(file);
+    metadataResult = await analyzeMetadata(file, firstFrameData);
+  } catch (e) {
+    // Fallback to filename-only analysis
+    metadataResult = await analyzeMetadata(file);
+  }
+  
   return new Promise((resolve) => {
     const video = document.createElement('video');
     video.preload = 'auto';
@@ -397,7 +412,12 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
         }
         
         const signals: string[] = [];
-        const threshold = 50;
+        const threshold = 45; // Lowered threshold to catch more signals
+        
+        // Add metadata signals first (strongest indicators)
+        if (metadataResult && metadataResult.signals.length > 0) {
+          signals.push(...metadataResult.signals);
+        }
         
         if (frameConsistency.score > threshold) signals.push(frameConsistency.description);
         if (temporalCoherence.score > threshold) signals.push(temporalCoherence.description);
@@ -406,11 +426,13 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
         if (motionAnalysis.score > threshold) signals.push(motionAnalysis.description);
         if (audioVideoSync.score > threshold) signals.push(audioVideoSync.description);
         
-        // Include quantum entropy in score if available
-        const quantumWeight = quantumEntropy ? 0.08 : 0;
-        const baseWeight = quantumEntropy ? 0.92 : 1.0;
+        // NEW WEIGHTING: Metadata is CRITICAL (catches filenames like "kling_xxx")
+        // If metadata score is very high (AI tool detected), it should dominate
+        const metadataScore = metadataResult?.score || 0;
+        const metadataWeight = metadataScore >= 70 ? 0.50 : metadataScore >= 40 ? 0.30 : 0.15;
+        const pixelWeight = 1 - metadataWeight - 0.05; // Reserve 5% for quantum
         
-        const baseScore = (
+        const pixelScore = (
           frameConsistency.score * 0.20 +
           temporalCoherence.score * 0.20 +
           faceTracking.score * 0.20 +
@@ -419,13 +441,25 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
           audioVideoSync.score * 0.10
         );
         
-        const overallScore = baseScore * baseWeight + 
-          (quantumEntropy ? quantumEntropy.anomalyScore * 100 * quantumWeight : 0);
+        const quantumScore = quantumEntropy ? quantumEntropy.anomalyScore * 100 : 0;
+        
+        // Combined score with dynamic metadata weighting
+        const overallScore = 
+          metadataScore * metadataWeight +
+          pixelScore * pixelWeight +
+          quantumScore * 0.05;
         
         URL.revokeObjectURL(video.src);
         
+        const metadataDetail = {
+          score: metadataScore,
+          description: metadataResult?.detectedAITool 
+            ? `AI Tool Detected: ${metadataResult.detectedAITool}`
+            : 'No AI tool signatures found'
+        };
+        
         resolve({
-          score: Math.round(overallScore),
+          score: Math.round(Math.max(overallScore, metadataScore * 0.8)), // Ensure metadata can drive verdict
           signals,
           details: {
             frameConsistency,
@@ -433,28 +467,34 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
             faceTracking,
             compressionAnalysis,
             motionAnalysis,
-            audioVideoSync
+            audioVideoSync,
+            metadataAnalysis: metadataDetail
           },
           frameCount: frames.length,
           duration,
-          quantumEntropy
+          quantumEntropy,
+          metadata: metadataResult
         });
       } catch (err) {
         console.error('Video analysis error:', err);
         URL.revokeObjectURL(video.src);
+        // Even on error, metadata score can detect AI
+        const fallbackScore = metadataResult?.score || 30;
         resolve({
-          score: 30,
-          signals: ['Video analysis encountered an error'],
+          score: Math.max(30, fallbackScore),
+          signals: metadataResult?.signals || ['Video analysis encountered an error'],
           details: {
             frameConsistency: { score: 30, description: 'Analysis failed' },
             temporalCoherence: { score: 30, description: 'Analysis failed' },
             faceTracking: { score: 30, description: 'Analysis failed' },
             compressionAnalysis: { score: 30, description: 'Analysis failed' },
             motionAnalysis: { score: 30, description: 'Analysis failed' },
-            audioVideoSync: { score: 30, description: 'Analysis failed' }
+            audioVideoSync: { score: 30, description: 'Analysis failed' },
+            metadataAnalysis: { score: metadataResult?.score || 0, description: metadataResult?.detectedAITool || 'Unknown' }
           },
           frameCount: 0,
-          duration: 0
+          duration: 0,
+          metadata: metadataResult
         });
       }
     };
