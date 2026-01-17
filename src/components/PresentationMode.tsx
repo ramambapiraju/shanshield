@@ -133,16 +133,16 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
           </div>
           <div className="grid grid-cols-3 gap-8 mt-12">
             <div className="text-center">
-              <div className="text-4xl font-bold text-primary">5s</div>
-              <div className="text-sm text-muted-foreground">Avg Analysis Time</div>
-            </div>
-            <div className="text-center">
               <div className="text-4xl font-bold text-primary">6+1</div>
               <div className="text-sm text-muted-foreground">AI Agents + Arbiter</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold text-primary">100%</div>
               <div className="text-sm text-muted-foreground">Client-Side / Offline</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-primary">0</div>
+              <div className="text-sm text-muted-foreground">API Keys Required</div>
             </div>
           </div>
           <p className="text-xl text-foreground mt-8">
@@ -683,8 +683,8 @@ const flickerScore = detectFlicker(diffs);
             </div>
             <div className="text-center p-6 bg-card border border-border rounded-xl">
               <Zap className="w-12 h-12 text-warning mx-auto mb-3" />
-              <div className="text-3xl font-bold text-foreground">&lt;6s</div>
-              <div className="text-muted-foreground">Analysis time</div>
+              <div className="text-3xl font-bold text-foreground">50+</div>
+              <div className="text-muted-foreground">AI Tool Patterns</div>
             </div>
             <div className="text-center p-6 bg-card border border-border rounded-xl">
               <Wifi className="w-12 h-12 text-cyan-400 mx-auto mb-3" />
