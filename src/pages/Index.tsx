@@ -37,6 +37,7 @@ const [showPresentation, setShowPresentation] = useState(false);
     analysisComplete,
     result,
     isOnlineMode,
+    resetKey,
     handleFilesSelected,
     startAnalysis,
     handleAnalysisComplete,
@@ -102,7 +103,7 @@ const [showPresentation, setShowPresentation] = useState(false);
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* LEFT - Input & Controls */}
           <div className="lg:col-span-4 space-y-6">
-            <MediaUploader onFilesSelected={handleFilesSelected} isAnalyzing={isAnalyzing} />
+            <MediaUploader key={resetKey} onFilesSelected={handleFilesSelected} isAnalyzing={isAnalyzing} />
             
             <AnalysisModeToggle 
               isOnlineMode={isOnlineMode} 

@@ -207,6 +207,8 @@ export const useAnalysis = () => {
   const [realAnalysisResult, setRealAnalysisResult] = useState<UnifiedAnalysis | null>(null);
   // Timing state for real processing time measurement
   const [processingTimeMs, setProcessingTimeMs] = useState(0);
+  // Reset key to force MediaUploader remount
+  const [resetKey, setResetKey] = useState(0);
 
   const handleFilesSelected = useCallback((selectedFiles: UploadedFile[]) => {
     setFiles(selectedFiles);
@@ -389,6 +391,7 @@ export const useAnalysis = () => {
     setResult(null);
     setCurrentProgress({ step: '', progress: 0 });
     setRealAnalysisResult(null);
+    setResetKey(prev => prev + 1);
   }, []);
 
   return {
@@ -399,6 +402,7 @@ export const useAnalysis = () => {
     isFieldMode,
     isOnlineMode,
     currentProgress,
+    resetKey,
     handleFilesSelected,
     startAnalysis,
     handleAnalysisComplete,
