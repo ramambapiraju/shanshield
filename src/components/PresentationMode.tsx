@@ -155,8 +155,8 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
               <div className="text-sm text-muted-foreground">Client-Side / Offline</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary">0</div>
-              <div className="text-sm text-muted-foreground">API Keys Required</div>
+              <div className="text-3xl font-bold text-primary">C2PA</div>
+              <div className="text-sm text-muted-foreground">Content Authenticity</div>
             </div>
           </div>
           
@@ -172,7 +172,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
               🏆 Winner — ASME IMECE 2025 Innovation Pitchathon (Mechatronics Startup)
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Currently incubated at college • Built with Lovable AI
+              Built with Lovable AI
             </p>
           </div>
         </div>
@@ -348,7 +348,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             <div className="flex items-center justify-center gap-6 text-xs">
               <span className="text-green-400 font-bold">✓ 100% Browser-Native APIs:</span>
               <span className="text-muted-foreground"><strong>Canvas API</strong> • <strong>Web Audio API</strong> • <strong>Web Crypto API</strong> • <strong>FileReader API</strong></span>
-              <span className="text-green-400 font-bold">• Zero External API Calls</span>
+              <span className="text-green-400 font-bold">• Optional Cloud ML</span>
             </div>
           </div>
         </div>
@@ -762,8 +762,8 @@ const cv = (stdDev / avgDiff) * 100;
             </div>
             <div className="text-center p-6 bg-card border border-border rounded-xl">
               <Wifi className="w-12 h-12 text-cyan-400 mx-auto mb-3" />
-              <div className="text-3xl font-bold text-foreground">0</div>
-              <div className="text-muted-foreground">External API calls</div>
+              <div className="text-3xl font-bold text-foreground">C2PA</div>
+              <div className="text-muted-foreground">Content Provenance</div>
             </div>
           </div>
 
@@ -1591,16 +1591,27 @@ const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions
             What's Next
           </h2>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="p-5 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/40 rounded-xl">
               <div className="flex items-center gap-2 mb-3">
-                <Eye className="w-6 h-6 text-blue-400" />
-                <h3 className="text-lg font-bold text-foreground">Neural Networks</h3>
+                <Brain className="w-6 h-6 text-blue-400" />
+                <h3 className="text-lg font-bold text-foreground">Neural Network Models</h3>
               </div>
               <p className="text-sm text-muted-foreground">
                 WebGPU-based deep learning models for GAN/Diffusion fingerprinting. Requires browser support.
               </p>
               <div className="mt-2 text-xs text-blue-400 font-semibold">PLANNED</div>
+            </div>
+
+            <div className="p-5 bg-gradient-to-br from-violet-500/10 to-violet-600/5 border border-violet-500/40 rounded-xl">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="w-6 h-6 text-violet-400" />
+                <h3 className="text-lg font-bold text-foreground">Quantum ML Models</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Quantum Convolutional Neural Networks (QT-CNNs) & Quantum Support Vector Machines (QSVMs) for next-gen detection.
+              </p>
+              <div className="mt-2 text-xs text-violet-400 font-semibold">PLANNED</div>
             </div>
 
             <div className="p-5 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/40 rounded-xl">
@@ -1785,8 +1796,8 @@ const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm text-foreground font-semibold">100% Client-Side</div>
-                <div className="text-xs text-muted-foreground">No external AI APIs for detection</div>
+                <div className="text-sm text-foreground font-semibold">Offline + Cloud ML</div>
+                <div className="text-xs text-muted-foreground">Dual-mode detection system</div>
               </div>
             </div>
           </div>
@@ -1832,16 +1843,16 @@ const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions
               <div className="text-sm text-muted-foreground">AI Agents + Arbiter</div>
             </div>
             <div className="text-center p-4 bg-card border border-border rounded-lg">
-              <div className="text-2xl font-bold text-primary">100%</div>
-              <div className="text-sm text-muted-foreground">Client-Side</div>
+              <div className="text-2xl font-bold text-primary">C2PA</div>
+              <div className="text-sm text-muted-foreground">Content Authenticity</div>
+            </div>
+            <div className="text-center p-4 bg-card border border-border rounded-lg">
+              <div className="text-2xl font-bold text-primary">Offline</div>
+              <div className="text-sm text-muted-foreground">+ Cloud ML Mode</div>
             </div>
             <div className="text-center p-4 bg-card border border-border rounded-lg">
               <div className="text-2xl font-bold text-primary">Real</div>
               <div className="text-sm text-muted-foreground">Algorithms</div>
-            </div>
-            <div className="text-center p-4 bg-card border border-border rounded-lg">
-              <div className="text-2xl font-bold text-primary">Free</div>
-              <div className="text-sm text-muted-foreground">No API Keys</div>
             </div>
           </div>
 
