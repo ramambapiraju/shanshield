@@ -91,16 +91,16 @@ const analyzeFrameConsistency = (frames: ImageData[]): { score: number; descript
   let score = 0;
   let description = '';
   
-  // More conservative - real videos naturally have some frame variation
-  // Only flag very high CV (> 90) as truly suspicious
-  if (coeffOfVariation > 100) {
-    score = 55 + Math.min(35, (coeffOfVariation - 100) / 3);
+  // VERY conservative - webcam videos have natural frame variation from lighting/auto-exposure
+  // Only flag extremely high CV (> 120) as truly suspicious
+  if (coeffOfVariation > 120) {
+    score = 50 + Math.min(30, (coeffOfVariation - 120) / 4);
     description = `High frame inconsistency detected (CV: ${coeffOfVariation.toFixed(1)}%) - possible frame interpolation`;
-  } else if (coeffOfVariation > 70) {
-    score = 30 + (coeffOfVariation - 70);
+  } else if (coeffOfVariation > 90) {
+    score = 20 + (coeffOfVariation - 90) / 2;
     description = `Moderate frame variation (CV: ${coeffOfVariation.toFixed(1)}%)`;
   } else {
-    score = Math.max(0, coeffOfVariation * 0.4);
+    score = Math.max(0, coeffOfVariation * 0.2);
     description = `Consistent frame transitions (CV: ${coeffOfVariation.toFixed(1)}%)`;
   }
   
@@ -171,16 +171,16 @@ const analyzeTemporalCoherence = (frames: ImageData[]): { score: number; descrip
   let score = 0;
   let description = '';
   
-  // Conservative - real handheld video has motion discontinuities
-  // Only flag extremely high discontinuity (> 55%)
-  if (discontinuityRate > 55) {
-    score = 50 + discontinuityRate / 3;
+  // VERY conservative - webcam video has natural motion discontinuities from auto-focus/exposure
+  // Only flag extremely high discontinuity (> 70%)
+  if (discontinuityRate > 70) {
+    score = 45 + discontinuityRate / 4;
     description = `Severe temporal discontinuities detected (${discontinuityRate.toFixed(1)}% of transitions)`;
-  } else if (discontinuityRate > 35) {
-    score = 25 + discontinuityRate / 2;
+  } else if (discontinuityRate > 50) {
+    score = 15 + discontinuityRate / 3;
     description = `Moderate motion discontinuities (${discontinuityRate.toFixed(1)}%)`;
   } else {
-    score = Math.max(0, discontinuityRate * 0.6);
+    score = Math.max(0, discontinuityRate * 0.3);
     description = `Smooth temporal flow (${discontinuityRate.toFixed(1)}% discontinuities)`;
   }
   

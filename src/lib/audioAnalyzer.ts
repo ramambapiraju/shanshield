@@ -150,16 +150,16 @@ const analyzeSpectrum = (audioBuffer: AudioBuffer): { score: number; description
   let score = 0;
   let description = '';
   
-  // More conservative thresholds - real recordings often have some regularity
-  // Only flag truly unnnatural patterns (CV < 12 AND flatness > 0.35)
-  if (centroidCV < 12 && avgFlatness > 0.35) {
-    score = 55 + (0.35 - avgFlatness) * 50 + (12 - centroidCV);
+  // VERY conservative - laptop/phone mics have narrow frequency response causing regularity
+  // Only flag truly unnnatural patterns (CV < 8 AND flatness > 0.45)
+  if (centroidCV < 8 && avgFlatness > 0.45) {
+    score = 50 + (0.45 - avgFlatness) * 40 + (8 - centroidCV);
     description = `Unnaturally consistent spectrum (CV: ${centroidCV.toFixed(1)}%, flatness: ${(avgFlatness * 100).toFixed(1)}%)`;
-  } else if (centroidCV < 18 && avgFlatness > 0.30) {
-    score = 30 + (18 - centroidCV) + (avgFlatness - 0.30) * 80;
+  } else if (centroidCV < 14 && avgFlatness > 0.38) {
+    score = 20 + (14 - centroidCV) + (avgFlatness - 0.38) * 60;
     description = `Moderate spectral regularity (CV: ${centroidCV.toFixed(1)}%)`;
   } else {
-    score = Math.max(0, 20 - centroidCV / 4);
+    score = Math.max(0, 12 - centroidCV / 5);
     description = `Natural spectral variation (CV: ${centroidCV.toFixed(1)}%)`;
   }
   
@@ -226,19 +226,19 @@ const analyzePitch = (audioBuffer: AudioBuffer): { score: number; description: s
   let score = 0;
   let description = '';
   
-  // More forgiving thresholds - real voice has natural variation
-  // Only flag extremely stable pitch (CV < 3) as truly synthetic
-  if (pitchCV < 3) {
-    score = 60 + (3 - pitchCV) * 10;
+  // VERY forgiving - laptop mics pick up room acoustics affecting pitch measurement
+  // Only flag extremely stable pitch (CV < 2) as truly synthetic
+  if (pitchCV < 2) {
+    score = 55 + (2 - pitchCV) * 12;
     description = `Unnaturally stable pitch (CV: ${pitchCV.toFixed(1)}%) - possible synthesis`;
-  } else if (jumpRate > 40) {
-    score = 45 + jumpRate / 3;
+  } else if (jumpRate > 55) {
+    score = 40 + jumpRate / 4;
     description = `Excessive pitch discontinuities (${jumpRate.toFixed(1)}% large jumps)`;
-  } else if (pitchCV < 6 && jumpRate < 15) {
-    score = 25 + (6 - pitchCV) * 3;
+  } else if (pitchCV < 4 && jumpRate < 10) {
+    score = 18 + (4 - pitchCV) * 3;
     description = `Some pitch regularity detected`;
   } else {
-    score = Math.max(0, 18 - pitchCV / 3);
+    score = Math.max(0, 12 - pitchCV / 4);
     description = `Natural pitch variation (CV: ${pitchCV.toFixed(1)}%)`;
   }
   
