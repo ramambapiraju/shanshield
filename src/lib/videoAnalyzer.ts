@@ -501,19 +501,23 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
     
     video.onerror = () => {
       URL.revokeObjectURL(video.src);
+      // Even on video load error, we can still use metadata analysis
+      const fallbackScore = metadataResult?.score || 30;
       resolve({
-        score: 30,
-        signals: ['Could not load video file'],
+        score: Math.max(30, fallbackScore),
+        signals: metadataResult?.signals.length ? metadataResult.signals : ['Could not load video file'],
         details: {
           frameConsistency: { score: 30, description: 'Video load failed' },
           temporalCoherence: { score: 30, description: 'Video load failed' },
           faceTracking: { score: 30, description: 'Video load failed' },
           compressionAnalysis: { score: 30, description: 'Video load failed' },
           motionAnalysis: { score: 30, description: 'Video load failed' },
-          audioVideoSync: { score: 30, description: 'Video load failed' }
+          audioVideoSync: { score: 30, description: 'Video load failed' },
+          metadataAnalysis: { score: metadataResult?.score || 0, description: metadataResult?.detectedAITool || 'Video load failed' }
         },
         frameCount: 0,
-        duration: 0
+        duration: 0,
+        metadata: metadataResult
       });
     };
     
