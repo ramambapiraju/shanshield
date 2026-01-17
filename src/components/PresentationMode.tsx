@@ -642,8 +642,8 @@ const flickerScore = detectFlicker(diffs);
                 <div className="text-xs text-green-400 mt-1">✓ Implemented</div>
               </div>
               <div className="p-3 bg-background/50 rounded-lg border border-green-500/30">
-                <div className="text-green-400 font-bold">Timestamps</div>
-                <div>ISO 8601 format</div>
+                <div className="text-green-400 font-bold">Magic Bytes</div>
+                <div>File type verification</div>
                 <div className="text-xs text-green-400 mt-1">✓ Implemented</div>
               </div>
               <div className="p-3 bg-background/50 rounded-lg border border-green-500/30">
@@ -800,22 +800,22 @@ for (let i = 0; i < 256; i++) {
 }`}</pre>
             </div>
 
-            {/* EXIF Parsing */}
+            {/* AI Signature Scanning */}
             <div className="p-4 bg-card border border-amber-500/40 rounded-xl space-y-3">
               <h3 className="text-xl font-bold text-amber-400 flex items-center gap-2">
                 <Database className="w-5 h-5" />
-                EXIF/XMP Extraction
+                AI Tool Pattern Matching
               </h3>
               <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// Parse embedded metadata
+{`// Scan file bytes for AI tool strings
+const aiPatterns = [
+  'Midjourney', 'DALL-E', 'Stable Diffusion',
+  'Firefly', 'Kling', 'Sora'
+];
+// Also parse PDF /Producer & /Creator
 const producerMatch = text.match(
   /\\/Producer\\s*\\(([^)]*)\\)/
-);
-const creatorMatch = text.match(
-  /\\/Creator\\s*\\(([^)]*)\\)/
-);
-// Detect AI generation markers:
-// "DALL-E", "Midjourney", "Stable Diffusion"`}</pre>
+);`}</pre>
             </div>
 
             {/* Magic Bytes */}
