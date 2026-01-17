@@ -8,7 +8,7 @@ import AnalysisResults from "@/components/analysis/AnalysisResults";
 import ExplainableAI from "@/components/analysis/ExplainableAI";
 import ForensicReport from "@/components/analysis/ForensicReport";
 import OfflineReadyIndicator from "@/components/analysis/FieldModeToggle";
-import SecurityIndicators from "@/components/analysis/SecurityIndicators";
+
 import JudgeModePanel from "@/components/JudgeModePanel";
 import PresentationMode from "@/components/PresentationMode";
 import TechShowcase from "@/components/TechShowcase";
@@ -121,7 +121,7 @@ const [showPresentation, setShowPresentation] = useState(false);
               </Button>
             )}
             
-            <SecurityIndicators />
+            
           </div>
 
           {/* CENTER/RIGHT - Analysis & Results */}
