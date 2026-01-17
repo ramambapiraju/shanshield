@@ -1,5 +1,6 @@
 // Real Audio Analysis - Frequency and spectral analysis for deepfake detection
 import { type QuantumEntropyResult } from './quantumEntropyAnalyzer';
+import { analyzeMetadata, type MetadataAnalysisResult } from './metadataAnalyzer';
 
 // Audio-specific Quantum Entropy Analysis
 // Uses spectral data as quantum states - mathematically valid approach
@@ -36,10 +37,12 @@ export interface AudioAnalysisFindings {
     compressionArtifacts: { score: number; description: string };
     voiceNaturalness: { score: number; description: string };
     frequencyDistribution: { score: number; description: string };
+    metadataAnalysis?: { score: number; description: string };
   };
   duration: number;
   sampleRate: number;
   quantumEntropy?: AudioQuantumEntropyResult;
+  metadata?: MetadataAnalysisResult;
 }
 
 // Load audio file and decode
@@ -666,6 +669,9 @@ const computeAudioEigenvalues = (matrix: number[][]): number[] => {
 
 // Main audio analysis function
 export const analyzeAudio = async (file: File): Promise<AudioAnalysisFindings> => {
+  // Analyze metadata first (catches filenames like "elevenlabs_", "suno_")
+  const metadataResult = await analyzeMetadata(file);
+  
   try {
     const audioBuffer = await loadAudioBuffer(file);
     
@@ -679,8 +685,20 @@ export const analyzeAudio = async (file: File): Promise<AudioAnalysisFindings> =
     // Quantum Entropy Analysis
     const quantumEntropy = analyzeAudioQuantumEntropy(audioBuffer);
     
+    const metadataAnalysis = {
+      score: metadataResult.score,
+      description: metadataResult.detectedAITool 
+        ? `AI Tool Detected: ${metadataResult.detectedAITool}`
+        : 'No AI tool signatures found'
+    };
+    
+    // Collect signals - metadata first (strongest)
     const signals: string[] = [];
-    const threshold = 50;
+    if (metadataResult.signals.length > 0) {
+      signals.push(...metadataResult.signals);
+    }
+    
+    const threshold = 45; // Lowered threshold
     
     if (spectralAnalysis.score > threshold) signals.push(spectralAnalysis.description);
     if (pitchConsistency.score > threshold) signals.push(pitchConsistency.description);
@@ -694,20 +712,31 @@ export const analyzeAudio = async (file: File): Promise<AudioAnalysisFindings> =
       signals.push(`Quantum entropy anomaly: Von Neumann entropy = ${quantumEntropy.vonNeumannEntropy.toFixed(3)}`);
     }
     
-    // Include quantum entropy in overall score
+    // Dynamic weighting based on metadata detection
+    const metadataWeight = metadataResult.score >= 70 ? 0.45 : metadataResult.score >= 40 ? 0.30 : 0.12;
     const quantumWeight = 0.08;
-    const baseWeight = 0.92;
+    const spectralWeight = 1 - metadataWeight - quantumWeight;
     
-    const baseScore = (
-      spectralAnalysis.score * 0.20 +
-      pitchConsistency.score * 0.20 +
-      noiseFloor.score * 0.15 +
-      compressionArtifacts.score * 0.15 +
-      voiceNaturalness.score * 0.15 +
-      frequencyDistribution.score * 0.15
+    const spectralScore = (
+      spectralAnalysis.score * 0.22 +
+      pitchConsistency.score * 0.22 +
+      noiseFloor.score * 0.16 +
+      compressionArtifacts.score * 0.14 +
+      voiceNaturalness.score * 0.14 +
+      frequencyDistribution.score * 0.12
     );
     
-    const overallScore = baseScore * baseWeight + quantumEntropy.anomalyScore * 100 * quantumWeight;
+    let overallScore = 
+      metadataResult.score * metadataWeight +
+      spectralScore * spectralWeight + 
+      quantumEntropy.anomalyScore * 100 * quantumWeight;
+    
+    // Metadata override: if AI tool detected, ensure high score
+    if (metadataResult.score >= 90) {
+      overallScore = Math.max(overallScore, 75);
+    } else if (metadataResult.score >= 70) {
+      overallScore = Math.max(overallScore, 55);
+    }
     
     return {
       score: Math.round(overallScore),
@@ -718,27 +747,33 @@ export const analyzeAudio = async (file: File): Promise<AudioAnalysisFindings> =
         noiseFloor,
         compressionArtifacts,
         voiceNaturalness,
-        frequencyDistribution
+        frequencyDistribution,
+        metadataAnalysis
       },
       duration: audioBuffer.duration,
       sampleRate: audioBuffer.sampleRate,
-      quantumEntropy
+      quantumEntropy,
+      metadata: metadataResult
     };
   } catch (err) {
     console.error('Audio analysis error:', err);
+    // Even on error, metadata can detect AI
+    const fallbackScore = metadataResult?.score || 30;
     return {
-      score: 30,
-      signals: ['Audio analysis encountered an error'],
+      score: Math.max(30, fallbackScore),
+      signals: metadataResult?.signals.length ? metadataResult.signals : ['Audio analysis encountered an error'],
       details: {
         spectralAnalysis: { score: 30, description: 'Analysis failed' },
         pitchConsistency: { score: 30, description: 'Analysis failed' },
         noiseFloor: { score: 30, description: 'Analysis failed' },
         compressionArtifacts: { score: 30, description: 'Analysis failed' },
         voiceNaturalness: { score: 30, description: 'Analysis failed' },
-        frequencyDistribution: { score: 30, description: 'Analysis failed' }
+        frequencyDistribution: { score: 30, description: 'Analysis failed' },
+        metadataAnalysis: { score: metadataResult?.score || 0, description: metadataResult?.detectedAITool || 'Analysis failed' }
       },
       duration: 0,
-      sampleRate: 0
+      sampleRate: 0,
+      metadata: metadataResult
     };
   }
 };
