@@ -542,18 +542,28 @@ const analyzeGradient = (data: Uint8ClampedArray, width: number, height: number)
   return { score: Math.min(100, Math.max(0, score)), description };
 };
 
-// Main analysis function with smart multi-signal detection
+// =====================================================================
+// MAIN ANALYSIS FUNCTION — BALANCED DETECTION
+// Key principle: Only be aggressive when we have CONCRETE AI evidence
+// (filename patterns, watermarks). Pixel analysis alone should NOT
+// trigger false positives on real photos.
+// =====================================================================
 export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
+  // STEP 1: Load image data
   const imageData = await loadImageData(file);
   const { data, width, height } = imageData;
 
   // =====================================================================
-  // STEP 1: RUN METADATA ANALYSIS FIRST (catches filename, watermarks)
-  // This is the MOST RELIABLE signal - humans don't name files "kling_xxx"
+  // STEP 2: METADATA ANALYSIS FIRST — Most reliable signal
+  // Humans don't name files "kling_xxx" or "midjourney_portrait.png"
+  // If we detect AI tool name in filename, that's DEFINITIVE evidence
   // =====================================================================
   const metadataResult = await analyzeMetadata(file, imageData);
 
-  // Run all pixel-based analyses
+  // =====================================================================
+  // STEP 3: RUN ALL PIXEL-BASED ANALYSES
+  // These detect statistical anomalies but can trigger on real photos too
+  // =====================================================================
   const noiseAnalysis = analyzeNoise(data, width, height);
   const edgeAnalysis = analyzeEdges(data, width, height);
   const colorAnalysis = analyzeColors(data);
@@ -563,7 +573,7 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
   const repetitionAnalysis = analyzeRepetition(data, width, height);
   const gradientAnalysis = analyzeGradient(data, width, height);
 
-  // Run Quantum Entropy Analysis
+  // STEP 4: Run Quantum Entropy Analysis
   const quantumEntropy = analyzeQuantumEntropy(imageData);
   const quantumEntropyAnalysis = {
     score: Math.round(quantumEntropy.anomalyScore * 100),
@@ -580,7 +590,8 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
   };
 
   // =====================================================================
-  // STEP 2: COLLECT SIGNALS - Metadata signals are HIGHEST PRIORITY
+  // STEP 5: COLLECT SIGNALS — Only add if above threshold
+  // Higher threshold = fewer false positive signals on real photos
   // =====================================================================
   const signals: string[] = [];
   
@@ -597,20 +608,21 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
     }
   }
   
-  const threshold = 40; // Signal threshold for pixel-based analyses
+  // Higher threshold for pixel-based signals to reduce false positives
+  const signalThreshold = 55; 
 
-  if (noiseAnalysis.score > threshold) signals.push(noiseAnalysis.description);
-  if (edgeAnalysis.score > threshold) signals.push(edgeAnalysis.description);
-  if (colorAnalysis.score > threshold) signals.push(colorAnalysis.description);
-  if (symmetryAnalysis.score > threshold) signals.push(symmetryAnalysis.description);
-  if (textureAnalysis.score > threshold) signals.push(textureAnalysis.description);
-  if (repetitionAnalysis.score > threshold) signals.push(repetitionAnalysis.description);
-  if (gradientAnalysis.score > threshold) signals.push(gradientAnalysis.description);
-  if (quantumEntropyAnalysis.score > threshold) signals.push(quantumEntropyAnalysis.description);
-  if (compressionAnalysis.score > 50) signals.push(compressionAnalysis.description);
+  if (noiseAnalysis.score > signalThreshold) signals.push(noiseAnalysis.description);
+  if (edgeAnalysis.score > signalThreshold) signals.push(edgeAnalysis.description);
+  if (colorAnalysis.score > signalThreshold) signals.push(colorAnalysis.description);
+  if (symmetryAnalysis.score > signalThreshold) signals.push(symmetryAnalysis.description);
+  if (textureAnalysis.score > signalThreshold) signals.push(textureAnalysis.description);
+  if (repetitionAnalysis.score > signalThreshold) signals.push(repetitionAnalysis.description);
+  if (gradientAnalysis.score > signalThreshold) signals.push(gradientAnalysis.description);
+  if (quantumEntropyAnalysis.score > signalThreshold) signals.push(quantumEntropyAnalysis.description);
+  if (compressionAnalysis.score > 60) signals.push(compressionAnalysis.description);
 
   // =====================================================================
-  // STEP 3: COUNT ELEVATED INDICATORS
+  // STEP 6: COUNT STRONG INDICATORS (for multi-signal correlation)
   // =====================================================================
   const allPixelScores = [
     noiseAnalysis.score,
@@ -623,131 +635,136 @@ export const analyzeImage = async (file: File): Promise<AnalysisFindings> => {
     gradientAnalysis.score,
     quantumEntropyAnalysis.score
   ];
-  const elevatedCount = allPixelScores.filter((s) => s > 35).length;
-  const highCount = allPixelScores.filter((s) => s > 60).length;
+  
+  // Count how many are elevated (>45) and high (>70)
+  const elevatedCount = allPixelScores.filter((s) => s > 45).length;
+  const highCount = allPixelScores.filter((s) => s > 70).length;
+  const veryHighCount = allPixelScores.filter((s) => s > 85).length;
 
   // =====================================================================
-  // STEP 4: CALCULATE FINAL SCORE WITH DYNAMIC WEIGHTING
+  // STEP 7: CALCULATE WEIGHTED PIXEL SCORE
+  // Balanced weights to avoid any single detector dominating
   // =====================================================================
-  
-  // If AI tool detected in filename/watermark, metadata DOMINATES
-  // This is the key fix: filename "kling_xxx" = 85%+ metadata weight
+  const pixelScore = (
+    noiseAnalysis.score * 0.14 +      // GAN noise uniformity
+    edgeAnalysis.score * 0.08 +       // Edge artifacts
+    colorAnalysis.score * 0.10 +      // Color anomalies
+    compressionAnalysis.score * 0.04 + // Compression (often triggers on real photos)
+    symmetryAnalysis.score * 0.10 +   // Perfect symmetry
+    textureAnalysis.score * 0.14 +    // Smooth textures
+    repetitionAnalysis.score * 0.06 + // Repeating patterns
+    gradientAnalysis.score * 0.12 +   // Smooth gradients
+    quantumEntropyAnalysis.score * 0.12 // Quantum entropy
+  ) / 0.90; // Normalize
+
+  // =====================================================================
+  // STEP 8: DYNAMIC WEIGHTING BASED ON METADATA EVIDENCE
+  // KEY PRINCIPLE: Only dominate with metadata when we have REAL evidence
+  // =====================================================================
   let metadataWeight: number;
   let pixelWeight: number;
   
   if (metadataResult.score >= 85) {
-    // DEFINITE AI TOOL DETECTED - Metadata is DOMINANT
-    metadataWeight = 0.85;
-    pixelWeight = 0.15;
+    // DEFINITIVE AI TOOL DETECTED (filename like "kling_xxx")
+    // Metadata is DOMINANT — this is irrefutable evidence
+    metadataWeight = 0.80;
+    pixelWeight = 0.20;
   } else if (metadataResult.score >= 70) {
-    // Strong AI indicator - Metadata is primary
-    metadataWeight = 0.70;
-    pixelWeight = 0.30;
+    // Strong AI indicator (watermark or partial match)
+    metadataWeight = 0.60;
+    pixelWeight = 0.40;
   } else if (metadataResult.score >= 50) {
-    // Moderate AI indicator
-    metadataWeight = 0.55;
-    pixelWeight = 0.45;
-  } else if (metadataResult.score >= 30) {
-    // Weak AI indicator - balanced
-    metadataWeight = 0.35;
-    pixelWeight = 0.65;
+    // Moderate indicator
+    metadataWeight = 0.40;
+    pixelWeight = 0.60;
   } else {
-    // No AI indicator - pixel analysis is primary
+    // No AI indicator — rely primarily on pixel analysis
+    // BUT pixel analysis alone should be conservative
     metadataWeight = 0.15;
     pixelWeight = 0.85;
   }
 
-  // Calculate weighted pixel-based score
-  const pixelScore = (
-    noiseAnalysis.score * 0.16 +
-    edgeAnalysis.score * 0.08 +
-    colorAnalysis.score * 0.10 +
-    compressionAnalysis.score * 0.05 +
-    symmetryAnalysis.score * 0.12 +
-    textureAnalysis.score * 0.15 +
-    repetitionAnalysis.score * 0.06 +
-    gradientAnalysis.score * 0.14 +
-    quantumEntropyAnalysis.score * 0.14
-  );
-
-  // Multi-signal boost: AI images trigger multiple detectors
+  // =====================================================================
+  // STEP 9: MULTI-SIGNAL BOOST (only when multiple detectors agree)
+  // This helps catch AI content that pixel analysis CAN detect
+  // =====================================================================
   let boostedPixelScore = pixelScore;
-  if (elevatedCount >= 6) {
-    boostedPixelScore = pixelScore * 1.40;
-  } else if (elevatedCount >= 5) {
-    boostedPixelScore = pixelScore * 1.30;
-  } else if (elevatedCount >= 4) {
-    boostedPixelScore = pixelScore * 1.20;
-  } else if (elevatedCount >= 3) {
-    boostedPixelScore = pixelScore * 1.10;
+  
+  // Only boost if MANY detectors agree (reduces false positives)
+  if (elevatedCount >= 7 && highCount >= 3) {
+    boostedPixelScore = pixelScore * 1.25;
+  } else if (elevatedCount >= 6 && highCount >= 2) {
+    boostedPixelScore = pixelScore * 1.15;
+  } else if (elevatedCount >= 5 && highCount >= 2) {
+    boostedPixelScore = pixelScore * 1.08;
   }
-
-  // High-score boost
-  if (highCount >= 3) {
-    boostedPixelScore = Math.max(boostedPixelScore, 55);
-  }
+  // If only 1-2 detectors are elevated, NO BOOST (likely false positive)
 
   // =====================================================================
-  // STEP 5: COMBINE SCORES
+  // STEP 10: COMBINE SCORES
   // =====================================================================
   let overallScore = metadataResult.score * metadataWeight + boostedPixelScore * pixelWeight;
 
   // =====================================================================
-  // STEP 6: CRITICAL OVERRIDES - ENSURE CORRECT VERDICTS
+  // STEP 11: METADATA OVERRIDES — Only when we have CONCRETE evidence
+  // These ensure AI-named files are ALWAYS flagged correctly
   // =====================================================================
   
-  // OVERRIDE 1: If AI tool detected by name, FORCE high score
-  // Files named "kling_xxx", "midjourney_xxx" are DEFINITELY AI
-  if (metadataResult.score >= 90) {
-    overallScore = Math.max(overallScore, 90);
-  } else if (metadataResult.score >= 80) {
-    overallScore = Math.max(overallScore, 80);
-  } else if (metadataResult.score >= 70) {
+  // If filename clearly indicates AI tool, FORCE high score
+  // This is the ONLY situation where we override aggressively
+  if (metadataResult.detectedAITool && metadataResult.score >= 85) {
+    // File is named "kling_xxx", "midjourney_yyy", etc. — DEFINITELY AI
+    overallScore = Math.max(overallScore, 88);
+  } else if (metadataResult.detectedAITool && metadataResult.score >= 70) {
+    // Strong AI tool indication
     overallScore = Math.max(overallScore, 70);
   } else if (metadataResult.score >= 60) {
+    // Moderate metadata evidence (watermark, etc.)
+    overallScore = Math.max(overallScore, 55);
+  }
+
+  // Watermark detected = AI tool watermark (Kling, Midjourney, etc.)
+  if (metadataResult.details.watermarkDetection.score >= 75) {
+    overallScore = Math.max(overallScore, 68);
+  } else if (metadataResult.details.watermarkDetection.score >= 60) {
+    overallScore = Math.max(overallScore, 55);
+  }
+
+  // =====================================================================
+  // STEP 12: PIXEL-ONLY OVERRIDES — Very conservative
+  // Only override when OVERWHELMING pixel evidence (many high scores)
+  // This prevents false positives on real photos
+  // =====================================================================
+  
+  // Only if 4+ detectors score very high (>85) — extremely rare for real photos
+  if (veryHighCount >= 4) {
     overallScore = Math.max(overallScore, 60);
-  } else if (metadataResult.score >= 50) {
+  } else if (veryHighCount >= 3 && highCount >= 5) {
     overallScore = Math.max(overallScore, 52);
   }
-
-  // OVERRIDE 2: Strong pixel-based AI indicators
-  const strongestPixelScore = Math.max(...allPixelScores);
-  if (strongestPixelScore >= 85) {
-    overallScore = Math.max(overallScore, 65);
-  } else if (strongestPixelScore >= 75) {
-    overallScore = Math.max(overallScore, 55);
-  } else if (strongestPixelScore >= 65) {
-    overallScore = Math.max(overallScore, 48);
-  }
-
-  // OVERRIDE 3: Multiple high-scoring pixel analyses
-  if (highCount >= 4) {
-    overallScore = Math.max(overallScore, 70);
-  } else if (highCount >= 3) {
-    overallScore = Math.max(overallScore, 58);
-  } else if (highCount >= 2) {
-    overallScore = Math.max(overallScore, 48);
-  }
-
-  // OVERRIDE 4: Watermark detected = likely AI
-  if (metadataResult.details.watermarkDetection.score >= 70) {
-    overallScore = Math.max(overallScore, 72);
-  } else if (metadataResult.details.watermarkDetection.score >= 50) {
-    overallScore = Math.max(overallScore, 58);
-  }
+  // Otherwise, NO pixel-only override — let the weighted score stand
 
   // =====================================================================
-  // STEP 7: Only dampen when EVERYTHING looks clean
+  // STEP 13: AUTHENTIC BOOST — Help real photos score low
+  // If nothing suspicious found, dampen the score
   // =====================================================================
-  if (metadataResult.score < 20 && 
-      elevatedCount <= 1 && 
+  if (metadataResult.score < 25 && 
+      elevatedCount <= 2 && 
       highCount === 0 && 
-      strongestPixelScore < 40 &&
-      overallScore < 30) {
-    // Genuine authentic-looking content
+      boostedPixelScore < 35) {
+    // Genuine authentic-looking content — reduce score
+    overallScore = overallScore * 0.80;
+  } else if (metadataResult.score < 15 &&
+             elevatedCount <= 3 &&
+             highCount <= 1 &&
+             boostedPixelScore < 40) {
+    // Likely authentic
     overallScore = overallScore * 0.90;
   }
 
+  // =====================================================================
+  // STEP 14: FINAL RESULT
+  // =====================================================================
   return {
     score: Math.round(Math.min(100, Math.max(0, overallScore))),
     signals,
