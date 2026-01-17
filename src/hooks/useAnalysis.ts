@@ -5,12 +5,12 @@ import { analyzeVideo, type VideoAnalysisFindings } from "@/lib/videoAnalyzer";
 import { analyzeAudio, type AudioAnalysisFindings } from "@/lib/audioAnalyzer";
 import { analyzeDocument, type DocumentAnalysisFindings } from "@/lib/documentAnalyzer";
 import { type QuantumEntropyResult } from "@/lib/quantumEntropyAnalyzer";
-import { analyzeWithLocalML, type LocalMLResult } from "@/lib/localMLAnalyzer";
+import { analyzeWithCloud, type CloudAnalysisResult } from "@/lib/cloudAnalyzer";
 import { analyzeC2PA, type C2PAResult } from "@/lib/c2paAnalyzer";
 import { toast } from "sonner";
 
-// Analysis mode types - Offline (signal processing) or Local ML (browser-based neural network)
-export type AnalysisModeType = 'offline' | 'local_ml';
+// Analysis mode types - Offline (signal processing) or Cloud ML (ShanShield pre-trained model)
+export type AnalysisModeType = 'offline' | 'cloud_ml';
 
 interface UploadedFile {
   file: File;
@@ -205,7 +205,7 @@ export const useAnalysis = () => {
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [isFieldMode, setIsFieldMode] = useState(false);
-  // Analysis mode: 'offline' | 'local_ml' | 'cloud_ml'
+  // Analysis mode: 'offline' | 'cloud_ml'
   const [analysisMode, setAnalysisMode] = useState<AnalysisModeType>('offline');
   const [currentProgress, setCurrentProgress] = useState({ step: '', progress: 0 });
   const [realAnalysisResult, setRealAnalysisResult] = useState<UnifiedAnalysis | null>(null);
@@ -214,8 +214,8 @@ export const useAnalysis = () => {
   // Reset key to force MediaUploader remount
   const [resetKey, setResetKey] = useState(0);
   
-  // Check if using ML mode
-  const isMLMode = analysisMode === 'local_ml';
+  // Check if using Cloud ML mode
+  const isMLMode = analysisMode === 'cloud_ml';
 
   const handleFilesSelected = useCallback((selectedFiles: UploadedFile[]) => {
     setFiles(selectedFiles);
@@ -239,6 +239,7 @@ export const useAnalysis = () => {
       let analysis: UnifiedAnalysis;
       
       // Step 1: Always run offline analysis first
+      setCurrentProgress({ step: 'Running offline analysis...', progress: 10 });
       if (file.type === 'image') {
         const result = await analyzeImage(file.file);
         analysis = toUnifiedAnalysis(result, 'image', result.quantumEntropy);
@@ -268,25 +269,26 @@ export const useAnalysis = () => {
         // C2PA failure is non-critical, continue with other analysis
       }
       
-      // Step 3: Run Local ML analysis if enabled
-      let localMLResult: LocalMLResult | null = null;
+      // Step 3: Run Cloud ML analysis if enabled (ShanShield pre-trained model)
+      let cloudResult: CloudAnalysisResult | null = null;
       
-      if (analysisMode === 'local_ml') {
+      if (analysisMode === 'cloud_ml') {
         try {
-          localMLResult = await analyzeWithLocalML(
+          setCurrentProgress({ step: 'ShanShield ML Analysis...', progress: 50 });
+          cloudResult = await analyzeWithCloud(
             file.file,
             file.type,
             {
               score: analysis.score,
               signals: analysis.signals,
               details: analysis.details
-            },
-            (progress) => setCurrentProgress({ step: progress.status, progress: progress.progress })
+            }
           );
-          toast.success("Local ML analysis complete!");
-        } catch (localMLError) {
-          console.error('Local ML analysis failed:', localMLError);
-          toast.error(localMLError instanceof Error ? localMLError.message : 'Local ML failed. Using offline results.');
+          setCurrentProgress({ step: 'ML Complete', progress: 90 });
+          toast.success("ShanShield ML analysis complete!");
+        } catch (cloudError) {
+          console.error('Cloud ML analysis failed:', cloudError);
+          toast.error(cloudError instanceof Error ? cloudError.message : 'Cloud ML failed. Using offline results.');
         }
       }
       
@@ -316,32 +318,32 @@ export const useAnalysis = () => {
         }
       }
       
-      // If we have local ML results, enhance the analysis
-      if (localMLResult) {
+      // If we have Cloud ML results, enhance the analysis
+      if (cloudResult) {
         analysisResult = {
           ...analysisResult,
-          verdict: localMLResult.verdict,
-          confidence: localMLResult.combinedConfidence,
-          analysisMode: 'local_ml' as const,
-          mlSignals: localMLResult.mlSignals,
-          aiToolDetected: localMLResult.aiToolDetected,
+          verdict: cloudResult.verdict,
+          confidence: cloudResult.combinedConfidence,
+          analysisMode: 'cloud_ml' as const,
+          mlSignals: cloudResult.mlSignals,
+          aiToolDetected: cloudResult.aiToolDetected,
           reasoning: [
-            `🧠 Local ML Analysis (${localMLResult.modelUsed})`,
-            localMLResult.reasoning,
-            `ML Score: ${localMLResult.mlScore}%`,
-            `Offline Score: ${localMLResult.offlineScore}%`,
-            `Combined Confidence: ${localMLResult.combinedConfidence}%`,
-            `Model Load: ${localMLResult.modelLoadTime}ms | Inference: ${localMLResult.inferenceTime}ms`,
-            ...(localMLResult.aiToolDetected ? [`⚠️ AI Tool Detected: ${localMLResult.aiToolDetected}`] : []),
-            ...(localMLResult.mlSignals.length > 0 ? [`ML Signals: ${localMLResult.mlSignals.join(', ')}`] : []),
+            `🛡️ ShanShield ML Analysis (${cloudResult.modelUsed})`,
+            cloudResult.reasoning,
+            `ML Score: ${cloudResult.mlScore}%`,
+            `Offline Score: ${cloudResult.offlineScore}%`,
+            `Combined Confidence: ${cloudResult.combinedConfidence}%`,
+            ...(cloudResult.aiToolDetected ? [`⚠️ AI Tool Detected: ${cloudResult.aiToolDetected}`] : []),
+            ...(cloudResult.manipulationTypes.length > 0 ? [`Manipulation Types: ${cloudResult.manipulationTypes.join(', ')}`] : []),
+            ...(cloudResult.mlSignals.length > 0 ? [`ML Signals: ${cloudResult.mlSignals.join(', ')}`] : []),
             '---',
             ...analysisResult.reasoning
           ],
           indicators: [
-            ...(localMLResult.mlSignals.map((signal, i) => ({
-              name: `Local ML Signal ${i + 1}`,
+            ...(cloudResult.mlSignals.map((signal, i) => ({
+              name: `ShanShield Signal ${i + 1}`,
               detected: true,
-              confidence: localMLResult.mlScore,
+              confidence: cloudResult.mlScore,
               description: signal
             }))),
             ...analysisResult.indicators
