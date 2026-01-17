@@ -151,8 +151,8 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
               <div className="text-sm text-muted-foreground">AI Agents + Arbiter</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary">94.7%</div>
-              <div className="text-sm text-muted-foreground">ML Accuracy</div>
+              <div className="text-3xl font-bold text-primary">100%</div>
+              <div className="text-sm text-muted-foreground">Offline Capable</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-primary">2 Modes</div>
@@ -768,7 +768,7 @@ const cv = (stdDev / avgDiff) * 100;
           </h2>
           <div className="flex justify-center gap-4 text-sm mb-4">
             <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full">• Offline = 100% client-side, no API keys</span>
-            <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full">• Cloud ML = 94.7% accuracy, 5 modules</span>
+            <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full">• Cloud ML = 5 specialized detection modules</span>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
@@ -1155,7 +1155,7 @@ if (filenameResult.score >= 70 && watermarkResult.score >= 50) {
         <div className="space-y-4">
           <div className="text-center mb-4">
             <h2 className="text-4xl font-bold text-gradient-cyber font-display">Pre-trained Detection Engine</h2>
-            <p className="text-muted-foreground mt-2">94.7% accuracy • 2.5M+ training samples • No external APIs</p>
+            <p className="text-muted-foreground mt-2">5 specialized modules • Runs on Supabase Edge Functions (Lovable Cloud)</p>
           </div>
 
           {/* Training Data */}
@@ -1363,6 +1363,7 @@ for (let i = 0; i < dim; i++) {
     densityMatrix[i][j] = normalized[i] * normalized[j];
   }
 }`}</pre>
+              <p className="text-xs text-purple-400 font-semibold mt-2">→ Creates NxN density matrix from pixel luminance. Represents image as quantum state for entropy analysis.</p>
             </div>
             <div className="p-4 bg-card border border-cyan-500/40 rounded-xl">
               <h4 className="text-lg font-bold text-cyan-400 mb-2">Entropy Calculations (Lines 115-157)</h4>
@@ -1385,6 +1386,7 @@ const minEntropy = -Math.log2(Math.max(...eigenvalues));
 // Rényi (α=2): H₂ = (1/(1-α)) log₂(Σᵢ λᵢ^α) - Lines 145-157
 const sum = eigenvalues.reduce((s,λ) => s + Math.pow(λ,alpha), 0);
 const renyiEntropy = (1 / (1 - alpha)) * Math.log2(sum);`}</pre>
+              <p className="text-xs text-cyan-400 font-semibold mt-2">→ Computes 3 entropy types from eigenvalues: Von Neumann (average), Min (worst-case), Rényi (collision).</p>
             </div>
           </div>
 
@@ -1409,8 +1411,8 @@ const renyiEntropy = (1 / (1 - alpha)) * Math.log2(sum);`}</pre>
               <div className="h-12 w-px bg-border" />
               <div className="text-center">
                 <Zap className="w-8 h-8 text-primary mx-auto mb-1" />
-                <div className="text-sm font-bold text-primary">Unique Feature</div>
-                <div className="text-xs text-muted-foreground">First deepfake tool with quantum entropy</div>
+                <div className="text-sm font-bold text-primary">Advanced Feature</div>
+                <div className="text-xs text-muted-foreground">Quantum entropy analysis</div>
               </div>
             </div>
           </div>
@@ -1747,7 +1749,7 @@ if (manifestStore?.activeManifest) {
               <ul className="text-muted-foreground space-y-2">
                 <li className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-blue-400" />
-                  <span><strong className="text-foreground">94.7% accuracy</strong> — 2.5M+ training samples</span>
+                  <span><strong className="text-foreground">5 specialized modules</strong> — Detection pipeline</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-blue-400" />
@@ -1948,7 +1950,7 @@ const moduleWeights = {
             <div className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/40 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
                 <Brain className="w-6 h-6 text-blue-400" />
-                <h3 className="text-lg font-bold text-foreground">CLOUD ML — 5 Modules (94.7%)</h3>
+                <h3 className="text-lg font-bold text-foreground">CLOUD ML — 5 Modules</h3>
               </div>
               <div className="grid grid-cols-5 gap-2 text-xs">
                 <div className="p-2 bg-background/50 rounded text-center">
@@ -2120,7 +2122,7 @@ const moduleWeights = {
             <p className="text-sm text-muted-foreground">
               <span className="text-green-400 font-semibold">Two-mode forensic detection system:</span> Offline mode runs 
               <span className="text-primary font-semibold"> 100% in-browser</span> using 6 AI agents with real algorithms (CV, FFT, Von Neumann entropy, Dempster-Shafer). 
-              Cloud ML mode adds our <span className="text-blue-400 font-semibold">pre-trained ShanShield-ML-v3.0</span> (94.7% accuracy) with 5 specialized modules 
+              Cloud ML mode adds <span className="text-blue-400 font-semibold">ShanShield-ML-v3.0</span> running on <span className="text-blue-400 font-semibold">Supabase Edge Functions (Lovable Cloud)</span> with 5 specialized modules 
               for GAN fingerprinting, diffusion detection, facial manipulation, audio deepfakes, and compression artifact analysis.
             </p>
           </div>
@@ -2146,14 +2148,14 @@ const moduleWeights = {
             <h1 className="text-6xl font-bold text-gradient-cyber font-display">Thank You!</h1>
           </div>
 
-          <div className="grid grid-cols-5 gap-4 mt-8">
+          <div className="grid grid-cols-4 gap-4 mt-8">
             <div className="text-center p-4 bg-card border border-border rounded-lg">
               <div className="text-2xl font-bold text-primary">6+1</div>
               <div className="text-sm text-muted-foreground">AI Agents</div>
             </div>
             <div className="text-center p-4 bg-card border border-border rounded-lg">
-              <div className="text-2xl font-bold text-primary">94.7%</div>
-              <div className="text-sm text-muted-foreground">ML Accuracy</div>
+              <div className="text-2xl font-bold text-primary">100%</div>
+              <div className="text-sm text-muted-foreground">Offline Capable</div>
             </div>
             <div className="text-center p-4 bg-card border border-border rounded-lg">
               <div className="text-2xl font-bold text-primary">2 Modes</div>
@@ -2162,10 +2164,6 @@ const moduleWeights = {
             <div className="text-center p-4 bg-card border border-border rounded-lg">
               <div className="text-2xl font-bold text-primary">C2PA</div>
               <div className="text-sm text-muted-foreground">Verified</div>
-            </div>
-            <div className="text-center p-4 bg-card border border-border rounded-lg">
-              <div className="text-2xl font-bold text-primary">2.5M+</div>
-              <div className="text-sm text-muted-foreground">Training Samples</div>
             </div>
           </div>
 
