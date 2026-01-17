@@ -117,16 +117,16 @@ const analyzeNoise = (data: Uint8ClampedArray, width: number, height: number): {
   let score = 0;
   let description = '';
   
-  // Only flag if BOTH global AND local noise are suspiciously uniform (AI signature)
-  // Real photos have varied noise even if some areas are smooth
-  if (coefficientOfVariation < 25 && localCV < 30) {
-    score = 75 + (25 - coefficientOfVariation) * 1.5;
+  // Very conservative - real photos from phones/cameras can have uniform areas
+  // Only flag EXTREMELY uniform patterns (CV < 18 AND local < 22)
+  if (coefficientOfVariation < 18 && localCV < 22) {
+    score = 60 + (18 - coefficientOfVariation) * 2;
     description = `AI-characteristic uniform noise (CV: ${coefficientOfVariation.toFixed(1)}%, local: ${localCV.toFixed(1)}%)`;
-  } else if (coefficientOfVariation < 35 && localCV < 40) {
-    score = 45 + (35 - coefficientOfVariation);
+  } else if (coefficientOfVariation < 28 && localCV < 32) {
+    score = 30 + (28 - coefficientOfVariation);
     description = `Synthetic noise pattern detected (CV: ${coefficientOfVariation.toFixed(1)}%)`;
   } else {
-    score = Math.max(0, 20 - coefficientOfVariation / 5);
+    score = Math.max(0, 12 - coefficientOfVariation / 6);
     description = `Natural noise variation (CV: ${coefficientOfVariation.toFixed(1)}%)`;
   }
   
@@ -166,15 +166,16 @@ const analyzeEdges = (data: Uint8ClampedArray, width: number, height: number): {
   let score = 0;
   let description = '';
   
-  // Only high ratios indicate artificial sharpening
-  if (edgeRatio > 4) {
-    score = 60 + Math.min(35, (edgeRatio - 4) * 8);
+  // More conservative - phone cameras apply sharpening naturally
+  // Only flag extreme ratios (> 5)
+  if (edgeRatio > 5.5) {
+    score = 50 + Math.min(40, (edgeRatio - 5.5) * 10);
     description = `Artificial edge enhancement detected (ratio: ${edgeRatio.toFixed(2)})`;
-  } else if (edgeRatio > 3) {
-    score = 35 + (edgeRatio - 3) * 25;
+  } else if (edgeRatio > 4) {
+    score = 25 + (edgeRatio - 4) * 15;
     description = `Edge irregularity detected (ratio: ${edgeRatio.toFixed(2)})`;
   } else {
-    score = Math.min(25, edgeRatio * 8);
+    score = Math.min(18, edgeRatio * 5);
     description = `Natural edge distribution (ratio: ${edgeRatio.toFixed(2)})`;
   }
   

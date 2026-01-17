@@ -150,14 +150,16 @@ const analyzeSpectrum = (audioBuffer: AudioBuffer): { score: number; description
   let score = 0;
   let description = '';
   
-  if (centroidCV < 15 && avgFlatness > 0.3) {
-    score = 65 + (0.3 - avgFlatness) * 50 + (15 - centroidCV);
+  // More conservative thresholds - real recordings often have some regularity
+  // Only flag truly unnnatural patterns (CV < 12 AND flatness > 0.35)
+  if (centroidCV < 12 && avgFlatness > 0.35) {
+    score = 55 + (0.35 - avgFlatness) * 50 + (12 - centroidCV);
     description = `Unnaturally consistent spectrum (CV: ${centroidCV.toFixed(1)}%, flatness: ${(avgFlatness * 100).toFixed(1)}%)`;
-  } else if (centroidCV < 25 || avgFlatness > 0.25) {
-    score = 35 + (25 - centroidCV) + (avgFlatness - 0.25) * 100;
+  } else if (centroidCV < 18 && avgFlatness > 0.30) {
+    score = 30 + (18 - centroidCV) + (avgFlatness - 0.30) * 80;
     description = `Moderate spectral regularity (CV: ${centroidCV.toFixed(1)}%)`;
   } else {
-    score = Math.max(0, 30 - centroidCV / 3);
+    score = Math.max(0, 20 - centroidCV / 4);
     description = `Natural spectral variation (CV: ${centroidCV.toFixed(1)}%)`;
   }
   
@@ -224,17 +226,19 @@ const analyzePitch = (audioBuffer: AudioBuffer): { score: number; description: s
   let score = 0;
   let description = '';
   
-  if (pitchCV < 5) {
-    score = 70 + (5 - pitchCV) * 6;
+  // More forgiving thresholds - real voice has natural variation
+  // Only flag extremely stable pitch (CV < 3) as truly synthetic
+  if (pitchCV < 3) {
+    score = 60 + (3 - pitchCV) * 10;
     description = `Unnaturally stable pitch (CV: ${pitchCV.toFixed(1)}%) - possible synthesis`;
-  } else if (jumpRate > 30) {
-    score = 55 + jumpRate / 2;
+  } else if (jumpRate > 40) {
+    score = 45 + jumpRate / 3;
     description = `Excessive pitch discontinuities (${jumpRate.toFixed(1)}% large jumps)`;
-  } else if (pitchCV < 10 || jumpRate > 20) {
-    score = 30 + (10 - pitchCV) * 2 + jumpRate;
-    description = `Some pitch irregularities detected`;
+  } else if (pitchCV < 6 && jumpRate < 15) {
+    score = 25 + (6 - pitchCV) * 3;
+    description = `Some pitch regularity detected`;
   } else {
-    score = Math.max(0, 25 - pitchCV / 2);
+    score = Math.max(0, 18 - pitchCV / 3);
     description = `Natural pitch variation (CV: ${pitchCV.toFixed(1)}%)`;
   }
   
@@ -270,15 +274,16 @@ const analyzeNoiseFloor = (audioBuffer: AudioBuffer): { score: number; descripti
   let score = 0;
   let description = '';
   
-  // Synthesized audio often has unnaturally clean or uniform noise floor
-  if (avgNoiseFloor < 0.001 || noiseCV < 10) {
-    score = 60 + (10 - noiseCV) * 2 + (0.001 - avgNoiseFloor) * 10000;
+  // Very conservative - real recordings in quiet rooms can have low noise
+  // Only flag if BOTH noise level AND consistency are suspiciously perfect
+  if (avgNoiseFloor < 0.0005 && noiseCV < 8) {
+    score = 50 + (8 - noiseCV) * 3;
     description = `Unnaturally clean noise floor (level: ${(avgNoiseFloor * 1000).toFixed(2)}, CV: ${noiseCV.toFixed(1)}%)`;
-  } else if (avgNoiseFloor < 0.005 || noiseCV < 20) {
-    score = 30 + (20 - noiseCV);
+  } else if (avgNoiseFloor < 0.002 && noiseCV < 12) {
+    score = 25 + (12 - noiseCV);
     description = `Very low noise floor (level: ${(avgNoiseFloor * 1000).toFixed(2)})`;
   } else {
-    score = Math.max(0, 25 - noiseCV / 4);
+    score = Math.max(0, 15 - noiseCV / 5);
     description = `Natural ambient noise present (level: ${(avgNoiseFloor * 1000).toFixed(2)})`;
   }
   
@@ -350,14 +355,16 @@ const analyzeVoiceNaturalness = (audioBuffer: AudioBuffer): { score: number; des
   let score = 0;
   let description = '';
   
-  if (ratio > 0.9 || changeVariance < 0.0001) {
-    score = 60 + (ratio - 0.9) * 100;
+  // More forgiving - real voice has varied dynamics
+  // Only flag extreme symmetry
+  if (ratio > 0.92 && changeVariance < 0.00005) {
+    score = 50 + (ratio - 0.92) * 150;
     description = `Unnatural voice envelope symmetry (ratio: ${ratio.toFixed(2)})`;
-  } else if (ratio > 0.7) {
-    score = 30 + (ratio - 0.7) * 100;
+  } else if (ratio > 0.80 && changeVariance < 0.0001) {
+    score = 25 + (ratio - 0.80) * 80;
     description = `Moderately regular voice pattern`;
   } else {
-    score = ratio * 30;
+    score = ratio * 20;
     description = `Natural voice dynamics (ratio: ${ratio.toFixed(2)})`;
   }
   
@@ -414,14 +421,16 @@ const analyzeFrequencyDistribution = (audioBuffer: AudioBuffer): { score: number
   let score = 0;
   let description = '';
   
-  if (highFreqRatio < 0.05) {
-    score = 55 + (0.05 - highFreqRatio) * 500;
+  // Conservative - phone/laptop mics naturally roll off highs
+  // Only flag extremely limited high freq (< 3%)
+  if (highFreqRatio < 0.03) {
+    score = 45 + (0.03 - highFreqRatio) * 400;
     description = `Limited high-frequency content (${(highFreqRatio * 100).toFixed(1)}%) - possible TTS`;
-  } else if (highFreqRatio < 0.15) {
-    score = 30 + (0.15 - highFreqRatio) * 150;
+  } else if (highFreqRatio < 0.08) {
+    score = 20 + (0.08 - highFreqRatio) * 150;
     description = `Reduced high-frequency presence`;
   } else {
-    score = Math.max(0, 25 - highFreqRatio * 50);
+    score = Math.max(0, 15 - highFreqRatio * 40);
     description = `Natural frequency distribution`;
   }
   
