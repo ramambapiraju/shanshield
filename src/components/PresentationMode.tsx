@@ -151,8 +151,8 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
               <div className="text-sm text-muted-foreground">AI Agents + Arbiter</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary">100%</div>
-              <div className="text-sm text-muted-foreground">Client-Side / Offline</div>
+              <div className="text-3xl font-bold text-primary">Dual</div>
+              <div className="text-sm text-muted-foreground">Offline & Online Modes</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-primary">C2PA</div>
