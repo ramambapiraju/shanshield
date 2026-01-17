@@ -36,13 +36,13 @@ const [showPresentation, setShowPresentation] = useState(false);
     isAnalyzing,
     analysisComplete,
     result,
-    isOnlineMode,
+    analysisMode,
     resetKey,
     handleFilesSelected,
     startAnalysis,
     handleAnalysisComplete,
     handleProgress,
-    handleOnlineModeChange,
+    handleAnalysisModeChange,
     resetAnalysis
   } = useAnalysis();
 
@@ -106,8 +106,8 @@ const [showPresentation, setShowPresentation] = useState(false);
             <MediaUploader key={resetKey} onFilesSelected={handleFilesSelected} isAnalyzing={isAnalyzing} />
             
             <AnalysisModeToggle 
-              isOnlineMode={isOnlineMode} 
-              onModeChange={handleOnlineModeChange}
+              analysisMode={analysisMode} 
+              onModeChange={handleAnalysisModeChange}
             />
             
             {/* Analyze Button - Always show when files exist */}
