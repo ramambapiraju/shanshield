@@ -8,6 +8,7 @@ import AnalysisResults from "@/components/analysis/AnalysisResults";
 import ExplainableAI from "@/components/analysis/ExplainableAI";
 import ForensicReport from "@/components/analysis/ForensicReport";
 import AnalysisModeToggle from "@/components/analysis/AnalysisModeToggle";
+import C2PAVerification from "@/components/analysis/C2PAVerification";
 
 import JudgeModePanel from "@/components/JudgeModePanel";
 import PresentationMode from "@/components/PresentationMode";
@@ -156,6 +157,9 @@ const [showPresentation, setShowPresentation] = useState(false);
                   fileSize={files[0].file.size}
                   processingTime={result.processingTime}
                 />
+                
+                {/* C2PA Verification */}
+                <C2PAVerification result={result.c2paResult || null} />
                 
                 <AnalysisResults
                   verdict={result.verdict}

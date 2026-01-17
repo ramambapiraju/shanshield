@@ -6,6 +6,7 @@ import { analyzeAudio, type AudioAnalysisFindings } from "@/lib/audioAnalyzer";
 import { analyzeDocument, type DocumentAnalysisFindings } from "@/lib/documentAnalyzer";
 import { type QuantumEntropyResult } from "@/lib/quantumEntropyAnalyzer";
 import { analyzeWithCloud, type CloudAnalysisResult } from "@/lib/cloudAnalyzer";
+import { analyzeC2PA, type C2PAResult } from "@/lib/c2paAnalyzer";
 import { toast } from "sonner";
 
 interface UploadedFile {
@@ -61,6 +62,7 @@ interface AnalysisResult {
   analysisMode?: 'offline' | 'cloud_ml';
   mlSignals?: string[];
   aiToolDetected?: string | null;
+  c2paResult?: C2PAResult;
 }
 
 type UnifiedAnalysis = {
@@ -242,11 +244,24 @@ export const useAnalysis = () => {
       
       setRealAnalysisResult(analysis);
       
-      // Step 2: If online mode, also run cloud ML analysis
+      // Step 2: Run C2PA analysis in parallel
+      setCurrentProgress({ step: 'C2PA Verification', progress: 30 });
+      let c2paResult: C2PAResult | null = null;
+      try {
+        c2paResult = await analyzeC2PA(file.file);
+        if (c2paResult.hasManifest) {
+          toast.success("C2PA manifest found!");
+        }
+      } catch (c2paError) {
+        console.error('C2PA analysis failed:', c2paError);
+        // C2PA failure is non-critical, continue with other analysis
+      }
+      
+      // Step 3: If online mode, also run cloud ML analysis
       let cloudResult: CloudAnalysisResult | null = null;
       if (isOnlineMode) {
         try {
-          setCurrentProgress({ step: 'Cloud ML Analysis', progress: 50 });
+          setCurrentProgress({ step: 'Cloud ML Analysis', progress: 60 });
           cloudResult = await analyzeWithCloud(file.file, file.type, {
             score: analysis.score,
             signals: analysis.signals,
@@ -266,6 +281,24 @@ export const useAnalysis = () => {
       // Generate result - merge cloud results if available
       const timeInSeconds = timeMs / 1000;
       let analysisResult = generateAnalysisResult(file, isFieldMode, analysis, timeInSeconds);
+      
+      // Add C2PA result
+      if (c2paResult) {
+        analysisResult.c2paResult = c2paResult;
+        
+        // If C2PA confirms AI generation, boost the score
+        if (c2paResult.hasManifest && c2paResult.provenance.aiGenerated) {
+          analysisResult.reasoning.unshift('📜 C2PA MANIFEST CONFIRMS AI-GENERATED CONTENT');
+          analysisResult.indicators.unshift({
+            name: 'C2PA AI Declaration',
+            detected: true,
+            confidence: 100,
+            description: `Content declared as AI-generated${c2paResult.provenance.aiToolName ? ` by ${c2paResult.provenance.aiToolName}` : ''}`
+          });
+        } else if (c2paResult.hasManifest && c2paResult.isValid) {
+          analysisResult.reasoning.unshift(`📜 C2PA Verified: Signed by ${c2paResult.signatureInfo?.issuer || 'Unknown'}`);
+        }
+      }
       
       // If we have cloud results, enhance the analysis
       if (cloudResult) {
