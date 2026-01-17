@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { 
   Loader2, 
   CheckCircle, 
-  AlertCircle,
-  Film,
+  Eye,
   AudioLines,
-  Scan,
+  Brain,
   Fingerprint,
   ShieldCheck,
-  Clock
+  FileSearch,
+  Atom
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,6 @@ interface PipelineStep {
   label: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
-  duration: number; // in ms
 }
 
 interface AnalysisPipelineProps {
@@ -28,124 +27,73 @@ interface AnalysisPipelineProps {
   onProgress: (step: string, progress: number) => void;
 }
 
-const basePipelineSteps: PipelineStep[] = [
-  {
-    id: 'ingest',
-    label: 'Media Ingestion',
-    description: 'Validating file integrity and format...',
-    icon: Clock,
-    duration: 800
-  },
-  {
-    id: 'frames',
-    label: 'Frame Extraction',
-    description: 'Extracting key frames for analysis...',
-    icon: Film,
-    duration: 1200
-  },
-  {
-    id: 'audio',
-    label: 'Audio Processing',
-    description: 'Generating spectrogram and waveform...',
-    icon: AudioLines,
-    duration: 1000
-  },
-  {
-    id: 'landmarks',
-    label: 'Facial Landmark Detection',
-    description: 'Mapping 468 facial landmarks and mesh overlay...',
-    icon: Scan,
-    duration: 1500
-  },
-  {
-    id: 'temporal',
-    label: 'Temporal Consistency',
-    description: 'Analyzing frame-to-frame continuity...',
-    icon: Fingerprint,
-    duration: 1300
-  },
-  {
-    id: 'artifacts',
-    label: 'Compression Artifacts',
-    description: 'Inspecting compression signatures...',
-    icon: AlertCircle,
-    duration: 900
-  },
-  {
-    id: 'verification',
-    label: 'Authenticity Verification',
-    description: 'Running final verification protocols...',
-    icon: ShieldCheck,
-    duration: 1100
-  }
-];
-
-const getPipelineForMedia = (type: 'image' | 'video' | 'audio' | 'document'): PipelineStep[] => {
+// Real analysis steps that match actual code execution
+const getActualPipelineSteps = (type: 'image' | 'video' | 'audio' | 'document'): PipelineStep[] => {
   switch (type) {
     case 'image':
-      return basePipelineSteps.filter(s => 
-        ['ingest', 'landmarks', 'artifacts', 'verification'].includes(s.id)
-      );
+      return [
+        { id: 'visual', label: 'Visual Agent', description: 'Analyzing noise, edges, textures, colors...', icon: Eye },
+        { id: 'metadata', label: 'AI Signature Agent', description: 'Scanning filename patterns & watermarks...', icon: FileSearch },
+        { id: 'quantum', label: 'Quantum Entropy Agent', description: 'Computing von Neumann entropy...', icon: Atom },
+        { id: 'arbiter', label: 'Arbiter Agent', description: 'Fusing all signals with Dempster-Shafer...', icon: Brain }
+      ];
     case 'video':
-      return basePipelineSteps;
+      return [
+        { id: 'visual', label: 'Visual Agent', description: 'Extracting frames for analysis...', icon: Eye },
+        { id: 'temporal', label: 'Temporal Agent', description: 'Checking frame-to-frame consistency...', icon: Fingerprint },
+        { id: 'metadata', label: 'AI Signature Agent', description: 'Scanning filename patterns & watermarks...', icon: FileSearch },
+        { id: 'quantum', label: 'Quantum Entropy Agent', description: 'Computing entropy across frames...', icon: Atom },
+        { id: 'arbiter', label: 'Arbiter Agent', description: 'Fusing all signals...', icon: Brain }
+      ];
     case 'audio':
-      return basePipelineSteps.filter(s => 
-        ['ingest', 'audio', 'verification'].includes(s.id)
-      );
+      return [
+        { id: 'audio', label: 'Audio Agent', description: 'FFT spectral analysis...', icon: AudioLines },
+        { id: 'metadata', label: 'AI Signature Agent', description: 'Scanning for AI tool signatures...', icon: FileSearch },
+        { id: 'quantum', label: 'Quantum Entropy Agent', description: 'Frequency entropy analysis...', icon: Atom },
+        { id: 'arbiter', label: 'Arbiter Agent', description: 'Fusing all signals...', icon: Brain }
+      ];
     case 'document':
-      return basePipelineSteps.filter(s => 
-        ['ingest', 'frames', 'landmarks', 'verification'].includes(s.id)
-      );
+      return [
+        { id: 'visual', label: 'Visual Agent', description: 'Analyzing embedded images...', icon: Eye },
+        { id: 'metadata', label: 'Metadata Agent', description: 'Checking document structure...', icon: FileSearch },
+        { id: 'arbiter', label: 'Arbiter Agent', description: 'Final verification...', icon: Brain }
+      ];
     default:
-      return basePipelineSteps;
+      return [
+        { id: 'analysis', label: 'Analysis', description: 'Processing...', icon: Brain },
+        { id: 'verification', label: 'Verification', description: 'Verifying...', icon: ShieldCheck }
+      ];
   }
 };
 
 const AnalysisPipeline = ({ isActive, mediaType, onComplete, onProgress }: AnalysisPipelineProps) => {
-  const [currentStep, setCurrentStep] = useState(-1);
-  const [stepProgress, setStepProgress] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
+  const [allComplete, setAllComplete] = useState(false);
+  const completedRef = useRef(false);
   
-  const pipelineSteps = getPipelineForMedia(mediaType);
+  const pipelineSteps = getActualPipelineSteps(mediaType);
 
+  // When analysis becomes active, mark all steps as in-progress
+  // When isActive becomes false (analysis done), mark all complete
   useEffect(() => {
-    if (!isActive) {
-      setCurrentStep(-1);
-      setStepProgress(0);
+    if (isActive) {
       setCompletedSteps([]);
-      return;
+      setAllComplete(false);
+      completedRef.current = false;
+      onProgress('analyzing', 50);
     }
+  }, [isActive, onProgress]);
 
-    let stepIndex = 0;
-    
-    const runStep = () => {
-      if (stepIndex >= pipelineSteps.length) {
-        onComplete();
-        return;
-      }
-
-      setCurrentStep(stepIndex);
-      const step = pipelineSteps[stepIndex];
-      const progressInterval = step.duration / 100;
-      let progress = 0;
-
-      const progressTimer = setInterval(() => {
-        progress += 1;
-        setStepProgress(progress);
-        onProgress(step.id, progress);
-
-        if (progress >= 100) {
-          clearInterval(progressTimer);
-          setCompletedSteps(prev => [...prev, step.id]);
-          stepIndex++;
-          setTimeout(runStep, 200);
-        }
-      }, progressInterval);
-    };
-
-    const timeout = setTimeout(runStep, 500);
-    return () => clearTimeout(timeout);
-  }, [isActive, pipelineSteps, onComplete, onProgress]);
+  // When real analysis completes (isActive goes false after being true)
+  useEffect(() => {
+    if (!isActive && !completedRef.current && pipelineSteps.length > 0) {
+      // Mark all steps complete
+      setCompletedSteps(pipelineSteps.map(s => s.id));
+      setAllComplete(true);
+      completedRef.current = true;
+      onComplete();
+    }
+  }, [isActive, pipelineSteps, onComplete]);
 
   if (!isActive && completedSteps.length === 0) {
     return null;
@@ -164,14 +112,16 @@ const AnalysisPipeline = ({ isActive, mediaType, onComplete, onProgress }: Analy
         {isActive && (
           <span className="text-xs text-primary animate-pulse">PROCESSING</span>
         )}
+        {allComplete && (
+          <span className="text-xs text-success">COMPLETE</span>
+        )}
       </div>
 
       <div className="space-y-3">
-        {pipelineSteps.map((step, index) => {
+        {pipelineSteps.map((step) => {
           const Icon = step.icon;
           const isCompleted = completedSteps.includes(step.id);
-          const isCurrent = currentStep === index;
-          const isPending = !isCompleted && !isCurrent;
+          const isCurrent = isActive && !isCompleted;
 
           return (
             <div
@@ -179,8 +129,7 @@ const AnalysisPipeline = ({ isActive, mediaType, onComplete, onProgress }: Analy
               className={cn(
                 "relative bg-card/50 border rounded-lg p-3 transition-all duration-300",
                 isCompleted && "border-success/50 bg-success/5",
-                isCurrent && "border-primary/50 bg-primary/5 glow-border",
-                isPending && "border-border/30 opacity-50"
+                isCurrent && "border-primary/50 bg-primary/5 glow-border"
               )}
             >
               <div className="flex items-center gap-3">
@@ -188,7 +137,7 @@ const AnalysisPipeline = ({ isActive, mediaType, onComplete, onProgress }: Analy
                   "w-8 h-8 rounded-full flex items-center justify-center transition-colors",
                   isCompleted && "bg-success/20",
                   isCurrent && "bg-primary/20",
-                  isPending && "bg-muted/20"
+                  !isCompleted && !isCurrent && "bg-muted/20"
                 )}>
                   {isCompleted ? (
                     <CheckCircle className="w-5 h-5 text-success" />
@@ -205,18 +154,18 @@ const AnalysisPipeline = ({ isActive, mediaType, onComplete, onProgress }: Analy
                       "font-display text-sm tracking-wide",
                       isCompleted && "text-success",
                       isCurrent && "text-primary",
-                      isPending && "text-muted-foreground"
+                      !isCompleted && !isCurrent && "text-muted-foreground"
                     )}>
                       {step.label}
                     </span>
-                    {isCurrent && (
-                      <span className="text-xs text-primary font-mono">
-                        {stepProgress}%
-                      </span>
-                    )}
                     {isCompleted && (
                       <span className="text-xs text-success font-mono">
                         COMPLETE
+                      </span>
+                    )}
+                    {isCurrent && (
+                      <span className="text-xs text-primary font-mono animate-pulse">
+                        RUNNING
                       </span>
                     )}
                   </div>
@@ -231,7 +180,7 @@ const AnalysisPipeline = ({ isActive, mediaType, onComplete, onProgress }: Analy
 
               {isCurrent && (
                 <div className="mt-3">
-                  <Progress value={stepProgress} className="h-1" />
+                  <Progress value={50} className="h-1 animate-pulse" />
                 </div>
               )}
             </div>
