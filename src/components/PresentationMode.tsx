@@ -230,7 +230,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             <div className="p-6 bg-card border border-border rounded-xl">
               <div className="w-12 h-12 rounded-full bg-destructive/20 flex items-center justify-center text-destructive font-bold mb-4">3</div>
               <h3 className="text-xl font-bold text-foreground mb-2">Cloud Dependency</h3>
-              <p className="text-muted-foreground">Border agents, analysts need offline detection. None exists.</p>
+              <p className="text-muted-foreground">Border agents, analysts need offline detection. Current tools require internet.</p>
             </div>
           </div>
         </div>
@@ -816,13 +816,13 @@ const cv = (stdDev / avgDiff) * 100;
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold text-foreground">CLOUD ML MODE</h3>
-                  <span className="text-blue-400 font-semibold">ShanShield-ML-v3.0 • 94.7% Accuracy</span>
+                  <span className="text-blue-400 font-semibold">ShanShield-ML-v3.0 • Pre-trained Model</span>
                 </div>
               </div>
               <ul className="text-muted-foreground space-y-2 mb-4">
                 <li className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-blue-400" />
-                  <span><strong className="text-foreground">Pre-trained on 2.5M+ samples</strong></span>
+                  <span><strong className="text-foreground">Pre-trained neural network</strong></span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-blue-400" />
@@ -834,7 +834,7 @@ const cv = (stdDev / avgDiff) * 100;
                 </li>
                 <li className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-blue-400" />
-                  <span><strong className="text-foreground">No external APIs</strong> — ShanShield exclusive</span>
+                  <span><strong className="text-foreground">No external APIs</strong> — runs on Supabase Edge Functions</span>
                 </li>
               </ul>
               <div className="p-3 bg-blue-500/10 rounded-lg">
@@ -905,6 +905,7 @@ const hashHex = hashArray
   .map(b => b.toString(16).padStart(2, '0'))
   .join('');
 // 64-char hex = unique file fingerprint`}</pre>
+              <p className="text-xs text-amber-400 font-semibold mt-2">→ Creates unique 64-char cryptographic fingerprint using Web Crypto API. Any file change = different hash.</p>
             </div>
 
             {/* Shannon Entropy */}
@@ -1249,7 +1250,7 @@ function forwardPass(features) {
   output = softmax(layer3(layer2(attended)));
   return { deepfakeProb, authenticProb };
 }`}</pre>
-              <p className="text-xs text-primary font-semibold mt-2">→ 3-layer MLP with attention. Trained on 2.5M samples for binary deepfake classification.</p>
+              <p className="text-xs text-primary font-semibold mt-2">→ 3-layer MLP with attention. Outputs deepfake probability for binary classification.</p>
             </div>
             
             <div className="p-4 bg-card border border-primary/40 rounded-xl">
@@ -1761,7 +1762,7 @@ if (manifestStore?.activeManifest) {
                 </li>
                 <li className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-blue-400" />
-                  <span><strong className="text-foreground">No external APIs</strong> — ShanShield exclusive model</span>
+                  <span><strong className="text-foreground">No external APIs</strong> — runs on Supabase Edge Functions</span>
                 </li>
               </ul>
               <div className="mt-4 p-3 bg-blue-500/10 rounded-lg">
@@ -1777,7 +1778,7 @@ if (manifestStore?.activeManifest) {
             <h4 className="text-lg font-bold text-primary mb-2">ShanShield-ML-v3.0 Architecture</h4>
             <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
 {`// ShanShield Pre-trained Neural Network
-// Training: 800K authentic + 500K Midjourney + 400K SD + 300K DALL-E + 250K GAN faces
+// Runs on Supabase Edge Functions (Lovable Cloud)
 
 const moduleWeights = {
   neural: 0.30,      // MLP with Attention
@@ -1789,7 +1790,7 @@ const moduleWeights = {
   offline: 0.05      // Browser-based signals
 };
 // Ensemble score → Verdict with full reasoning`}</pre>
-            <p className="text-xs text-primary font-semibold mt-2">→ Pre-trained model on 2.5M samples. No external APIs — runs on our backend only.</p>
+            <p className="text-xs text-primary font-semibold mt-2">→ Pre-trained model. No external APIs — runs on Supabase Edge Functions (Lovable Cloud).</p>
           </div>
         </div>
       )
@@ -1889,8 +1890,8 @@ const moduleWeights = {
                 <div>• Dempster-Shafer Fusion</div>
                 <div>• Explainable AI Reasoning</div>
                 <div>• PDF Forensic Reports</div>
-                <div>• 94.7% ML Accuracy</div>
-                <div>• 2.5M+ Training Samples</div>
+                <div>• Dynamic Agent Weighting</div>
+                <div>• Supabase Edge Functions</div>
               </div>
             </div>
           </div>
