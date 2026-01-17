@@ -85,24 +85,24 @@ const AnalysisModeToggle = ({
           <div className="bg-background/30 rounded-lg p-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">ML Model</span>
-              <span className="text-xs text-primary">ShanShield-ML-v2.0</span>
+              <span className="text-xs text-primary">ShanShield-ML-v3.0</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Detection</span>
               <span className="text-xs text-primary">GAN, Diffusion, Face Swap</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Large Files</span>
+              <span className="text-xs text-muted-foreground">Backend</span>
               <span className="text-xs text-success flex items-center gap-1">
-                <CheckCircle className="w-3 h-3" /> Supported
+                <CheckCircle className="w-3 h-3" /> Edge Functions
               </span>
             </div>
           </div>
           <div className="flex items-start gap-2 p-2 bg-primary/10 border border-primary/30 rounded-lg">
             <Shield className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
             <p className="text-xs text-primary/90">
-              <strong>ShanShield Exclusive:</strong> Custom pre-trained ML model (v3.0) with 94.7% accuracy.
-              Trained on 2.5M+ samples. No external APIs required.
+              <strong>ShanShield Exclusive:</strong> Pre-trained ML model (v3.0) running on Supabase Edge Functions.
+              No external APIs required.
             </p>
           </div>
         </div>

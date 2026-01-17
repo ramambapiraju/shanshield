@@ -10,22 +10,14 @@ const corsHeaders = {
  * ║                    SHANSHIELD ML ENGINE v3.0                              ║
  * ║                                                                           ║
  * ║  Pre-trained Deepfake Detection Neural Network                            ║
- * ║  Training Dataset: 2.5M+ samples (synthetic + authentic)                  ║
  * ║  Architecture: Multi-layer Perceptron with Attention                      ║
- * ║  Accuracy: 94.7% on benchmark datasets                                    ║
+ * ║  Backend: Supabase Edge Functions (Lovable Cloud)                         ║
  * ╚═══════════════════════════════════════════════════════════════════════════╝
  */
 
 // ============================================================================
 // PRE-TRAINED NEURAL NETWORK WEIGHTS
-// Calibrated on 2.5M+ image samples including:
-// - 800K authentic photos
-// - 500K Midjourney generations
-// - 400K Stable Diffusion outputs
-// - 300K DALL-E images
-// - 250K GAN-generated faces
-// - 150K Face-swap deepfakes
-// - 100K Voice-cloned audio samples
+// Calibrated for multi-modal deepfake detection
 // ============================================================================
 
 const PRETRAINED_WEIGHTS = {
@@ -128,7 +120,8 @@ const DETECTION_PATTERNS = {
 };
 
 // ============================================================================
-// DETECTION THRESHOLDS (Calibrated on validation set)
+// DETECTION THRESHOLDS (Calibrated for balanced detection)
+// Higher thresholds = fewer false positives on authentic content
 // ============================================================================
 
 const THRESHOLDS = {
@@ -143,12 +136,12 @@ const THRESHOLDS = {
   facial_landmark: { low: 0.48, medium: 0.65, high: 0.82 },
   spectral_analysis: { low: 0.38, medium: 0.55, high: 0.72 },
   
-  // Final verdict thresholds
+  // Final verdict thresholds - CONSERVATIVE to avoid false positives
   verdict: {
-    authentic: { max: 25 },
-    likely_authentic: { min: 25, max: 45 },
-    suspicious: { min: 45, max: 70 },
-    deepfake: { min: 70 },
+    authentic: { max: 30 },           // Below 30 = authentic
+    likely_authentic: { min: 30, max: 50 },  // 30-50 = likely authentic  
+    suspicious: { min: 50, max: 75 },        // 50-75 = suspicious
+    deepfake: { min: 75 },                   // Above 75 = deepfake
   },
 };
 
@@ -297,10 +290,11 @@ interface DetectionResult {
 /**
  * Frequency Domain Analysis Module
  * Analyzes DCT coefficients and spectral patterns
+ * More conservative scoring to reduce false positives
  */
 function analyzeFrequencyDomain(features: FeatureVector, offlineData: OfflineAnalysisData): DetectionResult {
   const signals: string[] = [];
-  let score = 50;
+  let score = 40; // Start lower for balance
   let bestMatch = { tool: '', similarity: 0 };
   
   // Compare against known AI generator frequency signatures
@@ -365,10 +359,11 @@ function analyzeFrequencyDomain(features: FeatureVector, offlineData: OfflineAna
 /**
  * GAN Fingerprint Detection Module
  * Detects characteristic patterns from generative adversarial networks
+ * Conservative scoring to avoid false positives on authentic photos
  */
 function detectGANFingerprints(features: FeatureVector, offlineData: OfflineAnalysisData): DetectionResult {
   const signals: string[] = [];
-  let score = 45;
+  let score = 35; // Start lower for balance
   let bestMatch = { tool: '', similarity: 0 };
   
   // Analyze noise patterns for GAN signatures
@@ -417,10 +412,11 @@ function detectGANFingerprints(features: FeatureVector, offlineData: OfflineAnal
 /**
  * Facial Manipulation Detection Module
  * Specialized for detecting face swaps and facial manipulations
+ * Higher threshold to reduce false positives on real faces
  */
 function analyzeFacialManipulation(features: FeatureVector, offlineData: OfflineAnalysisData): DetectionResult {
   const signals: string[] = [];
-  let score = 40;
+  let score = 30; // Start lower - real faces vary a lot
   let bestMatch = { tool: '', similarity: 0 };
   
   const facialScore = (features.facial + 1) / 2;
@@ -470,10 +466,11 @@ function analyzeFacialManipulation(features: FeatureVector, offlineData: Offline
 /**
  * Audio Deepfake Detection Module
  * Analyzes spectral and prosodic features for voice cloning
+ * Conservative to avoid false positives on natural voice variations
  */
 function analyzeAudioDeepfake(features: FeatureVector, offlineData: OfflineAnalysisData): DetectionResult {
   const signals: string[] = [];
-  let score = 42;
+  let score = 32; // Start lower for balance
   let bestMatch = { tool: '', similarity: 0 };
   
   // Use available features as proxies for audio analysis
@@ -512,10 +509,11 @@ function analyzeAudioDeepfake(features: FeatureVector, offlineData: OfflineAnaly
 /**
  * Compression Artifact Analysis
  * Detects re-encoding and manipulation through compression patterns
+ * Lower base score since compression is common in authentic media
  */
 function analyzeCompressionArtifacts(features: FeatureVector, offlineData: OfflineAnalysisData): DetectionResult {
   const signals: string[] = [];
-  let score = 48;
+  let score = 35; // Start lower - compression is normal
   
   const compressionScore = (features.compression + 1) / 2;
   
@@ -819,11 +817,6 @@ serve(async (req) => {
       modelUsed: mlResult.modelVersion,
       neuralNetworkOutput: mlResult.neuralNetworkOutput,
       moduleScores: mlResult.moduleScores,
-      trainingInfo: {
-        dataset: "2.5M+ samples",
-        accuracy: "94.7%",
-        lastUpdated: "2025-01-15",
-      },
     };
 
     console.log("=== Analysis Complete ===\n");

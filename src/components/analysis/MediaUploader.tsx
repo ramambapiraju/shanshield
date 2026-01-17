@@ -60,6 +60,11 @@ const mediaConfig = {
 
 const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  
+  // Reset files when component remounts (via key prop change)
+  useEffect(() => {
+    setUploadedFiles([]);
+  }, []);
   const [dragActive, setDragActive] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
