@@ -32,6 +32,7 @@ interface SlideData {
   duration: string;
   icon: React.ComponentType<{ className?: string }>;
   content: React.ReactNode;
+  speakerNotes?: string[];
 }
 
 interface PresentationModeProps {
@@ -43,6 +44,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
   const [isVisible, setIsVisible] = useState(isOpen ?? false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
 
   useEffect(() => {
     if (isOpen !== undefined) {
@@ -68,6 +70,10 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
     }
   }, []);
 
+  const toggleNotes = useCallback(() => {
+    setShowNotes(prev => !prev);
+  }, []);
+
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -90,6 +96,9 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
         if (e.key === "ArrowLeft") {
           e.preventDefault();
           setCurrentSlide((prev) => Math.max(prev - 1, 0));
+        }
+        if (e.key === "n" || e.key === "N") {
+          toggleNotes();
         }
         if (e.key === "f" || e.key === "F") {
           toggleFullscreen();
@@ -117,37 +126,55 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
       subtitle: "Multi-Agent Forensic Intelligence for Deepfake Detection",
       duration: "30 sec",
       icon: Shield,
+      speakerNotes: [
+        "Introduce yourself and SHANSHIELD",
+        "Mention 6+1 agent architecture, 100% offline, no API keys",
+        "Built with Lovable AI - rapid prototyping platform"
+      ],
       content: (
-        <div className="flex flex-col items-center justify-center h-full text-center space-y-8">
+        <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
           <div className="relative">
-            <Shield className="w-32 h-32 text-primary animate-pulse" />
-            <div className="absolute inset-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
+            <Shield className="w-28 h-28 text-primary animate-pulse" />
+            <div className="absolute inset-0 w-28 h-28 bg-primary/20 rounded-full blur-3xl" />
           </div>
-          <div className="space-y-4">
-            <h1 className="text-7xl font-bold text-gradient-cyber font-display tracking-wider">
+          <div className="space-y-3">
+            <h1 className="text-6xl font-bold text-gradient-cyber font-display tracking-wider">
               SHANSHIELD
             </h1>
-            <p className="text-2xl text-muted-foreground max-w-3xl">
+            <p className="text-xl text-muted-foreground max-w-3xl">
               Multi-Agent Forensic Intelligence for Deepfake Detection
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-8 mt-12">
+          <div className="grid grid-cols-3 gap-6 mt-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-primary">6+1</div>
+              <div className="text-3xl font-bold text-primary">6+1</div>
               <div className="text-sm text-muted-foreground">AI Agents + Arbiter</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-primary">100%</div>
+              <div className="text-3xl font-bold text-primary">100%</div>
               <div className="text-sm text-muted-foreground">Client-Side / Offline</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-primary">0</div>
+              <div className="text-3xl font-bold text-primary">0</div>
               <div className="text-sm text-muted-foreground">API Keys Required</div>
             </div>
           </div>
-          <p className="text-xl text-foreground mt-8">
-            Presented by <span className="text-primary font-bold">Shanmuka Sai Varma</span>
-          </p>
+          
+          {/* Bio Section */}
+          <div className="mt-6 p-4 bg-primary/10 border border-primary/30 rounded-xl max-w-2xl">
+            <p className="text-lg text-foreground font-semibold">
+              <span className="text-primary">Shanmuka Sai Varma</span>
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              18 y/o • BTech 1st Year, Mechanical Engineering @ JNTUH Hyderabad
+            </p>
+            <p className="text-sm text-primary mt-1 font-medium">
+              🏆 Winner — ASME IMECE 2025 Innovation Pitchathon (Mechatronics Startup)
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Currently incubated at college • Built with Lovable AI
+            </p>
+          </div>
         </div>
       )
     },
@@ -1785,6 +1812,20 @@ if (conflict > 0.7) {
         </Button>
       </div>
 
+      {/* Speaker Notes Overlay */}
+      {showNotes && currentSlideData.speakerNotes && (
+        <div className="absolute bottom-24 left-6 right-6 p-4 bg-card/95 backdrop-blur-xl border border-primary/40 rounded-xl z-20">
+          <div className="flex items-center gap-2 mb-2">
+            <FileText className="w-4 h-4 text-primary" />
+            <span className="text-sm font-bold text-primary">Speaker Notes (N to toggle)</span>
+          </div>
+          <ul className="text-sm text-muted-foreground space-y-1">
+            {currentSlideData.speakerNotes.map((note, idx) => (
+              <li key={idx}>• {note}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
