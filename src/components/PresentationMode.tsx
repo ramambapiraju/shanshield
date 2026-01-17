@@ -1396,95 +1396,251 @@ if (conflict > 0.7) {
     },
 
     // SLIDE 10: FUTURE ROADMAP
+    // SLIDE: C2PA VERIFICATION - IMPLEMENTED
     {
-      id: "roadmap",
-      title: "Future Roadmap",
-      subtitle: "Advanced Features in Development",
+      id: "c2pa",
+      title: "C2PA Content Provenance",
+      subtitle: "Industry Standard Verification — Fully Implemented",
       duration: "45 sec",
-      icon: Target,
+      icon: Lock,
       content: (
         <div className="space-y-6">
-          <h2 className="text-4xl font-bold text-center font-display text-foreground mb-6">
-            Coming Soon — Advanced Detection
+          <h2 className="text-4xl font-bold text-center font-display text-foreground mb-4">
+            C2PA Verification — src/lib/c2paAnalyzer.ts
           </h2>
 
-          <div className="grid grid-cols-2 gap-6">
-            <div className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-2 border-blue-500/40 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Eye className="w-10 h-10 text-blue-400" />
-                <div>
-                  <h3 className="text-xl font-bold text-foreground">Neural Network Models</h3>
-                  <span className="text-blue-400 font-semibold">Planned</span>
-                </div>
+          <div className="p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-500/40 rounded-xl">
+            <div className="flex items-center justify-center gap-8 text-sm">
+              <div className="text-center">
+                <div className="text-green-400 font-bold text-lg">✅ FULLY IMPLEMENTED</div>
+                <div className="text-muted-foreground">Using official c2pa npm package with WASM</div>
               </div>
-              <ul className="text-muted-foreground space-y-2 text-sm">
-                <li>• <span className="text-blue-400 font-semibold">EfficientNetV2-L</span> — 118M parameter detection</li>
-                <li>• GAN/Diffusion fingerprint classification</li>
-                <li>• Generator ID: Sora, Runway, DALL-E 4</li>
-                <li>• Requires WebGPU/WASM inference</li>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-card border border-green-500/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-green-400 flex items-center gap-2">
+                <Lock className="w-5 h-5" />
+                What is C2PA?
+              </h3>
+              <ul className="text-muted-foreground text-sm space-y-2">
+                <li>• <span className="text-green-400 font-semibold">Coalition for Content Provenance</span></li>
+                <li>• Founded by Adobe, Microsoft, BBC, Intel</li>
+                <li>• Cryptographic signatures embedded in files</li>
+                <li>• Tracks creation tool, modifications, AI generation</li>
+                <li>• International standard for media authenticity</li>
               </ul>
             </div>
 
-            <div className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-2 border-purple-500/40 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Mic className="w-10 h-10 text-purple-400" />
-                <div>
-                  <h3 className="text-xl font-bold text-foreground">Advanced Voice Analysis</h3>
-                  <span className="text-purple-400 font-semibold">Planned</span>
-                </div>
-              </div>
-              <ul className="text-muted-foreground space-y-2 text-sm">
-                <li>• <span className="text-purple-400 font-semibold">RawNet3</span> vocoder detection</li>
-                <li>• Wav2Vec2 semantic analysis</li>
-                <li>• Clone ID: ElevenLabs, XTTS, Bark</li>
-                <li>• Breathing pattern verification</li>
-              </ul>
-            </div>
-
-            <div className="p-6 bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border-2 border-cyan-500/40 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Activity className="w-10 h-10 text-cyan-400" />
-                <div>
-                  <h3 className="text-xl font-bold text-foreground">Biometric Analysis</h3>
-                  <span className="text-cyan-400 font-semibold">Planned</span>
-                </div>
-              </div>
-              <ul className="text-muted-foreground space-y-2 text-sm">
-                <li>• <span className="text-cyan-400 font-semibold">rPPG</span> heartbeat detection (0.8-2Hz)</li>
-                <li>• 478-point facial landmark tracking</li>
-                <li>• Blink pattern validation (PERCLOS)</li>
-                <li>• RAFT optical flow analysis</li>
-              </ul>
-            </div>
-
-            <div className="p-6 bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-2 border-amber-500/40 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <Lock className="w-10 h-10 text-amber-400" />
-                <div>
-                  <h3 className="text-xl font-bold text-foreground">Provenance Verification</h3>
-                  <span className="text-amber-400 font-semibold">Planned</span>
-                </div>
-              </div>
-              <ul className="text-muted-foreground space-y-2 text-sm">
-                <li>• <span className="text-amber-400 font-semibold">C2PA</span> content credentials</li>
-                <li>• SHA-3/256 cryptographic chaining</li>
-                <li>• Blockchain audit trail</li>
-                <li>• Digital watermark detection</li>
+            <div className="p-4 bg-card border border-green-500/40 rounded-xl space-y-3">
+              <h3 className="text-xl font-bold text-green-400 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5" />
+                What We Detect
+              </h3>
+              <ul className="text-muted-foreground text-sm space-y-2">
+                <li>• <span className="text-green-400 font-semibold">Manifest presence</span> — Signed or not</li>
+                <li>• <span className="text-green-400 font-semibold">Signature validation</span> — Cryptographic verify</li>
+                <li>• <span className="text-green-400 font-semibold">AI Generation flag</span> — trainedAlgorithmicMedia</li>
+                <li>• <span className="text-green-400 font-semibold">Creation tool</span> — Camera, Photoshop, AI</li>
+                <li>• <span className="text-green-400 font-semibold">Modification history</span> — Edit chain</li>
               </ul>
             </div>
           </div>
 
-          <div className="p-6 bg-gradient-to-r from-primary/20 to-primary/5 border-2 border-primary/50 rounded-xl">
-            <h4 className="text-xl font-bold text-foreground mb-3 flex items-center gap-2">
-              <Cpu className="w-6 h-6 text-primary" />
-              Technical Requirements
+          <div className="p-4 bg-card border border-primary/40 rounded-xl">
+            <h4 className="text-lg font-bold text-primary mb-2">Code Implementation (Lines 265-430)</h4>
+            <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// c2paAnalyzer.ts - Using official c2pa npm package
+import { createC2pa } from 'c2pa';
+
+const c2pa = await createC2pa({ wasmSrc, workerSrc });
+const { manifestStore } = await c2pa.read(blobUrl);
+
+if (manifestStore?.activeManifest) {
+  // Extract signature info, assertions, credentials
+  const aiGenerated = assertions.some(a => 
+    a.label.includes('trainedAlgorithmicMedia') ||
+    a.data.digitalSourceType === 'trainedAlgorithmicMedia'
+  );
+}`}</pre>
+          </div>
+        </div>
+      )
+    },
+
+    // SLIDE: OFFLINE VS CLOUD MODE
+    {
+      id: "modes",
+      title: "Dual Analysis Modes",
+      subtitle: "Offline-First with Optional Cloud ML",
+      duration: "45 sec",
+      icon: Wifi,
+      content: (
+        <div className="space-y-6">
+          <h2 className="text-4xl font-bold text-center font-display text-foreground mb-4">
+            Two Modes — Your Choice
+          </h2>
+
+          <div className="grid grid-cols-2 gap-6">
+            {/* Offline Mode */}
+            <div className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-600/5 border-2 border-green-500/40 rounded-2xl">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <Shield className="w-6 h-6 text-green-400" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-foreground">OFFLINE MODE</h3>
+                  <span className="text-green-400 font-semibold">Default • Privacy-First</span>
+                </div>
+              </div>
+              <ul className="text-muted-foreground space-y-2">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <span><strong className="text-foreground">100% client-side</strong> — runs in browser</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <span><strong className="text-foreground">Zero network calls</strong> — works air-gapped</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <span><strong className="text-foreground">No data leaves device</strong> — GDPR compliant</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <span><strong className="text-foreground">No API keys needed</strong> — free forever</span>
+                </li>
+              </ul>
+              <div className="mt-4 p-3 bg-green-500/10 rounded-lg">
+                <p className="text-sm text-green-400 font-semibold">
+                  Uses: Canvas API • Web Audio API • Web Crypto API
+                </p>
+              </div>
+            </div>
+
+            {/* Cloud Mode */}
+            <div className="p-6 bg-gradient-to-br from-blue-500/10 to-cyan-600/5 border-2 border-blue-500/40 rounded-2xl">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+                  <Wifi className="w-6 h-6 text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-foreground">CLOUD ML MODE</h3>
+                  <span className="text-blue-400 font-semibold">Optional • Enhanced</span>
+                </div>
+              </div>
+              <ul className="text-muted-foreground space-y-2">
+                <li className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-blue-400" />
+                  <span><strong className="text-foreground">Google Gemini 2.5 Flash</strong> — vision AI</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-blue-400" />
+                  <span><strong className="text-foreground">Pattern recognition</strong> — GAN fingerprints</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-blue-400" />
+                  <span><strong className="text-foreground">Specific AI tool ID</strong> — Midjourney, DALL-E</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-blue-400" />
+                  <span><strong className="text-foreground">Combined scoring</strong> — 60% ML + 40% offline</span>
+                </li>
+              </ul>
+              <div className="mt-4 p-3 bg-blue-500/10 rounded-lg">
+                <p className="text-sm text-blue-400 font-semibold">
+                  Uses: Lovable AI Gateway • Edge Functions
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* How it works */}
+          <div className="p-4 bg-card border border-primary/40 rounded-xl">
+            <h4 className="text-lg font-bold text-primary mb-2">Cloud Mode Implementation</h4>
+            <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
+{`// supabase/functions/analyze-media/index.ts
+const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  method: "POST",
+  headers: { Authorization: \`Bearer \${LOVABLE_API_KEY}\` },
+  body: JSON.stringify({
+    model: "google/gemini-2.5-flash",  // Real Google AI model
+    messages: [{ role: "user", content: [
+      { type: "text", text: "Analyze for deepfake..." },
+      { type: "image_url", image_url: { url: imageBase64 } }
+    ]}]
+  })
+});
+// Combined: 60% ML confidence + 40% offline score`}</pre>
+          </div>
+        </div>
+      )
+    },
+
+    // SLIDE: FUTURE ROADMAP (HONEST)
+    {
+      id: "roadmap",
+      title: "Future Roadmap",
+      subtitle: "Planned Enhancements",
+      duration: "30 sec",
+      icon: Target,
+      content: (
+        <div className="space-y-6">
+          <h2 className="text-4xl font-bold text-center font-display text-foreground mb-6">
+            What's Next
+          </h2>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="p-5 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/40 rounded-xl">
+              <div className="flex items-center gap-2 mb-3">
+                <Eye className="w-6 h-6 text-blue-400" />
+                <h3 className="text-lg font-bold text-foreground">Neural Networks</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                WebGPU-based deep learning models for GAN/Diffusion fingerprinting. Requires browser support.
+              </p>
+              <div className="mt-2 text-xs text-blue-400 font-semibold">PLANNED</div>
+            </div>
+
+            <div className="p-5 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/40 rounded-xl">
+              <div className="flex items-center gap-2 mb-3">
+                <Mic className="w-6 h-6 text-purple-400" />
+                <h3 className="text-lg font-bold text-foreground">Voice Clone Detection</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Advanced vocoder fingerprinting to identify ElevenLabs, XTTS, Bark clones.
+              </p>
+              <div className="mt-2 text-xs text-purple-400 font-semibold">PLANNED</div>
+            </div>
+
+            <div className="p-5 bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border border-cyan-500/40 rounded-xl">
+              <div className="flex items-center gap-2 mb-3">
+                <Cpu className="w-6 h-6 text-cyan-400" />
+                <h3 className="text-lg font-bold text-foreground">Mobile App</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Native iOS/Android app for field deployment with same offline-first architecture.
+              </p>
+              <div className="mt-2 text-xs text-cyan-400 font-semibold">PLANNED</div>
+            </div>
+          </div>
+
+          <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+            <h4 className="text-lg font-bold text-green-400 mb-2 flex items-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              Currently Implemented & Working
             </h4>
-            <p className="text-muted-foreground">
-              These advanced features require <span className="text-primary font-bold">WebGPU</span> for neural network inference, 
-              <span className="text-primary font-bold"> MediaPipe</span> for facial landmarks, and 
-              <span className="text-primary font-bold"> server-side processing</span> for C2PA verification. 
-              Current implementation uses optimized browser-native algorithms that work 100% offline.
-            </p>
+            <div className="grid grid-cols-4 gap-4 text-sm text-muted-foreground">
+              <div>• Visual Analysis (Noise, Edge, LBP)</div>
+              <div>• Audio Analysis (FFT, Pitch)</div>
+              <div>• C2PA Verification</div>
+              <div>• Quantum Entropy</div>
+              <div>• AI Signature Detection (50+ tools)</div>
+              <div>• Offline Mode (100%)</div>
+              <div>• Cloud ML (Gemini 2.5 Flash)</div>
+              <div>• Dempster-Shafer Fusion</div>
+            </div>
           </div>
         </div>
       )
