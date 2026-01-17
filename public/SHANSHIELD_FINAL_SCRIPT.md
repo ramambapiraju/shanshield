@@ -247,18 +247,27 @@ if (metadataResult.score >= 85) {
 > High entropy = encrypted or compressed.
 > Low entropy = repeated patterns.
 >
-> We also parse PDF metadata, EXIF data, and detect file structure anomalies."
+> **Magic Byte Verification** — checks file headers:
+> ```typescript
+> const jpegMagic = [0xFF, 0xD8, 0xFF];
+> const pngMagic = [0x89, 0x50, 0x4E, 0x47];
+> // If extension says .jpg but bytes say PNG = tampering!
+> ```
+>
+> We also parse PDF metadata (/Producer, /Creator fields) and detect AI tool strings."
 
 ### 🔴 CODE REFERENCE (documentAnalyzer.ts):
 
 | Function | Formula | Purpose |
 |----------|---------|---------|
 | `calculateEntropy()` | H = -Σ pᵢ log₂(pᵢ) | Information content |
+| `detectFileSignature()` | Magic bytes | File type verification |
+| `parsePDFMetadata()` | Regex parsing | PDF producer/creator |
 
 ### 🎯 HIGHLIGHT:
 - Shannon Entropy formula
-- PDF/EXIF parsing
-- File structure analysis
+- Magic byte verification (file tampering)
+- PDF metadata parsing
 
 ---
 
@@ -673,6 +682,212 @@ function calculateVonNeumannEntropy(eigenvalues: number[]): number {
 ### Q: "What makes this different from other deepfake detectors?"
 > "Three differentiators: (1) Multi-modal — we analyze video AND audio AND metadata, not just one. (2) Explainability — every verdict comes with specific explanations, not just a percentage. (3) Quantum entropy — we're the first to apply quantum information theory to deepfake detection."
 
+### Q: "What about EXIF metadata extraction?"
+> "We use text-pattern matching on file bytes to detect AI tool signatures like 'Midjourney', 'DALL-E' in embedded strings. For PDFs, we parse /Producer, /Creator, and date fields. This is simpler than deep binary EXIF parsing but highly effective for detecting AI tools that embed their names in files."
+
+---
+
+# 📚 PART 4: DETAILED CODE EXPLANATIONS (MISSING FEATURES)
+
+## Local Binary Patterns (LBP) — `analyzeTexture()`
+
+**Location:** `src/lib/imageAnalyzer.ts` Lines 328-391
+
+**What it does:** Compares each pixel to its 8 neighbors to build a texture descriptor. AI images have unnaturally smooth textures.
+
+**Line-by-line:**
+```typescript
+// Lines 334-348: Sample pixels in a grid
+for (let y = 1; y < height - 1; y += 3) {
+  for (let x = 1; x < width - 1; x += 3) {
+    const center = getGray(x, y);  // Get center pixel grayscale
+    
+    // Get 8 neighbors around center
+    const neighbors = [
+      getGray(x-1, y-1), getGray(x, y-1), getGray(x+1, y-1),  // Top row
+      getGray(x-1, y),                    getGray(x+1, y),    // Middle
+      getGray(x-1, y+1), getGray(x, y+1), getGray(x+1, y+1)   // Bottom row
+    ];
+
+// Lines 355-365: Build LBP code and count transitions
+    let pattern = 0;
+    for (let i = 0; i < 8; i++) {
+      if (neighbors[i] > center) pattern |= (1 << i);  // Set bit if neighbor > center
+    }
+    
+    // Count transitions (0→1 or 1→0) around the circle
+    let transitions = 0;
+    for (let i = 0; i < 8; i++) {
+      if (((pattern >> i) & 1) !== ((pattern >> ((i + 1) % 8)) & 1)) {
+        transitions++;
+      }
+    }
+```
+
+**Formula:** `LBP = Σ s(pᵢ - c) × 2ⁱ` where s(x) = 1 if x ≥ 0, else 0
+
+**Key insight:** AI images have low transitions (< 2.0) and high smooth ratio (> 50%).
+
+---
+
+## Color Histogram Analysis — `analyzeColors()`
+
+**Location:** `src/lib/imageAnalyzer.ts` Lines 184-242
+
+**What it does:** Builds RGB histograms and detects unnatural "spikes" — AI often has narrow color bands.
+
+**Line-by-line:**
+```typescript
+// Lines 186-196: Build histograms for each channel
+const colorHistogram = {
+  r: new Array(256).fill(0),  // 256 bins for red
+  g: new Array(256).fill(0),  // 256 bins for green
+  b: new Array(256).fill(0)   // 256 bins for blue
+};
+
+for (let i = 0; i < data.length; i += 4) {
+  colorHistogram.r[data[i]]++;      // Red channel
+  colorHistogram.g[data[i + 1]]++;  // Green channel
+  colorHistogram.b[data[i + 2]]++;  // Blue channel
+}
+
+// Lines 199-207: Detect spikes (values > 6× mean)
+const findSpikes = (hist: number[]) => {
+  const total = hist.reduce((a, b) => a + b, 0);
+  const mean = total / 256;
+  let spikes = 0;
+  for (const count of hist) {
+    if (count > mean * 6) spikes++;  // 6× threshold
+  }
+  return spikes;
+};
+```
+
+**Key insight:** Natural photos have smooth histograms. AI images have sharp spikes at specific colors.
+
+---
+
+## Frame Extraction — `extractFrames()`
+
+**Location:** `src/lib/videoAnalyzer.ts` Lines 24-57
+
+**What it does:** Extracts frames from video at regular intervals using Canvas API.
+
+**Line-by-line:**
+```typescript
+// Lines 24-33: Setup
+const extractFrames = (video: HTMLVideoElement, numFrames: number = 10) => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+  const duration = video.duration;
+  const interval = duration / (numFrames + 1);  // Space frames evenly
+  
+  canvas.width = Math.min(256, video.videoWidth);   // Resize for speed
+  canvas.height = Math.min(256, video.videoHeight);
+
+// Lines 37-56: Capture loop
+  const captureFrame = () => {
+    const time = interval * (currentFrame + 1);
+    video.currentTime = time;  // Seek to position
+  };
+  
+  video.onseeked = () => {
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);  // Draw frame
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    frames.push(imageData);  // Store pixel data
+    currentFrame++;
+    captureFrame();  // Next frame
+  };
+```
+
+**Key insight:** Uses browser's video decoder + Canvas API. No external libraries needed.
+
+---
+
+## Flicker Detection — `analyzeFrameConsistency()`
+
+**Location:** `src/lib/videoAnalyzer.ts` Lines 60-106
+
+**What it does:** Detects high-variance frame differences (flickering) common in deepfakes.
+
+**Line-by-line:**
+```typescript
+// Lines 67-86: Compare consecutive frames
+for (let i = 1; i < frames.length; i++) {
+  const prev = frames[i - 1].data;
+  const curr = frames[i].data;
+  let diff = 0;
+  
+  // Sample every 4th pixel for speed
+  for (let p = 0; p < prev.length; p += 16) {
+    diff += Math.abs(prev[p] - curr[p]) +          // Red diff
+            Math.abs(prev[p + 1] - curr[p + 1]) +  // Green diff
+            Math.abs(prev[p + 2] - curr[p + 2]);   // Blue diff
+  }
+  inconsistencies.push(diff / pixelCount);
+}
+
+// Lines 84-89: Calculate coefficient of variation
+const avgDiff = inconsistencies.reduce((a, b) => a + b, 0) / inconsistencies.length;
+const variance = inconsistencies.reduce((sum, val) => 
+  sum + Math.pow(val - avgDiff, 2), 0) / inconsistencies.length;
+const stdDev = Math.sqrt(variance);
+const coeffOfVariation = (stdDev / avgDiff) * 100;  // CV formula
+```
+
+**Formula:** `CV = (σ / μ) × 100` — Same as noise analysis!
+
+**Key insight:** CV > 80% = high flicker = likely deepfake with frame interpolation issues.
+
+---
+
+## SHA-256 Hashing — Chain of Custody
+
+**Location:** `src/components/JudgeModePanel.tsx` Lines 331-335
+
+**What it does:** Creates unique cryptographic fingerprint of file using Web Crypto API.
+
+**Line-by-line:**
+```typescript
+// Using browser's built-in crypto
+const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+const hashArray = Array.from(new Uint8Array(hashBuffer));
+const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+// Result: 64-character hex string like "a7b3c4d5..."
+```
+
+**Key insight:** Same file = same hash. Any modification = completely different hash.
+
+---
+
+## Magic Byte Verification — `detectFileSignature()`
+
+**Location:** `src/components/JudgeModePanel.tsx` Lines 392-408
+
+**What it does:** Checks file header bytes against known signatures to verify true file type.
+
+**Line-by-line:**
+```typescript
+function detectFileSignature(bytes: Uint8Array): string {
+  const signatures: Record<string, number[]> = {
+    'JPEG': [0xFF, 0xD8, 0xFF],              // JPEG always starts with FFD8FF
+    'PNG':  [0x89, 0x50, 0x4E, 0x47],         // PNG: 89 50 4E 47 (‰PNG)
+    'PDF':  [0x25, 0x50, 0x44, 0x46],         // PDF: %PDF
+    'MP4':  [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70], // ftyp
+    'WebM': [0x1A, 0x45, 0xDF, 0xA3]          // WebM/MKV
+  };
+  
+  for (const [type, sig] of Object.entries(signatures)) {
+    if (sig.every((byte, i) => bytes[i] === byte)) {
+      return type;  // Matches!
+    }
+  }
+  return 'Unknown';
+}
+```
+
+**Key insight:** If file extension says ".jpg" but magic bytes say "PNG" = possible tampering.
+
 ---
 
 # ✅ PRESENTATION CHECKLIST
@@ -683,3 +898,9 @@ function calculateVonNeumannEntropy(eigenvalues: number[]): number {
 - [ ] Practice 10-minute timing
 - [ ] Know the 3 key formulas: CV, Sobel, Von Neumann
 - [ ] Remember: 6+1 agents, 50+ patterns, 80% dynamic weight
+- [ ] LBP: "Compare center pixel to 8 neighbors, count transitions"
+- [ ] Color Histogram: "Detect spikes > 6× mean"
+- [ ] Frame Extraction: "Canvas API + video.currentTime"
+- [ ] Flicker: "CV > 80% = high inconsistency"
+- [ ] SHA-256: "64-char hex fingerprint"
+- [ ] Magic Bytes: "Verify true file type"
