@@ -100,19 +100,20 @@ const generateAnalysisResult = (
   let verdict: VerdictType;
   let confidence: number;
   
-  // Balanced thresholds - require higher scores for deepfake verdict
-  if (score >= 55) {
+  // Conservative thresholds - avoid false positives on authentic content
+  // Live captures, phone recordings, and real media often have natural artifacts
+  if (score >= 75) {
     verdict = 'deepfake';
-    confidence = Math.min(98, score + 20);
-  } else if (score >= 40) {
+    confidence = Math.min(98, score + 10);
+  } else if (score >= 55) {
     verdict = 'suspicious';
-    confidence = Math.min(85, score + 25);
-  } else if (score >= 25) {
+    confidence = Math.min(85, score + 15);
+  } else if (score >= 35) {
     verdict = 'likely_authentic';
-    confidence = Math.min(80, 100 - score);
+    confidence = Math.min(85, 100 - score);
   } else {
     verdict = 'authentic';
-    confidence = Math.min(98, 100 - score + 10);
+    confidence = Math.min(98, 100 - score + 15);
   }
 
   const indicators: AnalysisIndicator[] = [];

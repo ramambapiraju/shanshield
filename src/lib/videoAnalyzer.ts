@@ -91,14 +91,16 @@ const analyzeFrameConsistency = (frames: ImageData[]): { score: number; descript
   let score = 0;
   let description = '';
   
-  if (coeffOfVariation > 80) {
-    score = 70 + Math.min(30, (coeffOfVariation - 80) / 2);
+  // More conservative - real videos naturally have some frame variation
+  // Only flag very high CV (> 90) as truly suspicious
+  if (coeffOfVariation > 100) {
+    score = 55 + Math.min(35, (coeffOfVariation - 100) / 3);
     description = `High frame inconsistency detected (CV: ${coeffOfVariation.toFixed(1)}%) - possible frame interpolation`;
-  } else if (coeffOfVariation > 50) {
-    score = 40 + (coeffOfVariation - 50);
+  } else if (coeffOfVariation > 70) {
+    score = 30 + (coeffOfVariation - 70);
     description = `Moderate frame variation (CV: ${coeffOfVariation.toFixed(1)}%)`;
   } else {
-    score = coeffOfVariation * 0.8;
+    score = Math.max(0, coeffOfVariation * 0.4);
     description = `Consistent frame transitions (CV: ${coeffOfVariation.toFixed(1)}%)`;
   }
   
@@ -169,14 +171,16 @@ const analyzeTemporalCoherence = (frames: ImageData[]): { score: number; descrip
   let score = 0;
   let description = '';
   
-  if (discontinuityRate > 40) {
-    score = 65 + discontinuityRate / 2;
+  // Conservative - real handheld video has motion discontinuities
+  // Only flag extremely high discontinuity (> 55%)
+  if (discontinuityRate > 55) {
+    score = 50 + discontinuityRate / 3;
     description = `Severe temporal discontinuities detected (${discontinuityRate.toFixed(1)}% of transitions)`;
-  } else if (discontinuityRate > 20) {
-    score = 35 + discontinuityRate;
+  } else if (discontinuityRate > 35) {
+    score = 25 + discontinuityRate / 2;
     description = `Moderate motion discontinuities (${discontinuityRate.toFixed(1)}%)`;
   } else {
-    score = discontinuityRate * 1.5;
+    score = Math.max(0, discontinuityRate * 0.6);
     description = `Smooth temporal flow (${discontinuityRate.toFixed(1)}% discontinuities)`;
   }
   
@@ -239,14 +243,16 @@ const analyzeFaceTracking = (frames: ImageData[]): { score: number; description:
   let score = 0;
   let description = '';
   
-  if (avgRatio > 2.5) {
-    score = 60 + Math.min(40, (avgRatio - 2.5) * 15);
+  // More conservative - faces naturally move differently than backgrounds
+  // Only flag extreme differences (> 3x)
+  if (avgRatio > 3.5) {
+    score = 50 + Math.min(40, (avgRatio - 3.5) * 12);
     description = `Face region anomaly detected - changes ${avgRatio.toFixed(2)}x faster than background`;
-  } else if (avgRatio > 1.5) {
-    score = 30 + (avgRatio - 1.5) * 30;
+  } else if (avgRatio > 2.0) {
+    score = 20 + (avgRatio - 2.0) * 20;
     description = `Moderate face region variance (ratio: ${avgRatio.toFixed(2)})`;
   } else {
-    score = avgRatio * 20;
+    score = Math.max(0, avgRatio * 10);
     description = `Natural face-background consistency (ratio: ${avgRatio.toFixed(2)})`;
   }
   
@@ -290,15 +296,16 @@ const analyzeVideoCompression = (frames: ImageData[]): { score: number; descript
   let score = 0;
   let description = '';
   
-  // High variance suggests different compression levels (re-encoding)
-  if (variance > 100 && avgArtifacts > 30) {
-    score = 60 + Math.min(40, variance / 10);
+  // Very conservative - compression is normal in real videos
+  // Only flag extreme cases
+  if (variance > 150 && avgArtifacts > 40) {
+    score = 45 + Math.min(45, variance / 15);
     description = `Multiple compression artifacts detected (variance: ${variance.toFixed(1)})`;
-  } else if (avgArtifacts > 40) {
-    score = 40 + avgArtifacts / 2;
+  } else if (avgArtifacts > 55) {
+    score = 30 + avgArtifacts / 3;
     description = `Heavy compression detected (strength: ${avgArtifacts.toFixed(1)})`;
   } else {
-    score = avgArtifacts;
+    score = Math.max(0, avgArtifacts / 2);
     description = `Normal compression level (strength: ${avgArtifacts.toFixed(1)})`;
   }
   
@@ -348,14 +355,16 @@ const analyzeMotion = (frames: ImageData[]): { score: number; description: strin
   let score = 0;
   let description = '';
   
-  if (unnaturalRate > 50) {
-    score = 60 + unnaturalRate / 2;
+  // Conservative - handheld video naturally has motion irregularities
+  // Only flag extreme irregularity (> 60%)
+  if (unnaturalRate > 65) {
+    score = 45 + unnaturalRate / 3;
     description = `Unnatural motion patterns detected (${unnaturalRate.toFixed(1)}% irregular)`;
-  } else if (unnaturalRate > 25) {
-    score = 30 + unnaturalRate;
+  } else if (unnaturalRate > 40) {
+    score = 20 + unnaturalRate / 2;
     description = `Some motion irregularities (${unnaturalRate.toFixed(1)}%)`;
   } else {
-    score = unnaturalRate;
+    score = Math.max(0, unnaturalRate * 0.4);
     description = `Natural motion flow (${unnaturalRate.toFixed(1)}% irregular)`;
   }
   
