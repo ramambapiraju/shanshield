@@ -5,13 +5,12 @@ import { analyzeVideo, type VideoAnalysisFindings } from "@/lib/videoAnalyzer";
 import { analyzeAudio, type AudioAnalysisFindings } from "@/lib/audioAnalyzer";
 import { analyzeDocument, type DocumentAnalysisFindings } from "@/lib/documentAnalyzer";
 import { type QuantumEntropyResult } from "@/lib/quantumEntropyAnalyzer";
-import { analyzeWithCloud, type CloudAnalysisResult } from "@/lib/cloudAnalyzer";
 import { analyzeWithLocalML, type LocalMLResult } from "@/lib/localMLAnalyzer";
 import { analyzeC2PA, type C2PAResult } from "@/lib/c2paAnalyzer";
 import { toast } from "sonner";
 
-// Analysis mode types
-export type AnalysisModeType = 'offline' | 'local_ml' | 'cloud_ml';
+// Analysis mode types - Offline (signal processing) or Local ML (browser-based neural network)
+export type AnalysisModeType = 'offline' | 'local_ml';
 
 interface UploadedFile {
   file: File;
@@ -215,8 +214,8 @@ export const useAnalysis = () => {
   // Reset key to force MediaUploader remount
   const [resetKey, setResetKey] = useState(0);
   
-  // Backward compatibility - isOnlineMode means cloud_ml
-  const isOnlineMode = analysisMode === 'cloud_ml';
+  // Check if using ML mode
+  const isMLMode = analysisMode === 'local_ml';
 
   const handleFilesSelected = useCallback((selectedFiles: UploadedFile[]) => {
     setFiles(selectedFiles);
@@ -269,24 +268,10 @@ export const useAnalysis = () => {
         // C2PA failure is non-critical, continue with other analysis
       }
       
-      // Step 3: Run ML analysis based on mode
-      let cloudResult: CloudAnalysisResult | null = null;
+      // Step 3: Run Local ML analysis if enabled
       let localMLResult: LocalMLResult | null = null;
       
-      if (analysisMode === 'cloud_ml') {
-        try {
-          setCurrentProgress({ step: 'Cloud ML Analysis', progress: 60 });
-          cloudResult = await analyzeWithCloud(file.file, file.type, {
-            score: analysis.score,
-            signals: analysis.signals,
-            details: analysis.details
-          });
-          toast.success("Cloud ML analysis complete!");
-        } catch (cloudError) {
-          console.error('Cloud analysis failed:', cloudError);
-          toast.error(cloudError instanceof Error ? cloudError.message : 'Cloud analysis failed. Using offline results.');
-        }
-      } else if (analysisMode === 'local_ml') {
+      if (analysisMode === 'local_ml') {
         try {
           localMLResult = await analyzeWithLocalML(
             file.file,
@@ -331,38 +316,8 @@ export const useAnalysis = () => {
         }
       }
       
-      // If we have cloud results, enhance the analysis
-      if (cloudResult) {
-        analysisResult = {
-          ...analysisResult,
-          verdict: cloudResult.verdict,
-          confidence: cloudResult.combinedConfidence,
-          analysisMode: 'cloud_ml',
-          mlSignals: cloudResult.mlSignals,
-          aiToolDetected: cloudResult.aiToolDetected,
-          reasoning: [
-            `🤖 Cloud ML Analysis (${cloudResult.modelUsed})`,
-            cloudResult.reasoning,
-            `ML Confidence: ${cloudResult.mlScore}%`,
-            `Offline Score: ${cloudResult.offlineScore}%`,
-            `Combined Confidence: ${cloudResult.combinedConfidence}%`,
-            ...(cloudResult.aiToolDetected ? [`⚠️ AI Tool Detected: ${cloudResult.aiToolDetected}`] : []),
-            ...(cloudResult.mlSignals.length > 0 ? [`ML Signals: ${cloudResult.mlSignals.join(', ')}`] : []),
-            '---',
-            ...analysisResult.reasoning
-          ],
-          indicators: [
-            ...(cloudResult.mlSignals.map((signal, i) => ({
-              name: `ML Signal ${i + 1}`,
-              detected: true,
-              confidence: cloudResult.mlScore,
-              description: signal
-            }))),
-            ...analysisResult.indicators
-          ]
-        };
-      } else if (localMLResult) {
-        // Enhance with local ML results
+      // If we have local ML results, enhance the analysis
+      if (localMLResult) {
         analysisResult = {
           ...analysisResult,
           verdict: localMLResult.verdict,
@@ -419,7 +374,7 @@ export const useAnalysis = () => {
       setIsAnalyzing(false);
       setAnalysisComplete(true);
     }
-  }, [files, isFieldMode, isOnlineMode]);
+  }, [files, isFieldMode, analysisMode]);
 
   const handleAnalysisComplete = useCallback(() => {
     if (files.length === 0 || !realAnalysisResult) return;
@@ -436,10 +391,6 @@ export const useAnalysis = () => {
 
   const handleFieldModeChange = useCallback((enabled: boolean) => {
     setIsFieldMode(enabled);
-  }, []);
-
-  const handleOnlineModeChange = useCallback((enabled: boolean) => {
-    setAnalysisMode(enabled ? 'cloud_ml' : 'offline');
   }, []);
 
   const handleAnalysisModeChange = useCallback((mode: AnalysisModeType) => {
@@ -462,7 +413,7 @@ export const useAnalysis = () => {
     analysisComplete,
     result,
     isFieldMode,
-    isOnlineMode,
+    isMLMode,
     analysisMode,
     currentProgress,
     resetKey,
@@ -471,7 +422,6 @@ export const useAnalysis = () => {
     handleAnalysisComplete,
     handleProgress,
     handleFieldModeChange,
-    handleOnlineModeChange,
     handleAnalysisModeChange,
     resetAnalysis
   };
