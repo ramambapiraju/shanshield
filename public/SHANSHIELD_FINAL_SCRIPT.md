@@ -14,12 +14,14 @@
 | 5 | Audio/Temporal | **FFT**, **Autocorrelation**, **Frame diff** |
 | 6 | Explainability | **SHA-256**, **Glass box**, **Court-ready** |
 | 7 | Field Mode | **Zero API calls**, **GDPR compliant** |
-| 8 | Metadata Agent | **Shannon entropy**, **PDF parsing** |
+| 8 | Metadata Agent | **Shannon entropy**, **Magic bytes**, **PDF parsing** |
 | 9 | AI Signature | **50+ patterns**, **10%→80% dynamic weight** |
-| 10 | Quantum Entropy | **Von Neumann**, **Density matrix** |
-| 11 | Arbiter | **Dempster-Shafer**, **Belief fusion** |
-| 12 | Demo | **Live upload** |
-| 13 | Thank You | **Summary + Q&A** |
+| 10 | Quantum Entropy | **Von Neumann**, **Density matrix**, **Rényi entropy** |
+| 11 | Arbiter | **Dempster-Shafer**, **Belief fusion**, **Conflict detection** |
+| 12 | Demo | **Live upload**, **AI filename detection** |
+| 13 | Roadmap | **Neural networks (planned)**, **Biometric (planned)**, **C2PA (planned)** |
+| 14 | Tech & Credits | **React 18**, **Tailwind**, **Lovable** |
+| 15 | Thank You | **Summary + Q&A** |
 
 ---
 
@@ -416,7 +418,66 @@ if (metadataResult.score >= 85) {
 
 ---
 
-## SLIDE 13: THANK YOU (30 sec)
+## SLIDE 13: FUTURE ROADMAP (45 sec)
+
+### 📍 SAY THIS:
+> "What's coming next for SHANSHIELD:
+>
+> **Neural Network Models (Planned):**
+> - EfficientNetV2-L for GAN/Diffusion fingerprinting
+> - Generator identification: Sora, Runway, DALL-E 4
+> - Requires WebGPU/WASM inference
+>
+> **Advanced Voice Analysis (Planned):**
+> - RawNet3 vocoder detection
+> - Clone ID for ElevenLabs, XTTS, Bark
+>
+> **Biometric Analysis (Planned):**
+> - rPPG heartbeat detection (0.8-2Hz)
+> - 478-point facial landmark tracking
+>
+> **Provenance Verification (Planned):**
+> - C2PA content credentials
+> - Blockchain audit trail
+>
+> These require WebGPU and server-side processing. Current implementation is 100% browser-native."
+
+### 🎯 HIGHLIGHT:
+- Neural networks require WebGPU
+- Current system = fully functional offline
+- Roadmap shows growth potential
+
+---
+
+## SLIDE 14: TECH STACK & CREDITS (30 sec)
+
+### 📍 SAY THIS:
+> "Built with complete transparency:
+>
+> **Technology Stack:**
+> - React 18 + TypeScript
+> - Vite 5, Tailwind CSS
+> - shadcn/ui + Radix components
+> - jsPDF for forensic reports
+>
+> **Implemented Algorithms:**
+> - Noise, Sobel Edge, LBP — Visual
+> - FFT, Autocorrelation — Audio
+> - Frame diff, Flicker — Temporal
+> - Shannon Entropy, SHA-256 — Metadata
+> - Von Neumann, Rényi — Quantum
+> - Dempster-Shafer — Arbiter
+>
+> Built with Lovable AI platform. 100% client-side, no external AI APIs for detection."
+
+### 🎯 HIGHLIGHT:
+- React 18 + TypeScript
+- All algorithms are real and implemented
+- Built with Lovable
+
+---
+
+## SLIDE 15: THANK YOU (30 sec)
 
 ### 📍 SAY THIS:
 > "SHANSHIELD summary:
@@ -890,12 +951,12 @@ function detectFileSignature(bytes: Uint8Array): string {
 
 ---
 
-# ✅ PRESENTATION CHECKLIST
+# ✅ PRESENTATION CHECKLIST (15 Slides)
 
 - [ ] Open SHANSHIELD in browser
 - [ ] Press F5 for Presentation Mode
 - [ ] Have test files ready (kling_test.jpg, real_photo.jpg)
-- [ ] Practice 10-minute timing
+- [ ] Practice 10-minute timing (15 slides total)
 - [ ] Know the 3 key formulas: CV, Sobel, Von Neumann
 - [ ] Remember: 6+1 agents, 50+ patterns, 80% dynamic weight
 - [ ] LBP: "Compare center pixel to 8 neighbors, count transitions"
@@ -904,3 +965,5 @@ function detectFileSignature(bytes: Uint8Array): string {
 - [ ] Flicker: "CV > 80% = high inconsistency"
 - [ ] SHA-256: "64-char hex fingerprint"
 - [ ] Magic Bytes: "Verify true file type"
+- [ ] Roadmap: "Neural networks, biometrics require WebGPU — planned features"
+- [ ] Tech Stack: "React 18, TypeScript, Vite, Tailwind, shadcn/ui"
