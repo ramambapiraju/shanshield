@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { 
   Cpu, 
   Cloud, 
@@ -12,17 +11,17 @@ import {
   CheckCircle,
   AlertCircle
 } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import type { AnalysisModeType } from "@/hooks/useAnalysis";
 
 interface AnalysisModeToggleProps {
-  isOnlineMode: boolean;
-  onModeChange: (online: boolean) => void;
+  analysisMode: AnalysisModeType;
+  onModeChange: (mode: AnalysisModeType) => void;
   isConnected?: boolean;
 }
 
 const AnalysisModeToggle = ({ 
-  isOnlineMode, 
+  analysisMode, 
   onModeChange,
   isConnected = true 
 }: AnalysisModeToggleProps) => {
@@ -36,148 +35,133 @@ const AnalysisModeToggle = ({
             Analysis Mode
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          <div className={cn(
-            "flex items-center gap-1.5 text-xs font-medium transition-colors",
-            !isOnlineMode ? "text-accent" : "text-muted-foreground"
-          )}>
-            <WifiOff className="w-3.5 h-3.5" />
-            <span>Offline</span>
-          </div>
-          <Switch
-            checked={isOnlineMode}
-            onCheckedChange={onModeChange}
-            className="data-[state=checked]:bg-primary"
-          />
-          <div className={cn(
-            "flex items-center gap-1.5 text-xs font-medium transition-colors",
-            isOnlineMode ? "text-primary" : "text-muted-foreground"
-          )}>
-            <Cloud className="w-3.5 h-3.5" />
-            <span>Cloud ML</span>
-          </div>
-        </div>
+      </div>
+
+      {/* 3-Mode Selector */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <button
+          onClick={() => onModeChange('offline')}
+          className={cn(
+            "flex flex-col items-center gap-1 p-3 rounded-lg border transition-all",
+            analysisMode === 'offline'
+              ? "bg-accent/20 border-accent text-accent"
+              : "bg-background/30 border-border/50 text-muted-foreground hover:border-accent/50"
+          )}
+        >
+          <WifiOff className="w-5 h-5" />
+          <span className="text-xs font-medium">Offline</span>
+        </button>
+        <button
+          onClick={() => onModeChange('local_ml')}
+          className={cn(
+            "flex flex-col items-center gap-1 p-3 rounded-lg border transition-all",
+            analysisMode === 'local_ml'
+              ? "bg-warning/20 border-warning text-warning"
+              : "bg-background/30 border-border/50 text-muted-foreground hover:border-warning/50"
+          )}
+        >
+          <Brain className="w-5 h-5" />
+          <span className="text-xs font-medium">Local ML</span>
+        </button>
+        <button
+          onClick={() => onModeChange('cloud_ml')}
+          className={cn(
+            "flex flex-col items-center gap-1 p-3 rounded-lg border transition-all",
+            analysisMode === 'cloud_ml'
+              ? "bg-primary/20 border-primary text-primary"
+              : "bg-background/30 border-border/50 text-muted-foreground hover:border-primary/50"
+          )}
+        >
+          <Cloud className="w-5 h-5" />
+          <span className="text-xs font-medium">Cloud ML</span>
+        </button>
       </div>
 
       {/* Mode Details */}
-      {isOnlineMode ? (
+      {analysisMode === 'cloud_ml' && (
         <div className="space-y-3">
-          {/* Cloud ML Mode Active */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-lg border border-primary/30">
-              <Brain className="w-4 h-4 text-primary" />
-              <span className="text-xs text-primary">Neural Network AI</span>
-            </div>
-            <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-lg border border-primary/30">
-              <Cloud className="w-4 h-4 text-primary" />
-              <span className="text-xs text-primary">Cloud Processing</span>
-            </div>
-            <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-lg border border-primary/30">
-              <Zap className="w-4 h-4 text-primary" />
-              <span className="text-xs text-primary">Advanced Detection</span>
-            </div>
-            <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-lg border border-primary/30">
-              <CheckCircle className="w-4 h-4 text-primary" />
-              <span className="text-xs text-primary">Higher Accuracy</span>
-            </div>
-          </div>
-
-          {/* Status */}
           <div className="bg-background/30 rounded-lg p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Processing Mode</span>
-              <div className="flex items-center gap-1">
-                <Cloud className="w-3 h-3 text-primary" />
-                <span className="text-xs text-primary">Cloud + Local Hybrid</span>
-              </div>
+              <span className="text-xs text-muted-foreground">Processing</span>
+              <span className="text-xs text-primary">Cloud + Local Hybrid</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">ML Model</span>
-              <div className="flex items-center gap-1">
-                <Brain className="w-3 h-3 text-primary" />
-                <span className="text-xs text-primary">Gemini 2.5 Flash</span>
-              </div>
+              <span className="text-xs text-primary">Gemini 2.5 Flash</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Connection</span>
-              <div className="flex items-center gap-1">
-                {isConnected ? (
-                  <>
-                    <Wifi className="w-3 h-3 text-success" />
-                    <span className="text-xs text-success">Connected</span>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="w-3 h-3 text-destructive" />
-                    <span className="text-xs text-destructive">Disconnected</span>
-                  </>
-                )}
-              </div>
+              {isConnected ? (
+                <span className="text-xs text-success flex items-center gap-1">
+                  <Wifi className="w-3 h-3" /> Connected
+                </span>
+              ) : (
+                <span className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> Disconnected
+                </span>
+              )}
             </div>
           </div>
-
-          {/* Info Note */}
           <div className="flex items-start gap-2 p-2 bg-primary/10 border border-primary/30 rounded-lg">
             <Globe className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
             <p className="text-xs text-primary/90">
-              <strong>Cloud ML Mode:</strong> Combines local analysis with cloud-based neural networks 
-              for highest accuracy. Media is processed securely.
+              <strong>Cloud ML:</strong> Highest accuracy using cloud neural networks.
             </p>
           </div>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {/* Offline Mode Active */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex items-center gap-2 p-2 bg-accent/10 rounded-lg border border-accent/30">
-              <Cpu className="w-4 h-4 text-accent" />
-              <span className="text-xs text-accent">On-Device Inference</span>
-            </div>
-            <div className="flex items-center gap-2 p-2 bg-accent/10 rounded-lg border border-accent/30">
-              <Lock className="w-4 h-4 text-accent" />
-              <span className="text-xs text-accent">No Data Uploaded</span>
-            </div>
-            <div className="flex items-center gap-2 p-2 bg-accent/10 rounded-lg border border-accent/30">
-              <Zap className="w-4 h-4 text-accent" />
-              <span className="text-xs text-accent">Instant Analysis</span>
-            </div>
-            <div className="flex items-center gap-2 p-2 bg-accent/10 rounded-lg border border-accent/30">
-              <Shield className="w-4 h-4 text-accent" />
-              <span className="text-xs text-accent">Air-Gap Ready</span>
-            </div>
-          </div>
+      )}
 
-          {/* Status */}
+      {analysisMode === 'local_ml' && (
+        <div className="space-y-3">
           <div className="bg-background/30 rounded-lg p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Processing Mode</span>
-              <div className="flex items-center gap-1">
-                <CheckCircle className="w-3 h-3 text-success" />
-                <span className="text-xs text-success">Browser-Native</span>
-              </div>
+              <span className="text-xs text-muted-foreground">Processing</span>
+              <span className="text-xs text-warning">Browser ML (WebGPU)</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">ML Model</span>
+              <span className="text-xs text-warning">MobileNetV4 (Local)</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Privacy</span>
+              <span className="text-xs text-success flex items-center gap-1">
+                <Lock className="w-3 h-3" /> 100% Local
+              </span>
+            </div>
+          </div>
+          <div className="flex items-start gap-2 p-2 bg-warning/10 border border-warning/30 rounded-lg">
+            <Brain className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-warning/90">
+              <strong>Local ML:</strong> Real ML in your browser. No API needed - hackathon ready!
+            </p>
+          </div>
+        </div>
+      )}
+
+      {analysisMode === 'offline' && (
+        <div className="space-y-3">
+          <div className="bg-background/30 rounded-lg p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Processing</span>
+              <span className="text-xs text-success flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" /> Browser-Native
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">External APIs</span>
-              <div className="flex items-center gap-1">
-                <CheckCircle className="w-3 h-3 text-success" />
-                <span className="text-xs text-success">None Required</span>
-              </div>
+              <span className="text-xs text-success">None Required</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Privacy Status</span>
-              <div className="flex items-center gap-1">
-                <Lock className="w-3 h-3 text-success" />
-                <span className="text-xs text-success">Maximum Privacy</span>
-              </div>
+              <span className="text-xs text-muted-foreground">Privacy</span>
+              <span className="text-xs text-success flex items-center gap-1">
+                <Lock className="w-3 h-3" /> Maximum Privacy
+              </span>
             </div>
           </div>
-
-          {/* Info Note */}
           <div className="flex items-start gap-2 p-2 bg-accent/10 border border-accent/30 rounded-lg">
             <WifiOff className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
             <p className="text-xs text-accent/90">
-              <strong>Offline Mode:</strong> All analysis runs 100% in your browser using 
-              classical signal processing. No internet required after page load.
+              <strong>Offline:</strong> Classical signal processing. Air-gap ready.
             </p>
           </div>
         </div>
