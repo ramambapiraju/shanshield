@@ -2095,24 +2095,6 @@ const moduleWeights = {
             </div>
           </div>
 
-          {/* Credits Banner */}
-          <div className="p-5 bg-gradient-to-r from-[#8B5CF6]/20 via-primary/10 to-cyan-500/20 border-2 border-primary/50 rounded-xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#EC4899] flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">♥</span>
-                </div>
-                <div>
-                  <h4 className="text-lg font-bold text-foreground">Built with Lovable</h4>
-                  <p className="text-sm text-muted-foreground">AI-powered development platform for rapid prototyping</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-foreground font-semibold">Offline + Cloud ML</div>
-                <div className="text-xs text-muted-foreground">Dual-mode detection system</div>
-              </div>
-            </div>
-          </div>
 
           {/* Technical Note */}
           <div className="p-4 bg-card border border-green-500/30 rounded-xl">
