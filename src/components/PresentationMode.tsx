@@ -917,20 +917,24 @@ for (const corner of corners) {
             <div className="p-4 bg-card border border-red-500/40 rounded-xl space-y-3">
               <h3 className="text-xl font-bold text-red-400 flex items-center gap-2">
                 <Zap className="w-5 h-5" />
-                Dynamic Weight Override
+                Dynamic Weight Override (10% → 80%)
               </h3>
               <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// If AI tool detected, metadata DOMINATES
-const metadataWeight = 
-  metadataScore >= 70 ? 0.50 :  // 50% weight!
-  metadataScore >= 40 ? 0.30 :  // 30% weight
-  0.15;                          // Default
-
-// Ensure detection even if pixels look clean
-if (metadataResult.score >= 90) {
-  overallScore = Math.max(overallScore, 75);
+{`// STEP 8: DYNAMIC WEIGHTING (imageAnalyzer.ts)
+if (metadataResult.score >= 85) {
+  metadataWeight = 0.80;  // AI FOUND = 80%!
+  pixelWeight = 0.20;
 } else if (metadataResult.score >= 70) {
-  overallScore = Math.max(overallScore, 55);
+  metadataWeight = 0.60;  // Strong indicator
+  pixelWeight = 0.40;
+} else {
+  metadataWeight = 0.15;  // Default
+  pixelWeight = 0.85;
+}
+
+// STEP 11: HARD OVERRIDES - Ensure correct verdict
+if (metadataResult.detectedAITool && score >= 85) {
+  overallScore = Math.max(overallScore, 88);
 }`}</pre>
             </div>
 
@@ -1156,46 +1160,51 @@ const combineBeliefs = (agents) => {
             <div className="p-4 bg-card border border-primary/40 rounded-xl space-y-3">
               <h3 className="text-xl font-bold text-primary flex items-center gap-2">
                 <Target className="w-5 h-5" />
-                Dynamic Weighted Scoring
+                Balanced Dynamic Weighting
               </h3>
               <pre className="p-2 bg-background/80 rounded-lg font-mono text-xs text-muted-foreground overflow-x-auto">
-{`// DYNAMIC WEIGHTING - AI Signature dominates!
-const metadataWeight = 
-  metadataScore >= 70 ? 0.50 :  // AI tool found!
-  metadataScore >= 40 ? 0.30 :  // Possible AI
-  0.12;                          // Default
+{`// BALANCED WEIGHTING (imageAnalyzer.ts)
+// Only aggressive when we have CONCRETE evidence
+if (metadataResult.score >= 85) {
+  metadataWeight = 0.80;  // AI tool CONFIRMED
+  pixelWeight = 0.20;
+} else if (metadataResult.score >= 70) {
+  metadataWeight = 0.60;  // Strong indicator
+  pixelWeight = 0.40;
+} else {
+  metadataWeight = 0.15;  // No AI evidence
+  pixelWeight = 0.85;     // Pixel primary
+}
 
-const pixelWeight = 1 - metadataWeight - 0.08;
-
-const finalScore = 
-  metadata * metadataWeight +    // 12-50%!
-  pixel    * pixelWeight    +    // 42-80%
-  quantum  * 0.08;               // 8%`}</pre>
+// Authentic boost: dampen score for clean images
+if (metadataScore < 25 && highCount === 0) {
+  overallScore *= 0.80;  // Reduce false positives
+}`}</pre>
               <div className="mt-3 space-y-1">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-red-400" />
-                  <span className="text-xs text-muted-foreground">AI Signature: <strong className="text-red-400">12-50%</strong></span>
+                  <span className="text-xs text-muted-foreground">AI Detected: <strong className="text-red-400">15% → 80%</strong></span>
                   <div className="flex-1 h-1 bg-red-400/30 rounded">
-                    <div className="h-1 bg-red-400 rounded" style={{ width: '50%' }} />
+                    <div className="h-1 bg-red-400 rounded" style={{ width: '80%' }} />
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-400" />
-                  <span className="text-xs text-muted-foreground">Pixel Analysis: 42-80%</span>
+                  <span className="text-xs text-muted-foreground">Pixel Analysis: 20% → 85%</span>
                   <div className="flex-1 h-1 bg-blue-400/30 rounded">
-                    <div className="h-1 bg-blue-400 rounded" style={{ width: '60%' }} />
+                    <div className="h-1 bg-blue-400 rounded" style={{ width: '70%' }} />
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-purple-400" />
-                  <span className="text-xs text-muted-foreground">Quantum Entropy: 8%</span>
-                  <div className="flex-1 h-1 bg-purple-400/30 rounded">
-                    <div className="h-1 bg-purple-400 rounded" style={{ width: '8%' }} />
+                  <div className="w-2 h-2 rounded-full bg-green-400" />
+                  <span className="text-xs text-muted-foreground">Authentic Boost: Dampen false positives</span>
+                  <div className="flex-1 h-1 bg-green-400/30 rounded">
+                    <div className="h-1 bg-green-400 rounded" style={{ width: '20%' }} />
                   </div>
                 </div>
               </div>
               <div className="p-2 bg-red-500/10 border border-red-500/30 rounded-lg text-xs text-center">
-                <span className="text-red-400 font-bold">When AI tool detected → Metadata gets 50% weight!</span>
+                <span className="text-red-400 font-bold">AI tool detected → 80% metadata weight + HARD OVERRIDE to 88%!</span>
               </div>
             </div>
           </div>
