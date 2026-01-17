@@ -212,6 +212,7 @@ export const useAnalysis = () => {
     setIsAnalyzing(true);
     setAnalysisComplete(false);
     setResult(null);
+    setRealAnalysisResult(null);
 
     const file = files[0];
     
@@ -226,7 +227,6 @@ export const useAnalysis = () => {
         analysis = toUnifiedAnalysis(result, 'video', result.quantumEntropy);
       } else if (file.type === 'audio') {
         const result = await analyzeAudio(file.file);
-        // AudioQuantumEntropyResult is compatible with QuantumEntropyResult for display
         analysis = toUnifiedAnalysis(result, 'audio', result.quantumEntropy as unknown as QuantumEntropyResult | undefined);
       } else {
         const result = await analyzeDocument(file.file);
@@ -234,23 +234,36 @@ export const useAnalysis = () => {
       }
       
       const analysisEndTime = performance.now();
-      setProcessingTimeMs(analysisEndTime - analysisStartTime);
+      const timeMs = analysisEndTime - analysisStartTime;
+      setProcessingTimeMs(timeMs);
       setRealAnalysisResult(analysis);
-      // Signal that analysis computation is done - pipeline will call handleAnalysisComplete
+      
+      // Generate result directly here instead of relying on pipeline callback
+      const timeInSeconds = timeMs / 1000;
+      const analysisResult = generateAnalysisResult(file, isFieldMode, analysis, timeInSeconds);
+      setResult(analysisResult);
       setIsAnalyzing(false);
+      setAnalysisComplete(true);
     } catch (error) {
       console.error('Analysis failed:', error);
       const analysisEndTime = performance.now();
-      setProcessingTimeMs(analysisEndTime - analysisStartTime);
-      setRealAnalysisResult({
+      const timeMs = analysisEndTime - analysisStartTime;
+      setProcessingTimeMs(timeMs);
+      const errorAnalysis: UnifiedAnalysis = {
         score: 30,
         signals: ['Analysis encountered an error'],
         details: { error: { score: 30, description: 'Could not complete analysis' } },
         mediaType: file.type
-      });
+      };
+      setRealAnalysisResult(errorAnalysis);
+      
+      const timeInSeconds = timeMs / 1000;
+      const analysisResult = generateAnalysisResult(file, isFieldMode, errorAnalysis, timeInSeconds);
+      setResult(analysisResult);
       setIsAnalyzing(false);
+      setAnalysisComplete(true);
     }
-  }, [files]);
+  }, [files, isFieldMode]);
 
   const handleAnalysisComplete = useCallback(() => {
     if (files.length === 0 || !realAnalysisResult) return;
