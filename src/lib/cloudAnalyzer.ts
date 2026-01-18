@@ -20,23 +20,56 @@ export interface OfflineAnalysisData {
   details: Record<string, { score: number; description: string }>;
 }
 
+// Maximum image dimension for cloud analysis
+const MAX_IMAGE_DIMENSION = 1024;
+const MAX_BASE64_SIZE = 1024 * 1024; // 1MB max for base64
+
 /**
- * Convert a File to base64 string
+ * Compress and resize image to reduce payload size
  */
-async function fileToBase64(file: File): Promise<string> {
+async function compressImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      resolve(result);
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    img.onload = () => {
+      // Calculate new dimensions maintaining aspect ratio
+      let { width, height } = img;
+      
+      if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
+        if (width > height) {
+          height = Math.round((height * MAX_IMAGE_DIMENSION) / width);
+          width = MAX_IMAGE_DIMENSION;
+        } else {
+          width = Math.round((width * MAX_IMAGE_DIMENSION) / height);
+          height = MAX_IMAGE_DIMENSION;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      ctx?.drawImage(img, 0, 0, width, height);
+      
+      // Compress to JPEG with 0.7 quality
+      const base64 = canvas.toDataURL('image/jpeg', 0.7);
+      URL.revokeObjectURL(img.src);
+      
+      console.log(`Image compressed: ${file.size} bytes -> ~${Math.round(base64.length * 0.75)} bytes (${width}x${height})`);
+      resolve(base64);
     };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error('Failed to load image for compression'));
+    };
+    
+    img.src = URL.createObjectURL(file);
   });
 }
 
 /**
- * Extract first frame from video as base64
+ * Extract first frame from video as base64 (compressed)
  */
 async function extractVideoFrame(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -44,16 +77,39 @@ async function extractVideoFrame(file: File): Promise<string> {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
+    // Set a timeout for video loading
+    const timeout = setTimeout(() => {
+      URL.revokeObjectURL(video.src);
+      reject(new Error('Video frame extraction timed out'));
+    }, 10000);
+    
     video.onloadeddata = () => {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx?.drawImage(video, 0, 0);
-      const base64 = canvas.toDataURL('image/jpeg', 0.8);
+      clearTimeout(timeout);
+      
+      // Limit video frame size
+      let width = video.videoWidth;
+      let height = video.videoHeight;
+      
+      if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
+        if (width > height) {
+          height = Math.round((height * MAX_IMAGE_DIMENSION) / width);
+          width = MAX_IMAGE_DIMENSION;
+        } else {
+          width = Math.round((width * MAX_IMAGE_DIMENSION) / height);
+          height = MAX_IMAGE_DIMENSION;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      ctx?.drawImage(video, 0, 0, width, height);
+      const base64 = canvas.toDataURL('image/jpeg', 0.7);
       URL.revokeObjectURL(video.src);
       resolve(base64);
     };
     
     video.onerror = () => {
+      clearTimeout(timeout);
       URL.revokeObjectURL(video.src);
       reject(new Error('Failed to load video'));
     };
@@ -73,9 +129,22 @@ export async function analyzeWithCloud(
 ): Promise<CloudAnalysisResult> {
   let imageBase64: string | null = null;
   
-  // Convert media to base64 for vision analysis
+  console.log(`Cloud analysis starting for ${mediaType}: ${file.name} (${file.size} bytes)`);
+  
+  // Convert media to base64 for vision analysis (with compression)
   if (mediaType === 'image') {
-    imageBase64 = await fileToBase64(file);
+    try {
+      imageBase64 = await compressImage(file);
+    } catch (e) {
+      console.warn('Image compression failed, trying raw:', e);
+      // Fallback to raw file if compression fails
+      imageBase64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
   } else if (mediaType === 'video') {
     try {
       imageBase64 = await extractVideoFrame(file);
@@ -84,33 +153,57 @@ export async function analyzeWithCloud(
     }
   }
   
-  // Call the edge function
-  const { data, error } = await supabase.functions.invoke('analyze-media', {
-    body: {
-      imageBase64,
-      mediaType,
-      fileName: file.name,
-      offlineAnalysis
+  // Warn if base64 is still too large
+  if (imageBase64 && imageBase64.length > MAX_BASE64_SIZE) {
+    console.warn(`Image base64 is large: ${Math.round(imageBase64.length / 1024)}KB - analysis may be slow`);
+  }
+  
+  console.log(`Calling edge function with ${imageBase64 ? Math.round(imageBase64.length / 1024) + 'KB image' : 'no image'}`);
+  
+  // Call the edge function with timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+  
+  try {
+    const { data, error } = await supabase.functions.invoke('analyze-media', {
+      body: {
+        imageBase64,
+        mediaType,
+        fileName: file.name,
+        offlineAnalysis
+      }
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (error) {
+      console.error('Cloud analysis error:', error);
+      throw new Error(error.message || 'Cloud analysis failed');
     }
-  });
-  
-  if (error) {
-    console.error('Cloud analysis error:', error);
-    throw new Error(error.message || 'Cloud analysis failed');
+    
+    // Handle rate limit or payment errors
+    if (data?.code === 'RATE_LIMIT') {
+      throw new Error('Rate limit exceeded. Please try again in a moment.');
+    }
+    
+    if (data?.code === 'PAYMENT_REQUIRED') {
+      throw new Error('API credits exhausted. Please add credits to continue.');
+    }
+    
+    if (data?.error) {
+      throw new Error(data.error);
+    }
+    
+    console.log('Cloud analysis complete:', data.verdict, data.confidence + '%');
+    
+    return data as CloudAnalysisResult;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error('Cloud analysis timed out. Please try a smaller image or use offline mode.');
+    }
+    
+    throw err;
   }
-  
-  // Handle rate limit or payment errors
-  if (data?.code === 'RATE_LIMIT') {
-    throw new Error('Rate limit exceeded. Please try again in a moment.');
-  }
-  
-  if (data?.code === 'PAYMENT_REQUIRED') {
-    throw new Error('API credits exhausted. Please add credits to continue.');
-  }
-  
-  if (data?.error) {
-    throw new Error(data.error);
-  }
-  
-  return data as CloudAnalysisResult;
 }
