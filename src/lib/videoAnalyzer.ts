@@ -91,19 +91,19 @@ const analyzeFrameConsistency = (frames: ImageData[]): { score: number; descript
   let score = 0;
   let description = '';
   
-  // More aggressive detection - deepfakes often show frame-to-frame inconsistencies
-  // that real cameras don't produce. Lower thresholds to catch more manipulation.
-  if (coeffOfVariation > 60) {
-    score = 55 + Math.min(35, (coeffOfVariation - 60) / 2);
-    description = `High frame inconsistency detected (CV: ${coeffOfVariation.toFixed(1)}%) - possible frame interpolation`;
-  } else if (coeffOfVariation > 35) {
-    score = 35 + (coeffOfVariation - 35);
-    description = `Moderate frame variation (CV: ${coeffOfVariation.toFixed(1)}%) - potential manipulation`;
-  } else if (coeffOfVariation > 20) {
-    score = 15 + coeffOfVariation * 0.5;
-    description = `Some frame variation detected (CV: ${coeffOfVariation.toFixed(1)}%)`;
+  // AGGRESSIVE detection - deepfakes often show frame-to-frame inconsistencies
+  // that real cameras don't produce. Very low thresholds to catch manipulation.
+  if (coeffOfVariation > 45) {
+    score = 65 + Math.min(30, (coeffOfVariation - 45) / 1.5);
+    description = `High frame inconsistency detected (CV: ${coeffOfVariation.toFixed(1)}%) - likely manipulation`;
+  } else if (coeffOfVariation > 25) {
+    score = 45 + (coeffOfVariation - 25);
+    description = `Suspicious frame variation (CV: ${coeffOfVariation.toFixed(1)}%) - potential deepfake`;
+  } else if (coeffOfVariation > 15) {
+    score = 20 + (coeffOfVariation - 15) * 2;
+    description = `Elevated frame variation (CV: ${coeffOfVariation.toFixed(1)}%) - warrants scrutiny`;
   } else {
-    score = Math.max(0, coeffOfVariation * 0.5);
+    score = Math.max(0, coeffOfVariation);
     description = `Consistent frame transitions (CV: ${coeffOfVariation.toFixed(1)}%)`;
   }
   
@@ -454,12 +454,12 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
         const pixelWeight = 1 - metadataWeight - 0.05; // Reserve 5% for quantum
         
         const pixelScore = (
-          frameConsistency.score * 0.28 +    // Increased from 0.20 - key deepfake indicator
+          frameConsistency.score * 0.32 +    // Highest weight - key deepfake indicator
           temporalCoherence.score * 0.20 +
-          faceTracking.score * 0.18 +
+          faceTracking.score * 0.16 +
           compressionAnalysis.score * 0.12 +
           motionAnalysis.score * 0.12 +
-          audioVideoSync.score * 0.10
+          audioVideoSync.score * 0.08
         );
         
         const quantumScore = quantumEntropy ? quantumEntropy.anomalyScore * 100 : 0;
