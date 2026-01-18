@@ -794,7 +794,7 @@ const cv = (stdDev / avgDiff) * 100;
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span><strong className="text-foreground">No data leaves device</strong> — GDPR compliant</span>
+                  <span><strong className="text-foreground">No data leaves device</strong> — complete privacy</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-400" />
@@ -834,7 +834,7 @@ const cv = (stdDev / avgDiff) * 100;
                 </li>
                 <li className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-blue-400" />
-                  <span><strong className="text-foreground">No external APIs</strong> — runs on Supabase Edge Functions</span>
+                  <span><strong className="text-foreground">Secure backend</strong> — runs on Supabase Edge Functions</span>
                 </li>
               </ul>
               <div className="p-3 bg-blue-500/10 rounded-lg">
@@ -1722,7 +1722,7 @@ if (manifestStore?.activeManifest) {
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span><strong className="text-foreground">No data leaves device</strong> — GDPR compliant</span>
+                  <span><strong className="text-foreground">No data leaves device</strong> — complete privacy</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-400" />
@@ -1762,7 +1762,7 @@ if (manifestStore?.activeManifest) {
                 </li>
                 <li className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-blue-400" />
-                  <span><strong className="text-foreground">No external APIs</strong> — runs on Supabase Edge Functions</span>
+                  <span><strong className="text-foreground">Secure backend</strong> — runs on Supabase Edge Functions</span>
                 </li>
               </ul>
               <div className="mt-4 p-3 bg-blue-500/10 rounded-lg">
@@ -1790,7 +1790,7 @@ const moduleWeights = {
   offline: 0.05      // Browser-based signals
 };
 // Ensemble score → Verdict with full reasoning`}</pre>
-            <p className="text-xs text-primary font-semibold mt-2">→ Pre-trained model. No external APIs — runs on Supabase Edge Functions (Lovable Cloud).</p>
+            <p className="text-xs text-primary font-semibold mt-2">→ Pre-trained model runs on Supabase Edge Functions (Lovable Cloud).</p>
           </div>
         </div>
       )
