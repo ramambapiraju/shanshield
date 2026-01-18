@@ -653,11 +653,10 @@ class QuantumPreparedness {
    *    - Can't be faked without actual human presence
    */
   biologicalAnchors = [
-    "rPPG_heartbeat",         // Blood flow in skin
-    "micro_expressions",       // Involuntary facial movements  
-    "pupil_dilation",         // Physiological response
+    "rPPG_heartbeat",         // Blood flow in skin (future)
+    "pupil_dilation",         // Physiological response (future)
     "thermal_signature",       // Body heat patterns (future)
-    "voice_micro_tremors"      // Involuntary vocal cord movements
+    "voice_micro_tremors"      // Involuntary vocal cord movements (future)
   ];
   
   // LAYER 3: Semantic Understanding
@@ -1008,9 +1007,9 @@ class CloudAnalyzer:
         self.models = {
             "visual_ensemble": self.load_visual_ensemble(),      # 5 different models
             "audio_full": self.load_audio_models(),              # RawNet3 + AASIST
-            "temporal_rppg": self.load_rppg_model(),             # Full heartbeat detection
+            "temporal_analysis": self.load_temporal_model(),     # Frame consistency
             "metadata_c2pa": self.load_c2pa_verifier(),          # C2PA verification
-            "cross_modal": self.load_cross_modal_detector()      # Lip-sync + emotion
+            "pattern_detector": self.load_pattern_detector()     # GAN/diffusion artifacts
         }
         
         # Redis for caching results (24-hour TTL)
@@ -1052,8 +1051,8 @@ class CloudAnalyzer:
                 # This is CPU-intensive but very reliable
                 results["biological"] = await self.run_rppg_analysis(frames)
             
-            # Cross-modal: Check if lips match audio, emotion matches voice
-            results["cross_modal"] = await self.run_cross_modal(file)
+            # Pattern detection: Check for GAN/diffusion artifacts
+            results["pattern"] = await self.run_pattern_detection(file)
         
         # STEP 3: C2PA verification (cryptographic check)
         results["provenance"] = await self.verify_c2pa(file)
@@ -1089,10 +1088,10 @@ class CloudAnalyzer:
         
         # Otherwise: weighted ensemble of all agents
         weights = {
-            "visual": 0.35,      # Visual analysis
+            "visual": 0.40,      # Visual analysis
             "audio": 0.25,       # Audio analysis  
-            "biological": 0.25,  # rPPG heartbeat
-            "cross_modal": 0.15  # Lip-sync, emotion match
+            "temporal": 0.20,    # Temporal consistency
+            "pattern": 0.15      # Artifact patterns
         }
         
         score = sum(

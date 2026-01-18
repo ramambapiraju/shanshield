@@ -1209,8 +1209,8 @@ if (filenameResult.score >= 70 && watermarkResult.score >= 50) {
             
             <div className="p-4 bg-gradient-to-br from-red-500/10 to-red-600/5 border-2 border-red-500/40 rounded-xl text-center">
               <Eye className="w-8 h-8 text-red-400 mx-auto mb-2" />
-              <h4 className="font-bold text-foreground text-sm">Facial Manipulation</h4>
-              <p className="text-xs text-muted-foreground mt-1">DeepFaceLab • FaceSwap • SimSwap</p>
+              <h4 className="font-bold text-foreground text-sm">Visual Artifacts</h4>
+              <p className="text-xs text-muted-foreground mt-1">Edge • Texture • Pattern anomalies</p>
               <div className="mt-2 text-red-400 font-bold text-lg">14%</div>
               <div className="text-xs text-muted-foreground">weight</div>
             </div>
@@ -1261,7 +1261,7 @@ const ensembleScore =
   neuralOutput.deepfakeProb * 0.30 +  // Neural
   frequencyResult.score * 0.18 +       // Frequency
   ganResult.score * 0.18 +             // GAN
-  facialResult.score * 0.14 +          // Facial
+  artifactResult.score * 0.14 +        // Visual Artifacts
   audioResult.score * 0.08 +           // Audio
   compressionResult.score * 0.07 +     // Compression
   offlineAnalysis.score * 0.05;        // Browser
@@ -1879,7 +1879,7 @@ const moduleWeights = {
                 <div className="text-blue-400 font-semibold">Cloud ML (5 Modules)</div>
                 <div>• Frequency Domain (18%)</div>
                 <div>• GAN Fingerprint (18%)</div>
-                <div>• Facial Manipulation (14%)</div>
+                <div>• Visual Artifacts (14%)</div>
                 <div>• Audio Deepfake (8%)</div>
                 <div>• Compression Artifacts (7%)</div>
                 <div>• Neural Network (30%)</div>
@@ -1964,7 +1964,7 @@ const moduleWeights = {
                 </div>
                 <div className="p-2 bg-background/50 rounded text-center">
                   <div className="text-red-400 font-bold">14%</div>
-                  <div className="text-muted-foreground">Facial</div>
+                  <div className="text-muted-foreground">Artifacts</div>
                 </div>
                 <div className="p-2 bg-background/50 rounded text-center">
                   <div className="text-cyan-400 font-bold">8%</div>
@@ -2106,7 +2106,7 @@ const moduleWeights = {
               <span className="text-green-400 font-semibold">Two-mode forensic detection system:</span> Offline mode runs 
               <span className="text-primary font-semibold"> 100% in-browser</span> using 6 AI agents with real algorithms (CV, FFT, Von Neumann entropy, Dempster-Shafer). 
               Cloud ML mode adds <span className="text-blue-400 font-semibold">ShanShield-ML-v3.0</span> running on <span className="text-blue-400 font-semibold">Supabase Edge Functions (Lovable Cloud)</span> with 5 specialized modules 
-              for GAN fingerprinting, diffusion detection, facial manipulation, audio deepfakes, and compression artifact analysis.
+              for GAN fingerprinting, diffusion detection, visual artifacts, audio deepfakes, and compression artifact analysis.
             </p>
           </div>
         </div>
