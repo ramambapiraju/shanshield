@@ -1845,7 +1845,7 @@ const moduleWeights = {
               <p className="text-sm text-muted-foreground">
                 Advanced vocoder fingerprinting to identify ElevenLabs, XTTS, Bark clones.
               </p>
-              <div className="mt-2 text-xs text-purple-400 font-semibold">IN DEVELOPMENT</div>
+              <div className="mt-2 text-xs text-purple-400 font-semibold">NEXT PHASE</div>
             </div>
 
             <div className="p-5 bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border border-cyan-500/40 rounded-xl">

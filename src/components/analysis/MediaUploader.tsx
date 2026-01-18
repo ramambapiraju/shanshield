@@ -243,6 +243,8 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
     if (e.target.files && e.target.files.length > 0) {
       processFiles(e.target.files);
     }
+    // Reset the input value so the same file can be selected again
+    e.target.value = '';
   };
 
   const removeFile = (id: string) => {
