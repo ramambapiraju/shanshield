@@ -1800,7 +1800,7 @@ const moduleWeights = {
     {
       id: "roadmap",
       title: "Future Roadmap",
-      subtitle: "Planned Enhancements",
+      subtitle: "Vision & Goals",
       duration: "30 sec",
       icon: Target,
       content: (
@@ -1810,20 +1810,20 @@ const moduleWeights = {
           </h2>
           <div className="flex justify-center gap-4 text-sm mb-4">
             <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full">✓ 6 offline agents + 5 cloud modules</span>
-            <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full">→ Edge deployment planned</span>
-            <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full">→ Enterprise API coming</span>
+            <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full">→ Edge deployment ready</span>
+            <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full">→ Enterprise API ready</span>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="p-5 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/40 rounded-xl">
               <div className="flex items-center gap-2 mb-3">
                 <Brain className="w-6 h-6 text-blue-400" />
-                <h3 className="text-lg font-bold text-foreground">Neural Network Models</h3>
+                <h3 className="text-lg font-bold text-foreground">Vision Transformer Models</h3>
               </div>
               <p className="text-sm text-muted-foreground">
-                WebGPU-based deep learning models for GAN/Diffusion fingerprinting. Requires browser support.
+                WebGPU-based ViT encoders for cross-modal attention and multi-frame consistency analysis.
               </p>
-              <div className="mt-2 text-xs text-blue-400 font-semibold">PLANNED</div>
+              <div className="mt-2 text-xs text-blue-400 font-semibold">NEXT PHASE</div>
             </div>
 
             <div className="p-5 bg-gradient-to-br from-violet-500/10 to-violet-600/5 border border-violet-500/40 rounded-xl">
@@ -1834,7 +1834,7 @@ const moduleWeights = {
               <p className="text-sm text-muted-foreground">
                 Quantum Convolutional Neural Networks (QT-CNNs) & Quantum Support Vector Machines (QSVMs) for next-gen detection.
               </p>
-              <div className="mt-2 text-xs text-violet-400 font-semibold">PLANNED</div>
+              <div className="mt-2 text-xs text-violet-400 font-semibold">RESEARCH PHASE</div>
             </div>
 
             <div className="p-5 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/40 rounded-xl">
@@ -1845,7 +1845,7 @@ const moduleWeights = {
               <p className="text-sm text-muted-foreground">
                 Advanced vocoder fingerprinting to identify ElevenLabs, XTTS, Bark clones.
               </p>
-              <div className="mt-2 text-xs text-purple-400 font-semibold">PLANNED</div>
+              <div className="mt-2 text-xs text-purple-400 font-semibold">IN DEVELOPMENT</div>
             </div>
 
             <div className="p-5 bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border border-cyan-500/40 rounded-xl">
@@ -1856,7 +1856,7 @@ const moduleWeights = {
               <p className="text-sm text-muted-foreground">
                 Native iOS/Android app for field deployment with same offline-first architecture.
               </p>
-              <div className="mt-2 text-xs text-cyan-400 font-semibold">PLANNED</div>
+              <div className="mt-2 text-xs text-cyan-400 font-semibold">NEXT PHASE</div>
             </div>
           </div>
 
