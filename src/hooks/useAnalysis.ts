@@ -227,13 +227,21 @@ const toUnifiedAnalysis = (
   };
 };
 
+// Compute real SHA-256 hash of file contents using Web Crypto API
+const computeSHA256 = async (file: File): Promise<string> => {
+  const buffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
 // Generate analysis results from REAL analysis
-const generateAnalysisResult = (
+const generateAnalysisResult = async (
   file: UploadedFile, 
   isFieldMode: boolean,
   analysis: UnifiedAnalysis,
   actualProcessingTime: number
-): AnalysisResult => {
+): Promise<AnalysisResult> => {
   const { score, signals, details, mediaType } = analysis;
   const fileName = file.file.name.toLowerCase();
   
@@ -409,11 +417,8 @@ const generateAnalysisResult = (
     `FINAL VERDICT: ${verdict.toUpperCase()} (${confidence}% confidence)`
   ];
 
-  const hashInput = `${file.file.name}-${file.file.size}-${file.file.lastModified}-${score}`;
-  let mediaHash = '';
-  for (let i = 0; i < 64; i++) {
-    mediaHash += ((hashInput.charCodeAt(i % hashInput.length) * (i + 1)) % 16).toString(16);
-  }
+  // Compute real SHA-256 cryptographic hash of file contents
+  const mediaHash = await computeSHA256(file.file);
 
   const methodsByType: Record<string, string[]> = {
     image: ["Pixel Noise Analysis", "Sobel Edge Detection", "Color Histogram", "JPEG Artifact Detection", "Symmetry Check", "LBP Texture", "Quantum Entropy Analysis"],
@@ -553,7 +558,7 @@ export const useAnalysis = () => {
       
       // Generate result - merge cloud results if available
       const timeInSeconds = timeMs / 1000;
-      let analysisResult = generateAnalysisResult(file, isFieldMode, analysis, timeInSeconds);
+      let analysisResult = await generateAnalysisResult(file, isFieldMode, analysis, timeInSeconds);
       
       // Add C2PA result
       if (c2paResult) {
@@ -645,18 +650,18 @@ export const useAnalysis = () => {
       setRealAnalysisResult(errorAnalysis);
       
       const timeInSeconds = timeMs / 1000;
-      const analysisResult = generateAnalysisResult(file, isFieldMode, errorAnalysis, timeInSeconds);
+      const analysisResult = await generateAnalysisResult(file, isFieldMode, errorAnalysis, timeInSeconds);
       setResult(analysisResult);
       setIsAnalyzing(false);
       setAnalysisComplete(true);
     }
   }, [files, isFieldMode, analysisMode]);
 
-  const handleAnalysisComplete = useCallback(() => {
+  const handleAnalysisComplete = useCallback(async () => {
     if (files.length === 0 || !realAnalysisResult) return;
     
     const timeInSeconds = processingTimeMs / 1000;
-    const analysisResult = generateAnalysisResult(files[0], isFieldMode, realAnalysisResult, timeInSeconds);
+    const analysisResult = await generateAnalysisResult(files[0], isFieldMode, realAnalysisResult, timeInSeconds);
     setResult(analysisResult);
     setAnalysisComplete(true);
   }, [files, isFieldMode, realAnalysisResult, processingTimeMs]);
