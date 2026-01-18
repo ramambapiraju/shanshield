@@ -454,11 +454,11 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
         const pixelWeight = 1 - metadataWeight - 0.05; // Reserve 5% for quantum
         
         const pixelScore = (
-          frameConsistency.score * 0.20 +
+          frameConsistency.score * 0.28 +    // Increased from 0.20 - key deepfake indicator
           temporalCoherence.score * 0.20 +
-          faceTracking.score * 0.20 +
-          compressionAnalysis.score * 0.15 +
-          motionAnalysis.score * 0.15 +
+          faceTracking.score * 0.18 +
+          compressionAnalysis.score * 0.12 +
+          motionAnalysis.score * 0.12 +
           audioVideoSync.score * 0.10
         );
         
