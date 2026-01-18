@@ -509,26 +509,41 @@ export const useAnalysis = () => {
         // C2PA failure is non-critical, continue with other analysis
       }
       
-      // Step 3: Run Cloud ML analysis if enabled (ShanShield pre-trained model)
+      // Step 3: Run Cloud ML analysis if enabled (requires internet)
       let cloudResult: CloudAnalysisResult | null = null;
-      
+
       if (analysisMode === 'cloud_ml') {
-        try {
-          setCurrentProgress({ step: 'ShanShield ML Analysis...', progress: 50 });
-          cloudResult = await analyzeWithCloud(
-            file.file,
-            file.type,
-            {
-              score: analysis.score,
-              signals: analysis.signals,
-              details: analysis.details
+        const online = typeof navigator === 'undefined' ? true : navigator.onLine;
+
+        if (!online) {
+          toast.error('Cloud ML requires internet connection. Switched to Offline mode.');
+          setAnalysisMode('offline');
+        } else {
+          try {
+            setCurrentProgress({ step: 'Cloud ML Analysis...', progress: 50 });
+            cloudResult = await analyzeWithCloud(
+              file.file,
+              file.type,
+              {
+                score: analysis.score,
+                signals: analysis.signals,
+                details: analysis.details
+              }
+            );
+            setCurrentProgress({ step: 'Cloud ML Complete', progress: 90 });
+            toast.success("Cloud ML analysis complete!");
+          } catch (cloudError) {
+            console.error('Cloud ML analysis failed:', cloudError);
+
+            const msg = cloudError instanceof Error ? cloudError.message : '';
+            const looksOffline = /failed to fetch|network|offline|timed out/i.test(msg);
+            if (looksOffline) {
+              setAnalysisMode('offline');
+              toast.error('Cloud ML is unreachable (no internet). Switched to Offline results.');
+            } else {
+              toast.error(cloudError instanceof Error ? cloudError.message : 'Cloud ML failed. Using offline results.');
             }
-          );
-          setCurrentProgress({ step: 'ML Complete', progress: 90 });
-          toast.success("ShanShield ML analysis complete!");
-        } catch (cloudError) {
-          console.error('Cloud ML analysis failed:', cloudError);
-          toast.error(cloudError instanceof Error ? cloudError.message : 'Cloud ML failed. Using offline results.');
+          }
         }
       }
       

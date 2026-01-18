@@ -175,6 +175,7 @@ const [showPresentation, setShowPresentation] = useState(false);
                   indicators={result.indicators}
                   notDetected={result.notDetected}
                   processingTime={result.processingTime}
+                  analysisMode={result.analysisMode}
                 />
                 
                 <ExplainableAI

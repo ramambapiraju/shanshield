@@ -27,6 +27,7 @@ interface AnalysisResultsProps {
   indicators: AnalysisIndicator[];
   notDetected: string[];
   processingTime: number;
+  analysisMode?: 'offline' | 'cloud_ml';
 }
 
 const verdictConfig: Record<VerdictType, {
@@ -84,7 +85,8 @@ const AnalysisResults = ({
   confidence, 
   indicators, 
   notDetected,
-  processingTime 
+  processingTime,
+  analysisMode,
 }: AnalysisResultsProps) => {
   const config = verdictConfig[verdict];
   const Icon = config.icon;
@@ -125,8 +127,17 @@ const AnalysisResults = ({
               )}
             </div>
             <p className="text-sm text-muted-foreground mt-1">{config.description}</p>
+
+            {analysisMode && (
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Engine</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-border/50 bg-background/30 text-foreground">
+                  {analysisMode === 'cloud_ml' ? 'Cloud ML' : 'Offline'}
+                </span>
+              </div>
+            )}
           </div>
-          
+
           <div className="text-right">
             <div className={cn("text-3xl font-display font-bold", config.color)}>
               {confidence}%

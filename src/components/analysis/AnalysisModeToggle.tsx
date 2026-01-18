@@ -1,11 +1,12 @@
-import { 
-  Cpu, 
+import { useEffect, useState } from "react";
+import {
+  Cpu,
   Shield,
   WifiOff,
   Cloud,
   Lock,
   CheckCircle,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AnalysisModeType } from "@/hooks/useAnalysis";
@@ -15,10 +16,27 @@ interface AnalysisModeToggleProps {
   onModeChange: (mode: AnalysisModeType) => void;
 }
 
-const AnalysisModeToggle = ({ 
-  analysisMode, 
+const AnalysisModeToggle = ({
+  analysisMode,
   onModeChange
 }: AnalysisModeToggleProps) => {
+  const [isOnline, setIsOnline] = useState(() =>
+    typeof navigator !== "undefined" ? navigator.onLine : true
+  );
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
   return (
     <div className="rounded-lg border p-4 bg-card/50 border-border/50 glow-border">
       {/* Mode Toggle Header */}
@@ -48,8 +66,10 @@ const AnalysisModeToggle = ({
         </button>
         <button
           onClick={() => onModeChange('cloud_ml')}
+          disabled={!isOnline}
+          title={isOnline ? "Requires internet connection" : "Offline — connect to internet to use Cloud ML"}
           className={cn(
-            "flex flex-col items-center gap-1 p-3 rounded-lg border transition-all",
+            "flex flex-col items-center gap-1 p-3 rounded-lg border transition-all disabled:opacity-50 disabled:cursor-not-allowed",
             analysisMode === 'cloud_ml'
               ? "bg-primary/20 border-primary text-primary"
               : "bg-background/30 border-border/50 text-muted-foreground hover:border-primary/50"
@@ -57,7 +77,7 @@ const AnalysisModeToggle = ({
         >
           <Cloud className="w-5 h-5" />
           <span className="text-xs font-medium">Cloud ML</span>
-          <span className="text-[10px] opacity-70">ShanShield AI</span>
+          <span className="text-[10px] opacity-70">Internet Required</span>
         </button>
       </div>
 
@@ -85,24 +105,41 @@ const AnalysisModeToggle = ({
           <div className="bg-background/30 rounded-lg p-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">ML Model</span>
-              <span className="text-xs text-primary">ShanShield-ML-v3.0</span>
+              <span className="text-xs text-primary">Gemini Vision</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Detection</span>
-              <span className="text-xs text-primary">GAN, Diffusion, Face Swap</span>
+              <span className="text-xs text-primary">AI Gen, Face Swap, Artifacts</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Internet</span>
+              <span className={cn(
+                "text-xs flex items-center gap-1",
+                isOnline ? "text-success" : "text-destructive"
+              )}>
+                {isOnline ? (
+                  <>
+                    <CheckCircle className="w-3 h-3" /> Connected
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="w-3 h-3" /> Offline
+                  </>
+                )}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Backend</span>
-              <span className="text-xs text-success flex items-center gap-1">
-                <CheckCircle className="w-3 h-3" /> Edge Functions
+              <span className="text-xs text-primary flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" /> Cloud Functions
               </span>
             </div>
           </div>
           <div className="flex items-start gap-2 p-2 bg-primary/10 border border-primary/30 rounded-lg">
             <Shield className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
             <p className="text-xs text-primary/90">
-              <strong>ShanShield Exclusive:</strong> Pre-trained ML model (v3.0) running on Supabase Edge Functions.
-              No external APIs required.
+              <strong>Cloud ML:</strong> Runs on Lovable Cloud and requires an internet connection.
+              No user API keys needed.
             </p>
           </div>
         </div>
