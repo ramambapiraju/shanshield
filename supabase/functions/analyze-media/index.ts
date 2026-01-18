@@ -133,8 +133,15 @@ const THRESHOLDS = {
   color_distribution: { low: 0.42, medium: 0.58, high: 0.75 },
   edge_coherence: { low: 0.35, medium: 0.52, high: 0.68 },
   temporal_consistency: { low: 0.45, medium: 0.62, high: 0.78 },
-  facial_landmark: { low: 0.48, medium: 0.65, high: 0.82 },
+  visual_artifacts: { low: 0.40, medium: 0.58, high: 0.75 },
   spectral_analysis: { low: 0.38, medium: 0.55, high: 0.72 },
+  
+  // Video-specific thresholds - STRICTER for videos
+  video: {
+    temporal_consistency: { low: 0.35, medium: 0.50, high: 0.65 },
+    frame_coherence: { low: 0.30, medium: 0.45, high: 0.60 },
+    motion_artifacts: { low: 0.32, medium: 0.48, high: 0.62 },
+  },
   
   // Final verdict thresholds - VERY CONSERVATIVE to avoid false positives
   verdict: {
@@ -142,6 +149,14 @@ const THRESHOLDS = {
     likely_authentic: { min: 35, max: 55 },  // 35-55 = likely authentic  
     suspicious: { min: 55, max: 80 },        // 55-80 = suspicious
     deepfake: { min: 80 },                   // Above 80 = deepfake (higher threshold)
+  },
+  
+  // Video verdict thresholds - MORE SENSITIVE for videos
+  video_verdict: {
+    authentic: { max: 30 },           // Below 30 = authentic (stricter)
+    likely_authentic: { min: 30, max: 50 },  // 30-50 = likely authentic  
+    suspicious: { min: 50, max: 70 },        // 50-70 = suspicious (earlier)
+    deepfake: { min: 70 },                   // Above 70 = deepfake (lower bar)
   },
 };
 
@@ -574,10 +589,11 @@ function formatToolName(tool: string): string {
   return nameMap[tool] || tool.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 }
 
-function determineVerdict(score: number): 'deepfake' | 'suspicious' | 'likely_authentic' | 'authentic' {
-  if (score >= THRESHOLDS.verdict.deepfake.min) return 'deepfake';
-  if (score >= THRESHOLDS.verdict.suspicious.min) return 'suspicious';
-  if (score >= THRESHOLDS.verdict.likely_authentic.min) return 'likely_authentic';
+function determineVerdict(score: number, isVideo: boolean = false): 'deepfake' | 'suspicious' | 'likely_authentic' | 'authentic' {
+  const thresholds = isVideo ? THRESHOLDS.video_verdict : THRESHOLDS.verdict;
+  if (score >= thresholds.deepfake.min) return 'deepfake';
+  if (score >= thresholds.suspicious.min) return 'suspicious';
+  if (score >= thresholds.likely_authentic.min) return 'likely_authentic';
   return 'authentic';
 }
 
@@ -687,8 +703,17 @@ function runShanShieldML(offlineAnalysis: OfflineAnalysisData, mediaType: string
     ...compressionResult.signals,
   ];
   
-  // Weighted ensemble scoring
-  const moduleWeights = {
+  // Weighted ensemble scoring - use different weights for video
+  const isVideo = mediaType === 'video';
+  const moduleWeights = isVideo ? {
+    neural: 0.25,
+    frequency: 0.15,
+    gan: 0.15,
+    facial: 0.20,        // Higher weight for visual artifacts in video
+    audio: 0.10,         // Audio more important for video
+    compression: 0.10,   // Compression artifacts more common in video
+    offline: 0.05,
+  } : {
     neural: 0.30,
     frequency: 0.18,
     gan: 0.18,
@@ -698,15 +723,19 @@ function runShanShieldML(offlineAnalysis: OfflineAnalysisData, mediaType: string
     offline: 0.05,
   };
   
-  const ensembleScore = Math.round(
+  // For video, apply a baseline suspicion boost
+  const videoBoost = isVideo ? 10 : 0;
+  
+  const ensembleScore = Math.min(100, Math.round(
     neuralOutput.deepfakeProb * 100 * moduleWeights.neural +
     frequencyResult.score * moduleWeights.frequency +
     ganResult.score * moduleWeights.gan +
     facialResult.score * moduleWeights.facial +
     audioResult.score * moduleWeights.audio +
     compressionResult.score * moduleWeights.compression +
-    offlineAnalysis.score * moduleWeights.offline
-  );
+    offlineAnalysis.score * moduleWeights.offline +
+    videoBoost
+  ));
   
   console.log(`Ensemble Score: ${ensembleScore}`);
   
@@ -728,8 +757,8 @@ function runShanShieldML(offlineAnalysis: OfflineAnalysisData, mediaType: string
   if (audioResult.score > 60) manipulationTypes.push('Voice Cloning');
   if (compressionResult.score > 60) manipulationTypes.push('Re-encoding Manipulation');
   
-  // Determine verdict
-  const verdict = determineVerdict(ensembleScore);
+  // Determine verdict - use stricter thresholds for video
+  const verdict = determineVerdict(ensembleScore, isVideo);
   
   // Generate reasoning
   const reasoning = generateReasoning(
