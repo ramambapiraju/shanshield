@@ -76,6 +76,142 @@ type UnifiedAnalysis = {
   quantumEntropy?: QuantumEntropyResult;
 };
 
+// Helper: Map raw ML signal text to a readable indicator name
+const mapSignalToIndicatorName = (signal: string): string => {
+  const lowerSignal = signal.toLowerCase();
+  
+  // Frequency domain signals
+  if (lowerSignal.includes('frequency') || lowerSignal.includes('spectral')) {
+    return 'Frequency Anomaly';
+  }
+  if (lowerSignal.includes('fft') || lowerSignal.includes('fourier')) {
+    return 'FFT Pattern Detection';
+  }
+  
+  // GAN signatures
+  if (lowerSignal.includes('gan') || lowerSignal.includes('generative')) {
+    return 'GAN Fingerprint';
+  }
+  if (lowerSignal.includes('stylegan') || lowerSignal.includes('progan')) {
+    return 'StyleGAN Signature';
+  }
+  
+  // Facial manipulation
+  if (lowerSignal.includes('face') || lowerSignal.includes('facial')) {
+    return 'Face Manipulation';
+  }
+  if (lowerSignal.includes('swap') || lowerSignal.includes('deepfake')) {
+    return 'Face Swap Detection';
+  }
+  if (lowerSignal.includes('landmark') || lowerSignal.includes('morph')) {
+    return 'Facial Landmark Anomaly';
+  }
+  
+  // Audio signals
+  if (lowerSignal.includes('voice') || lowerSignal.includes('vocal')) {
+    return 'Voice Synthesis';
+  }
+  if (lowerSignal.includes('audio') || lowerSignal.includes('sound')) {
+    return 'Audio Anomaly';
+  }
+  if (lowerSignal.includes('pitch') || lowerSignal.includes('formant')) {
+    return 'Pitch Irregularity';
+  }
+  
+  // Compression & artifacts
+  if (lowerSignal.includes('compression') || lowerSignal.includes('artifact')) {
+    return 'Compression Artifact';
+  }
+  if (lowerSignal.includes('jpeg') || lowerSignal.includes('quantization')) {
+    return 'JPEG Inconsistency';
+  }
+  
+  // AI tool signatures
+  if (lowerSignal.includes('midjourney')) return 'Midjourney Signature';
+  if (lowerSignal.includes('dall-e') || lowerSignal.includes('dalle')) return 'DALL-E Signature';
+  if (lowerSignal.includes('stable diffusion') || lowerSignal.includes('sd')) return 'Stable Diffusion Pattern';
+  if (lowerSignal.includes('flux')) return 'Flux Pattern';
+  if (lowerSignal.includes('sora')) return 'Sora Signature';
+  if (lowerSignal.includes('elevenlabs')) return 'ElevenLabs Voice';
+  
+  // Edge patterns
+  if (lowerSignal.includes('edge') || lowerSignal.includes('boundary')) {
+    return 'Edge Inconsistency';
+  }
+  if (lowerSignal.includes('noise') || lowerSignal.includes('pattern')) {
+    return 'Noise Pattern';
+  }
+  if (lowerSignal.includes('texture')) {
+    return 'Texture Anomaly';
+  }
+  if (lowerSignal.includes('lighting') || lowerSignal.includes('shadow')) {
+    return 'Lighting Inconsistency';
+  }
+  
+  // Neural network detection
+  if (lowerSignal.includes('neural') || lowerSignal.includes('network')) {
+    return 'Neural Pattern';
+  }
+  
+  // Generic manipulation
+  if (lowerSignal.includes('manipulat')) {
+    return 'Manipulation Detected';
+  }
+  if (lowerSignal.includes('synthetic') || lowerSignal.includes('generated')) {
+    return 'Synthetic Content';
+  }
+  
+  // Default: Clean up the signal as a name
+  const words = signal.split(/[\s:,.-]+/).slice(0, 3);
+  return words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ').substring(0, 25);
+};
+
+// Helper: Get confidence level based on signal keywords
+const getSignalConfidence = (signal: string, baseScore: number): number => {
+  const lowerSignal = signal.toLowerCase();
+  
+  // High confidence keywords
+  if (lowerSignal.includes('definite') || lowerSignal.includes('confirmed') || lowerSignal.includes('strong')) {
+    return Math.min(98, baseScore + 15);
+  }
+  
+  // Medium-high confidence
+  if (lowerSignal.includes('detected') || lowerSignal.includes('found') || lowerSignal.includes('match')) {
+    return Math.min(92, baseScore + 8);
+  }
+  
+  // Medium confidence
+  if (lowerSignal.includes('possible') || lowerSignal.includes('potential') || lowerSignal.includes('likely')) {
+    return Math.max(50, baseScore - 5);
+  }
+  
+  // Lower confidence
+  if (lowerSignal.includes('minor') || lowerSignal.includes('slight') || lowerSignal.includes('weak')) {
+    return Math.max(40, baseScore - 15);
+  }
+  
+  return baseScore;
+};
+
+// Helper: Format manipulation type for display
+const formatManipulationType = (type: string): string => {
+  const typeMap: Record<string, string> = {
+    'face_swap': 'Face Swap',
+    'face_morph': 'Face Morphing',
+    'face_reenactment': 'Face Reenactment',
+    'lip_sync': 'Lip Sync Manipulation',
+    'voice_clone': 'Voice Cloning',
+    'audio_splice': 'Audio Splicing',
+    'full_synthesis': 'Full Synthesis',
+    'partial_synthesis': 'Partial Synthesis',
+    'image_inpainting': 'Image Inpainting',
+    'style_transfer': 'Style Transfer',
+    'super_resolution': 'AI Upscaling',
+  };
+  
+  return typeMap[type] || type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+};
+
 // Convert any analyzer result to unified format
 const toUnifiedAnalysis = (
   result: AnalysisFindings | VideoAnalysisFindings | AudioAnalysisFindings | DocumentAnalysisFindings,
@@ -340,11 +476,30 @@ export const useAnalysis = () => {
             ...analysisResult.reasoning
           ],
           indicators: [
-            ...(cloudResult.mlSignals.map((signal, i) => ({
-              name: `ShanShield Signal ${i + 1}`,
+            // Map ML signals to meaningful indicator names based on signal content
+            ...(cloudResult.mlSignals.map((signal) => {
+              const signalName = mapSignalToIndicatorName(signal);
+              const signalConfidence = getSignalConfidence(signal, cloudResult.mlScore);
+              return {
+                name: signalName,
+                detected: true,
+                confidence: signalConfidence,
+                description: signal
+              };
+            })),
+            // Add AI tool detection as a prominent indicator if detected
+            ...(cloudResult.aiToolDetected ? [{
+              name: 'AI Tool Signature',
+              detected: true,
+              confidence: Math.min(95, cloudResult.mlScore + 10),
+              description: `Detected: ${cloudResult.aiToolDetected}`
+            }] : []),
+            // Add manipulation type indicators
+            ...(cloudResult.manipulationTypes.map(type => ({
+              name: formatManipulationType(type),
               detected: true,
               confidence: cloudResult.mlScore,
-              description: signal
+              description: `${type} manipulation detected`
             }))),
             ...analysisResult.indicators
           ]
