@@ -776,7 +776,7 @@ function runShanShieldML(offlineAnalysis: OfflineAnalysisData, mediaType: string
     if (ensembleScore < 30) {
       allSignals.push('No AI generation markers detected');
       allSignals.push('Natural media characteristics confirmed');
-      allSignals.push('Authentic signal patterns verified');
+      allSignals.push('Authentic patterns verified');
     } else {
       allSignals.push('Analysis complete - minor anomalies detected');
     }

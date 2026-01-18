@@ -44,7 +44,7 @@ const AnalysisModeToggle = ({
         >
           <WifiOff className="w-5 h-5" />
           <span className="text-xs font-medium">Offline</span>
-          <span className="text-[10px] opacity-70">Signal Processing</span>
+          <span className="text-[10px] opacity-70">Browser Analysis</span>
         </button>
         <button
           onClick={() => onModeChange('cloud_ml')}
@@ -113,7 +113,7 @@ const AnalysisModeToggle = ({
           <div className="grid grid-cols-2 gap-2">
             <div className="flex items-center gap-2 p-2 bg-accent/10 rounded-lg border border-accent/30">
               <Cpu className="w-4 h-4 text-accent" />
-              <span className="text-xs text-accent">Signal Analysis</span>
+              <span className="text-xs text-accent">JS Analysis</span>
             </div>
             <div className="flex items-center gap-2 p-2 bg-accent/10 rounded-lg border border-accent/30">
               <Lock className="w-4 h-4 text-accent" />
@@ -149,7 +149,7 @@ const AnalysisModeToggle = ({
           <div className="flex items-start gap-2 p-2 bg-accent/10 border border-accent/30 rounded-lg">
             <WifiOff className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
             <p className="text-xs text-accent/90">
-              <strong>Offline:</strong> Classical signal processing with quantum entropy analysis.
+              <strong>Offline:</strong> Browser-native JavaScript analysis with quantum entropy.
               No network - fastest option.
             </p>
           </div>

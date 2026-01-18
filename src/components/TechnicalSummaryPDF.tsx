@@ -145,9 +145,9 @@ const TechnicalSummaryPDF = ({ isOpen, onClose }: TechnicalSummaryPDFProps) => {
       y = addSection("Technical Highlights", y);
       const highlights = [
         "Real pixel-level analysis using Canvas API",
-        "Real signal processing with Web Audio API + FFT",
+        "Real audio analysis with Web Audio API + FFT",
         "Real video forensics with frame extraction",
-        "Edge computing - all processing in-browser",
+        "Edge computing - all processing in-browser JavaScript",
         "Privacy-first - media never leaves the device"
       ];
       highlights.forEach((h) => {
@@ -340,9 +340,9 @@ const TechnicalSummaryPDF = ({ isOpen, onClose }: TechnicalSummaryPDFProps) => {
                   </h2>
                   <ul className="text-xs space-y-1 text-green-800">
                     <li>• <strong>Real pixel-level analysis:</strong> Canvas API for image data extraction</li>
-                    <li>• <strong>Real signal processing:</strong> Web Audio API + FFT for audio</li>
+                    <li>• <strong>Real audio analysis:</strong> Web Audio API + FFT for audio</li>
                     <li>• <strong>Real video forensics:</strong> Frame extraction + temporal analysis</li>
-                    <li>• <strong>Edge computing:</strong> All processing in-browser, no server needed</li>
+                    <li>• <strong>Edge computing:</strong> All processing in-browser JavaScript, no server</li>
                     <li>• <strong>Privacy-first:</strong> Media never leaves the device</li>
                   </ul>
                 </div>
