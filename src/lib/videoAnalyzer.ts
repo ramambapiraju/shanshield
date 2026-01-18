@@ -465,10 +465,16 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
         const quantumScore = quantumEntropy ? quantumEntropy.anomalyScore * 100 : 0;
         
         // Combined score with dynamic metadata weighting
-        const overallScore = 
+        // Add baseline video suspicion since we lack advanced detection (facial landmarks, lip-sync)
+        const baselineVideoSuspicion = 15;
+        
+        const rawScore = 
           metadataScore * metadataWeight +
           pixelScore * pixelWeight +
-          quantumScore * 0.05;
+          quantumScore * 0.05 +
+          baselineVideoSuspicion;
+        
+        const overallScore = Math.min(100, rawScore);
         
         URL.revokeObjectURL(video.src);
         

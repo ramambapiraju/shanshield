@@ -239,26 +239,33 @@ const generateAnalysisResult = (
   let verdict: VerdictType;
   let confidence: number;
   
-  // VERY Conservative thresholds - avoid false positives on authentic content
-  // Live webcam captures, phone recordings, and real media have natural artifacts
-  // that naive algorithms may misinterpret. Require HIGH scores for deepfake verdict.
-  //
-  // NOTE: Video "authentic" should never be displayed with near-100% certainty.
-  // Even high-quality deepfakes can evade basic signal processing, so we keep
-  // video results in "likely authentic" unless strong manipulation evidence exists.
-  if (score >= 82) {
+  // Conservative thresholds - but stricter for video since detection is harder
+  // Video deepfakes require lower thresholds because:
+  // 1. Frame-by-frame analysis can miss subtle manipulation
+  // 2. Compression artifacts mask some signals
+  // 3. Without real lip-sync/facial landmark analysis, we must be more cautious
+  
+  const isVideo = mediaType === 'video';
+  
+  // Video gets STRICTER thresholds (lower bars for suspicious/deepfake)
+  const deepfakeThreshold = isVideo ? 65 : 82;
+  const suspiciousThreshold = isVideo ? 45 : 65;
+  const likelyAuthThreshold = isVideo ? 30 : 40;
+  
+  if (score >= deepfakeThreshold) {
     verdict = 'deepfake';
     confidence = Math.min(98, score + 8);
-  } else if (score >= 65) {
+  } else if (score >= suspiciousThreshold) {
     verdict = 'suspicious';
-    confidence = Math.min(80, score + 10);
-  } else if (score >= 40) {
+    confidence = Math.min(85, score + 15);
+  } else if (score >= likelyAuthThreshold) {
     verdict = 'likely_authentic';
-    confidence = Math.min(88, 100 - score);
+    confidence = Math.min(75, 100 - score);
   } else {
-    if (mediaType === 'video') {
+    // Video should NEVER show "authentic" - always "likely_authentic" at best
+    if (isVideo) {
       verdict = 'likely_authentic';
-      confidence = Math.min(80, 100 - score);
+      confidence = Math.min(70, 100 - score);
     } else {
       verdict = 'authentic';
       confidence = Math.min(98, 100 - score + 20);
