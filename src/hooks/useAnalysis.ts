@@ -242,6 +242,10 @@ const generateAnalysisResult = (
   // VERY Conservative thresholds - avoid false positives on authentic content
   // Live webcam captures, phone recordings, and real media have natural artifacts
   // that naive algorithms may misinterpret. Require HIGH scores for deepfake verdict.
+  //
+  // NOTE: Video "authentic" should never be displayed with near-100% certainty.
+  // Even high-quality deepfakes can evade basic signal processing, so we keep
+  // video results in "likely authentic" unless strong manipulation evidence exists.
   if (score >= 82) {
     verdict = 'deepfake';
     confidence = Math.min(98, score + 8);
@@ -252,8 +256,13 @@ const generateAnalysisResult = (
     verdict = 'likely_authentic';
     confidence = Math.min(88, 100 - score);
   } else {
-    verdict = 'authentic';
-    confidence = Math.min(98, 100 - score + 20);
+    if (mediaType === 'video') {
+      verdict = 'likely_authentic';
+      confidence = Math.min(80, 100 - score);
+    } else {
+      verdict = 'authentic';
+      confidence = Math.min(98, 100 - score + 20);
+    }
   }
 
   const indicators: AnalysisIndicator[] = [];

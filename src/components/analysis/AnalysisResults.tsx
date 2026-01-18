@@ -42,11 +42,11 @@ const verdictConfig: Record<VerdictType, {
   authentic: {
     icon: ShieldCheck,
     label: "AUTHENTIC",
-    description: "Content verified as genuine",
+    description: "No strong manipulation signals detected",
     color: "text-success",
     bgColor: "bg-success/10",
     borderColor: "border-success/50",
-    recommendation: "Content verified — safe to proceed"
+    recommendation: "No strong manipulation signals — proceed with verification"
   },
   likely_authentic: {
     icon: Shield,
