@@ -91,16 +91,19 @@ const analyzeFrameConsistency = (frames: ImageData[]): { score: number; descript
   let score = 0;
   let description = '';
   
-  // VERY conservative - webcam videos have natural frame variation from lighting/auto-exposure
-  // Only flag extremely high CV (> 120) as truly suspicious
-  if (coeffOfVariation > 120) {
-    score = 50 + Math.min(30, (coeffOfVariation - 120) / 4);
+  // More aggressive detection - deepfakes often show frame-to-frame inconsistencies
+  // that real cameras don't produce. Lower thresholds to catch more manipulation.
+  if (coeffOfVariation > 60) {
+    score = 55 + Math.min(35, (coeffOfVariation - 60) / 2);
     description = `High frame inconsistency detected (CV: ${coeffOfVariation.toFixed(1)}%) - possible frame interpolation`;
-  } else if (coeffOfVariation > 90) {
-    score = 20 + (coeffOfVariation - 90) / 2;
-    description = `Moderate frame variation (CV: ${coeffOfVariation.toFixed(1)}%)`;
+  } else if (coeffOfVariation > 35) {
+    score = 35 + (coeffOfVariation - 35);
+    description = `Moderate frame variation (CV: ${coeffOfVariation.toFixed(1)}%) - potential manipulation`;
+  } else if (coeffOfVariation > 20) {
+    score = 15 + coeffOfVariation * 0.5;
+    description = `Some frame variation detected (CV: ${coeffOfVariation.toFixed(1)}%)`;
   } else {
-    score = Math.max(0, coeffOfVariation * 0.2);
+    score = Math.max(0, coeffOfVariation * 0.5);
     description = `Consistent frame transitions (CV: ${coeffOfVariation.toFixed(1)}%)`;
   }
   
@@ -171,16 +174,19 @@ const analyzeTemporalCoherence = (frames: ImageData[]): { score: number; descrip
   let score = 0;
   let description = '';
   
-  // VERY conservative - webcam video has natural motion discontinuities from auto-focus/exposure
-  // Only flag extremely high discontinuity (> 70%)
-  if (discontinuityRate > 70) {
-    score = 45 + discontinuityRate / 4;
-    description = `Severe temporal discontinuities detected (${discontinuityRate.toFixed(1)}% of transitions)`;
-  } else if (discontinuityRate > 50) {
-    score = 15 + discontinuityRate / 3;
-    description = `Moderate motion discontinuities (${discontinuityRate.toFixed(1)}%)`;
+  // More aggressive - AI-generated videos often have unnatural motion jumps
+  // that differ from real camera footage. Lower thresholds.
+  if (discontinuityRate > 40) {
+    score = 55 + discontinuityRate / 2;
+    description = `Severe temporal discontinuities detected (${discontinuityRate.toFixed(1)}% of transitions) - likely manipulation`;
+  } else if (discontinuityRate > 25) {
+    score = 35 + discontinuityRate;
+    description = `Moderate motion discontinuities (${discontinuityRate.toFixed(1)}%) - suspicious`;
+  } else if (discontinuityRate > 10) {
+    score = 15 + discontinuityRate;
+    description = `Minor motion discontinuities (${discontinuityRate.toFixed(1)}%)`;
   } else {
-    score = Math.max(0, discontinuityRate * 0.3);
+    score = Math.max(0, discontinuityRate);
     description = `Smooth temporal flow (${discontinuityRate.toFixed(1)}% discontinuities)`;
   }
   
@@ -243,16 +249,19 @@ const analyzeFaceTracking = (frames: ImageData[]): { score: number; description:
   let score = 0;
   let description = '';
   
-  // More conservative - faces naturally move differently than backgrounds
-  // Only flag extreme differences (> 3x)
-  if (avgRatio > 3.5) {
-    score = 50 + Math.min(40, (avgRatio - 3.5) * 12);
-    description = `Face region anomaly detected - changes ${avgRatio.toFixed(2)}x faster than background`;
-  } else if (avgRatio > 2.0) {
-    score = 20 + (avgRatio - 2.0) * 20;
-    description = `Moderate face region variance (ratio: ${avgRatio.toFixed(2)})`;
+  // More aggressive face detection - deepfakes often show face regions that
+  // change differently from backgrounds (blending artifacts, warping)
+  if (avgRatio > 2.0) {
+    score = 60 + Math.min(35, (avgRatio - 2.0) * 15);
+    description = `Face region anomaly detected - changes ${avgRatio.toFixed(2)}x faster than background (likely manipulation)`;
+  } else if (avgRatio > 1.4) {
+    score = 40 + (avgRatio - 1.4) * 30;
+    description = `Suspicious face region variance (ratio: ${avgRatio.toFixed(2)}) - possible face swap`;
+  } else if (avgRatio > 1.0) {
+    score = 15 + (avgRatio - 1.0) * 40;
+    description = `Minor face region variance (ratio: ${avgRatio.toFixed(2)})`;
   } else {
-    score = Math.max(0, avgRatio * 10);
+    score = Math.max(0, avgRatio * 15);
     description = `Natural face-background consistency (ratio: ${avgRatio.toFixed(2)})`;
   }
   
@@ -355,16 +364,19 @@ const analyzeMotion = (frames: ImageData[]): { score: number; description: strin
   let score = 0;
   let description = '';
   
-  // Conservative - handheld video naturally has motion irregularities
-  // Only flag extreme irregularity (> 60%)
-  if (unnaturalRate > 65) {
-    score = 45 + unnaturalRate / 3;
-    description = `Unnatural motion patterns detected (${unnaturalRate.toFixed(1)}% irregular)`;
-  } else if (unnaturalRate > 40) {
-    score = 20 + unnaturalRate / 2;
-    description = `Some motion irregularities (${unnaturalRate.toFixed(1)}%)`;
+  // More aggressive motion detection - AI video generators often produce
+  // unnatural acceleration patterns that real cameras don't
+  if (unnaturalRate > 35) {
+    score = 55 + unnaturalRate / 2;
+    description = `Unnatural motion patterns detected (${unnaturalRate.toFixed(1)}% irregular) - likely AI-generated`;
+  } else if (unnaturalRate > 20) {
+    score = 35 + unnaturalRate;
+    description = `Suspicious motion irregularities (${unnaturalRate.toFixed(1)}%)`;
+  } else if (unnaturalRate > 10) {
+    score = 15 + unnaturalRate;
+    description = `Minor motion irregularities (${unnaturalRate.toFixed(1)}%)`;
   } else {
-    score = Math.max(0, unnaturalRate * 0.4);
+    score = Math.max(0, unnaturalRate);
     description = `Natural motion flow (${unnaturalRate.toFixed(1)}% irregular)`;
   }
   
@@ -372,12 +384,13 @@ const analyzeMotion = (frames: ImageData[]): { score: number; description: strin
 };
 
 // Placeholder for audio-video sync (would need actual audio analysis)
+// For videos without strong metadata signals, this adds baseline suspicion
 const analyzeAudioVideoSync = (): { score: number; description: string } => {
-  // In a real implementation, this would analyze lip sync
-  // For now, return a neutral score
+  // Without real lip-sync analysis, we add a baseline suspicion score for videos
+  // This prevents "98% authentic" verdicts when we can't truly verify A/V sync
   return { 
-    score: 30, 
-    description: 'Audio-video sync analysis requires advanced lip-sync detection' 
+    score: 45, 
+    description: 'Audio-video sync analysis pending (lip-sync verification recommended)' 
   };
 };
 
