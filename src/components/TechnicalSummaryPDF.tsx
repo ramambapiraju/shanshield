@@ -354,7 +354,6 @@ const TechnicalSummaryPDF = ({ isOpen, onClose }: TechnicalSummaryPDFProps) => {
                   </h2>
                   <ul className="text-xs space-y-1 text-sky-800">
                     <li>• TensorFlow.js CNN models for deeper pattern recognition</li>
-                    <li>• Face-API.js for facial landmark detection</li>
                     <li>• WebGL acceleration for real-time video</li>
                     <li>• Backend API for model inference at scale</li>
                     <li>• Database for historical analysis tracking</li>

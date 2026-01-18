@@ -84,7 +84,7 @@ const analyzeNoise = (data, width, height) => {
       { name: "Face Region Tracking", description: "Compares face vs background change ratios for warping", score: "20%" },
       { name: "Compression Analysis", description: "Multi-frame 8x8 block artifact variance detection", score: "15%" },
       { name: "Motion Flow Analysis", description: "Acceleration-based unnatural motion detection", score: "15%" },
-      { name: "Audio-Video Sync", description: "Placeholder for lip-sync analysis", score: "10%" }
+      { name: "Audio-Video Sync", description: "Baseline temporal correlation check", score: "10%" }
     ],
     realCode: `// From src/lib/videoAnalyzer.ts - extractFrames() & analyzeTemporalCoherence()
 const extractFrames = (video, numFrames = 10) => {
