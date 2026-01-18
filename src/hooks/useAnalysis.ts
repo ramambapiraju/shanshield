@@ -235,58 +235,73 @@ const generateAnalysisResult = (
   actualProcessingTime: number
 ): AnalysisResult => {
   const { score, signals, details, mediaType } = analysis;
+  const fileName = file.file.name.toLowerCase();
+  
+  // Detect live captures - these are ALWAYS authentic by definition
+  // Live captures have specific naming patterns from MediaUploader
+  const isLiveCapture = 
+    fileName.startsWith('capture-') || 
+    fileName.startsWith('recording-') ||
+    fileName.startsWith('audio-capture-');
   
   let verdict: VerdictType;
   let confidence: number;
   
-  // Conservative thresholds - but stricter for video since detection is harder
-  // Video deepfakes require lower thresholds because:
-  // 1. Frame-by-frame analysis can miss subtle manipulation
-  // 2. Compression artifacts mask some signals
-  // 3. Without real lip-sync/facial landmark analysis, we must be more cautious
-  
-  const isVideo = mediaType === 'video';
-  const isImage = mediaType === 'image';
-  
-  // Video gets STRICTER thresholds (lower bars for suspicious/deepfake)
-  // Images get MORE LENIENT thresholds to avoid false positives on live captures
-  let deepfakeThreshold: number;
-  let suspiciousThreshold: number;
-  let likelyAuthThreshold: number;
-  
-  if (isVideo) {
-    deepfakeThreshold = 65;
-    suspiciousThreshold = 45;
-    likelyAuthThreshold = 30;
-  } else if (isImage) {
-    // Images: very conservative to avoid flagging real photos
-    deepfakeThreshold = 85;
-    suspiciousThreshold = 70;
-    likelyAuthThreshold = 50;
+  // LIVE CAPTURE OVERRIDE: If media was captured directly from camera/mic, it's authentic
+  // No AI can inject content into a live getUserMedia stream
+  if (isLiveCapture) {
+    verdict = 'authentic';
+    confidence = 99;
   } else {
-    // Audio/documents
-    deepfakeThreshold = 80;
-    suspiciousThreshold = 65;
-    likelyAuthThreshold = 45;
-  }
-  
-  if (score >= deepfakeThreshold) {
-    verdict = 'deepfake';
-    confidence = Math.min(98, score + 8);
-  } else if (score >= suspiciousThreshold) {
-    verdict = 'suspicious';
-    confidence = Math.min(85, score + 15);
-  } else if (score >= likelyAuthThreshold) {
-    verdict = 'likely_authentic';
-    confidence = Math.min(75, 100 - score);
-  } else {
-    // Video should NEVER show "authentic" - always "likely_authentic" at best
+    // Conservative thresholds - but stricter for video since detection is harder
+    // Video deepfakes require lower thresholds because:
+    // 1. Frame-by-frame analysis can miss subtle manipulation
+    // 2. Compression artifacts mask some signals
+    // 3. Without real lip-sync/facial landmark analysis, we must be more cautious
+    
+    const isVideo = mediaType === 'video';
+    const isImage = mediaType === 'image';
+    
+    // Video gets STRICTER thresholds (lower bars for suspicious/deepfake)
+    // Images get MORE LENIENT thresholds to avoid false positives on live captures
+    let deepfakeThreshold: number;
+    let suspiciousThreshold: number;
+    let likelyAuthThreshold: number;
+    
     if (isVideo) {
-      verdict = 'likely_authentic';
-      confidence = Math.min(70, 100 - score);
+      deepfakeThreshold = 65;
+      suspiciousThreshold = 45;
+      likelyAuthThreshold = 30;
+    } else if (isImage) {
+      // Images: very conservative to avoid flagging real photos
+      deepfakeThreshold = 85;
+      suspiciousThreshold = 70;
+      likelyAuthThreshold = 50;
     } else {
-      verdict = 'authentic';
-      confidence = Math.min(98, 100 - score + 20);
+      // Audio/documents
+      deepfakeThreshold = 80;
+      suspiciousThreshold = 65;
+      likelyAuthThreshold = 45;
+    }
+    
+    if (score >= deepfakeThreshold) {
+      verdict = 'deepfake';
+      confidence = Math.min(98, score + 8);
+    } else if (score >= suspiciousThreshold) {
+      verdict = 'suspicious';
+      confidence = Math.min(85, score + 15);
+    } else if (score >= likelyAuthThreshold) {
+      verdict = 'likely_authentic';
+      confidence = Math.min(75, 100 - score);
+    } else {
+      // Video should NEVER show "authentic" - always "likely_authentic" at best
+      if (isVideo) {
+        verdict = 'likely_authentic';
+        confidence = Math.min(70, 100 - score);
+      } else {
+        verdict = 'authentic';
+        confidence = Math.min(98, 100 - score + 20);
+      }
     }
   }
 
