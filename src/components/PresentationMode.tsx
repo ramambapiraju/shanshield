@@ -197,7 +197,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
             <div className="mt-4 flex justify-center gap-4 text-sm">
               <span className="px-3 py-1 bg-destructive/20 text-destructive rounded-full">• $25B annual fraud losses</span>
               <span className="px-3 py-1 bg-warning/20 text-warning rounded-full">• 500K+ deepfakes shared daily</span>
-              <span className="px-3 py-1 bg-destructive/20 text-destructive rounded-full">• 73% humans fail to detect</span>
+              <span className="px-3 py-1 bg-destructive/20 text-destructive rounded-full">• 90%+ Humans fail to detect</span>
             </div>
           </div>
           
@@ -211,7 +211,7 @@ const PresentationMode = ({ isOpen, onClose }: PresentationModeProps) => {
               <div className="text-lg text-muted-foreground mt-2">Deepfakes shared daily</div>
             </div>
             <div className="text-center p-8 bg-destructive/10 rounded-2xl border border-destructive/30">
-              <div className="text-6xl font-bold text-destructive">73%</div>
+              <div className="text-6xl font-bold text-destructive">90%+</div>
               <div className="text-lg text-muted-foreground mt-2">Humans fail to detect</div>
             </div>
           </div>
