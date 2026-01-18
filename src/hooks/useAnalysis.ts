@@ -260,11 +260,56 @@ const generateAnalysisResult = (
   const notDetected: string[] = [];
   const detailEntries = Object.entries(details);
 
+  // Map technical keys to user-friendly indicator names
+  const indicatorNameMap: Record<string, string> = {
+    'noiseAnalysis': 'Noise Pattern Analysis',
+    'edgeAnalysis': 'Edge Artifact Detection',
+    'colorAnalysis': 'Color Distribution',
+    'compressionAnalysis': 'Compression Artifacts',
+    'symmetryAnalysis': 'Symmetry Analysis',
+    'textureAnalysis': 'Texture Pattern',
+    'repetitionAnalysis': 'Repetition Detection',
+    'gradientAnalysis': 'Gradient Analysis',
+    'quantumEntropyAnalysis': 'Quantum Entropy',
+    'metadataAnalysis': 'AI Tool Signatures',
+    'filenameAnalysis': 'Filename Pattern',
+    'watermarkDetection': 'Watermark Detection',
+    'aiSignatures': 'AI Visual Signatures',
+    'metadataPatterns': 'File Metadata',
+    'spectralAnalysis': 'Spectral Analysis',
+    'pitchAnalysis': 'Pitch Irregularity',
+    'noiseFloorAnalysis': 'Audio Noise Floor',
+    'voiceNaturalness': 'Voice Naturalness',
+    'temporalCoherence': 'Temporal Coherence',
+    'frameConsistency': 'Frame Consistency',
+    'faceTracking': 'Face Tracking',
+    'motionAnalysis': 'Motion Analysis',
+  };
+
   for (const [key, value] of detailEntries) {
-    const name = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim();
-    if (value.score > 50) {
+    // Use mapped name or generate readable name from key
+    const name = indicatorNameMap[key] || 
+      key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim();
+    
+    // Special handling for metadata - check for actual AI tool detection
+    const isAIToolDetected = key === 'metadataAnalysis' && 
+      value.description && 
+      (value.description.includes('AI Tool Detected') || 
+       value.description.includes('AI TOOL CONFIRMED') ||
+       value.description.includes('Midjourney') ||
+       value.description.includes('DALL-E') ||
+       value.description.includes('Stable Diffusion') ||
+       value.description.includes('Kling') ||
+       value.description.includes('Sora') ||
+       value.description.includes('ElevenLabs') ||
+       value.description.includes('Flux'));
+    
+    // Higher threshold for generic detections, lower for concrete AI tool evidence
+    const threshold = isAIToolDetected ? 30 : 50;
+    
+    if (value.score > threshold || isAIToolDetected) {
       indicators.push({
-        name,
+        name: isAIToolDetected ? 'AI Tool Detected' : name,
         detected: true,
         confidence: Math.round(value.score),
         description: value.description
