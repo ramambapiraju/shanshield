@@ -565,7 +565,7 @@ for (let lag = 50; lag < 400; lag++) {
 }
 const freq = sampleRate / maxLag; // Hz
 // pitchCV < 5% = unnaturally stable (TTS)`}</pre>
-                <p className="text-xs text-purple-400 font-semibold mt-2">→ Finds pitch via signal self-similarity. Too-stable pitch (CV &lt;5%) = AI voice clone.</p>
+                <p className="text-xs text-purple-400 font-semibold mt-2">→ Finds pitch via autocorrelation. Too-stable pitch (CV &lt;5%) = AI voice clone.</p>
               </div>
             </div>
 
@@ -1787,7 +1787,7 @@ const moduleWeights = {
   facial: 0.14,      // Facial manipulation
   audio: 0.08,       // Voice clone detection
   compression: 0.07, // Artifact analysis
-  offline: 0.05      // Browser-based signals
+  offline: 0.05      // Browser JS analysis
 };
 // Ensemble score → Verdict with full reasoning`}</pre>
             <p className="text-xs text-primary font-semibold mt-2">→ Pre-trained model runs on Supabase Edge Functions (Lovable Cloud).</p>

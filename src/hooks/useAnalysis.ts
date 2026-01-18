@@ -9,7 +9,7 @@ import { analyzeWithCloud, type CloudAnalysisResult } from "@/lib/cloudAnalyzer"
 import { analyzeC2PA, type C2PAResult } from "@/lib/c2paAnalyzer";
 import { toast } from "sonner";
 
-// Analysis mode types - Offline (signal processing) or Cloud ML (ShanShield pre-trained model)
+// Analysis mode types - Offline (browser JS engine) or Cloud ML (ShanShield pre-trained model)
 export type AnalysisModeType = 'offline' | 'cloud_ml';
 
 interface UploadedFile {
