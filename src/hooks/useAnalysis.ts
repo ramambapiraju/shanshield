@@ -246,11 +246,29 @@ const generateAnalysisResult = (
   // 3. Without real lip-sync/facial landmark analysis, we must be more cautious
   
   const isVideo = mediaType === 'video';
+  const isImage = mediaType === 'image';
   
   // Video gets STRICTER thresholds (lower bars for suspicious/deepfake)
-  const deepfakeThreshold = isVideo ? 65 : 82;
-  const suspiciousThreshold = isVideo ? 45 : 65;
-  const likelyAuthThreshold = isVideo ? 30 : 40;
+  // Images get MORE LENIENT thresholds to avoid false positives on live captures
+  let deepfakeThreshold: number;
+  let suspiciousThreshold: number;
+  let likelyAuthThreshold: number;
+  
+  if (isVideo) {
+    deepfakeThreshold = 65;
+    suspiciousThreshold = 45;
+    likelyAuthThreshold = 30;
+  } else if (isImage) {
+    // Images: very conservative to avoid flagging real photos
+    deepfakeThreshold = 85;
+    suspiciousThreshold = 70;
+    likelyAuthThreshold = 50;
+  } else {
+    // Audio/documents
+    deepfakeThreshold = 80;
+    suspiciousThreshold = 65;
+    likelyAuthThreshold = 45;
+  }
   
   if (score >= deepfakeThreshold) {
     verdict = 'deepfake';
