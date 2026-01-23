@@ -383,14 +383,115 @@ const analyzeMotion = (frames: ImageData[]): { score: number; description: strin
   return { score: Math.min(100, Math.max(0, score)), description };
 };
 
-// Placeholder for audio-video sync (adds baseline suspicion for videos)
-const analyzeAudioVideoSync = (): { score: number; description: string } => {
-  // Without advanced A/V correlation, we add a baseline suspicion score for videos
-  // This prevents overconfident "authentic" verdicts
-  return { 
-    score: 45, 
-    description: 'Audio-video temporal baseline (advanced sync pending)' 
-  };
+// Real Audio-Video Sync Analysis
+// Analyzes temporal correlation between audio energy and visual motion
+const analyzeAudioVideoSync = async (file: File, frames: ImageData[]): Promise<{ score: number; description: string }> => {
+  if (frames.length < 3) {
+    return { score: 25, description: 'Insufficient frames for A/V sync analysis' };
+  }
+  
+  try {
+    // Extract audio from video and analyze temporal patterns
+    const audioContext = new AudioContext();
+    const arrayBuffer = await file.arrayBuffer();
+    let audioBuffer: AudioBuffer;
+    
+    try {
+      audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
+    } catch {
+      audioContext.close();
+      return { score: 30, description: 'No audio track detected - video only' };
+    }
+    
+    const samples = audioBuffer.getChannelData(0);
+    const duration = audioBuffer.duration;
+    
+    // Calculate audio energy per video frame interval
+    const frameInterval = duration / frames.length;
+    const audioEnergies: number[] = [];
+    
+    for (let i = 0; i < frames.length; i++) {
+      const startSample = Math.floor((i * frameInterval) * audioBuffer.sampleRate);
+      const endSample = Math.floor(((i + 1) * frameInterval) * audioBuffer.sampleRate);
+      
+      let energy = 0;
+      for (let s = startSample; s < Math.min(endSample, samples.length); s++) {
+        energy += samples[s] * samples[s];
+      }
+      audioEnergies.push(Math.sqrt(energy / (endSample - startSample + 1)));
+    }
+    
+    // Calculate visual motion energy between frames
+    const visualEnergies: number[] = [0];
+    for (let i = 1; i < frames.length; i++) {
+      const prev = frames[i - 1].data;
+      const curr = frames[i].data;
+      let motionEnergy = 0;
+      
+      for (let p = 0; p < prev.length; p += 16) {
+        motionEnergy += Math.abs(prev[p] - curr[p]) + 
+                        Math.abs(prev[p + 1] - curr[p + 1]) + 
+                        Math.abs(prev[p + 2] - curr[p + 2]);
+      }
+      visualEnergies.push(motionEnergy / (prev.length / 16));
+    }
+    
+    audioContext.close();
+    
+    // Normalize both energy arrays
+    const maxAudio = Math.max(...audioEnergies, 0.001);
+    const maxVisual = Math.max(...visualEnergies, 0.001);
+    const normAudio = audioEnergies.map(e => e / maxAudio);
+    const normVisual = visualEnergies.map(e => e / maxVisual);
+    
+    // Calculate cross-correlation at different lags
+    const correlations: number[] = [];
+    for (let lag = -3; lag <= 3; lag++) {
+      let sum = 0;
+      let count = 0;
+      for (let i = 0; i < normAudio.length; i++) {
+        const j = i + lag;
+        if (j >= 0 && j < normVisual.length) {
+          sum += normAudio[i] * normVisual[j];
+          count++;
+        }
+      }
+      correlations.push(count > 0 ? sum / count : 0);
+    }
+    
+    const maxCorrelation = Math.max(...correlations);
+    const bestLag = correlations.indexOf(maxCorrelation) - 3;
+    
+    // Also calculate direct (zero-lag) correlation
+    let directCorr = 0;
+    for (let i = 0; i < normAudio.length; i++) {
+      directCorr += normAudio[i] * normVisual[i];
+    }
+    directCorr /= normAudio.length;
+    
+    let score = 0;
+    let description = '';
+    
+    // Deepfakes often have poor A/V correlation or unnatural sync
+    if (maxCorrelation < 0.15 && directCorr < 0.1) {
+      score = 65 + (0.15 - maxCorrelation) * 150;
+      description = `Poor audio-video correlation (r=${directCorr.toFixed(3)}) - likely lip-sync manipulation`;
+    } else if (Math.abs(bestLag) > 1) {
+      score = 45 + Math.abs(bestLag) * 10;
+      description = `Audio-video sync offset detected (${bestLag > 0 ? '+' : ''}${bestLag} frames)`;
+    } else if (maxCorrelation < 0.35) {
+      score = 30 + (0.35 - maxCorrelation) * 60;
+      description = `Weak audio-video correlation (r=${maxCorrelation.toFixed(3)})`;
+    } else {
+      score = Math.max(0, 20 - maxCorrelation * 30);
+      description = `Good audio-video synchronization (r=${maxCorrelation.toFixed(3)})`;
+    }
+    
+    return { score: Math.min(100, Math.max(0, score)), description };
+  } catch (e) {
+    console.warn('A/V sync analysis failed:', e);
+    return { score: 35, description: 'A/V sync analysis could not complete' };
+  }
 };
 
 // Main video analysis function
@@ -424,7 +525,9 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
         const faceTracking = analyzeFaceTracking(frames);
         const compressionAnalysis = analyzeVideoCompression(frames);
         const motionAnalysis = analyzeMotion(frames);
-        const audioVideoSync = analyzeAudioVideoSync();
+        
+        // Real audio-video sync analysis (async - requires file access)
+        const audioVideoSync = await analyzeAudioVideoSync(file, frames);
         
         // Quantum Entropy Analysis on first frame
         let quantumEntropy: QuantumEntropyResult | undefined;
@@ -454,19 +557,19 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
         const pixelWeight = 1 - metadataWeight - 0.05; // Reserve 5% for quantum
         
         const pixelScore = (
-          frameConsistency.score * 0.32 +    // Highest weight - key deepfake indicator
-          temporalCoherence.score * 0.20 +
-          faceTracking.score * 0.16 +
-          compressionAnalysis.score * 0.12 +
+          frameConsistency.score * 0.30 +    // Key deepfake indicator
+          temporalCoherence.score * 0.18 +
+          faceTracking.score * 0.14 +
+          compressionAnalysis.score * 0.10 +
           motionAnalysis.score * 0.12 +
-          audioVideoSync.score * 0.08
+          audioVideoSync.score * 0.16        // Increased weight for real A/V sync
         );
         
         const quantumScore = quantumEntropy ? quantumEntropy.anomalyScore * 100 : 0;
         
         // Combined score with dynamic metadata weighting
         // Add baseline video suspicion since we lack advanced detection (facial landmarks, lip-sync)
-        const baselineVideoSuspicion = 15;
+        const baselineVideoSuspicion = 12; // Reduced since we now have real A/V sync
         
         const rawScore = 
           metadataScore * metadataWeight +
