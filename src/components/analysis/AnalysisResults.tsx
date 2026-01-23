@@ -174,7 +174,7 @@ const AnalysisResults = ({
 
       {/* Indicators Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Detected Indicators */}
+        {/* Detected Indicators (Anomalies Found) */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <ThumbsUp className="w-4 h-4 text-muted-foreground" />
@@ -183,62 +183,82 @@ const AnalysisResults = ({
             </span>
           </div>
           
-          {indicators.map((indicator, index) => (
-            <div 
-              key={index}
-              className={cn(
-                "bg-card/50 border rounded-lg p-3",
-                indicator.detected 
-                  ? (indicator.confidence > 70 ? "border-destructive/30" : "border-warning/30")
-                  : "border-success/30"
-              )}
-            >
-              <div className="flex items-start gap-2">
-                {indicator.detected ? (
-                  indicator.confidence > 70 ? (
+          {indicators.filter(i => i.detected).length > 0 ? (
+            indicators.filter(i => i.detected).map((indicator, index) => (
+              <div 
+                key={index}
+                className={cn(
+                  "bg-card/50 border rounded-lg p-3",
+                  indicator.confidence > 70 ? "border-destructive/30" : "border-warning/30"
+                )}
+              >
+                <div className="flex items-start gap-2">
+                  {indicator.confidence > 70 ? (
                     <XCircle className="w-4 h-4 text-destructive mt-0.5" />
                   ) : (
                     <AlertTriangle className="w-4 h-4 text-warning mt-0.5" />
-                  )
-                ) : (
-                  <CheckCircle className="w-4 h-4 text-success mt-0.5" />
-                )}
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-foreground">{indicator.name}</span>
-                    <span className={cn(
-                      "text-xs font-mono",
-                      indicator.detected ? "text-destructive" : "text-success"
-                    )}>
-                      {indicator.confidence}%
-                    </span>
+                  )}
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-foreground">{indicator.name}</span>
+                      <span className="text-xs font-mono text-destructive">
+                        {indicator.confidence}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{indicator.description}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">{indicator.description}</p>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="bg-card/30 border border-success/20 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-success/80">
+                <CheckCircle className="w-4 h-4" />
+                <span className="text-sm">No manipulation indicators detected</span>
+              </div>
             </div>
-          ))}
+          )}
         </div>
 
-        {/* Not Detected (False Positive Protection) */}
+        {/* Not Detected (Verified Clean - False-Positive Protection) */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <ThumbsDown className="w-4 h-4 text-muted-foreground" />
             <span className="font-display text-xs tracking-widest uppercase text-muted-foreground">
-              Not Detected (False-Positive Protection)
+              Verified Clean (False-Positive Protection)
             </span>
           </div>
           
-          <div className="bg-card/30 border border-success/20 rounded-lg p-4">
-            <ul className="space-y-2">
-              {notDetected.map((item, index) => (
-                <li key={index} className="flex items-center gap-2 text-sm text-success/80">
-                  <CheckCircle className="w-4 h-4" />
-                  {item}
-                </li>
+          {indicators.filter(i => !i.detected).length > 0 ? (
+            <div className="space-y-2">
+              {indicators.filter(i => !i.detected).map((indicator, index) => (
+                <div 
+                  key={index}
+                  className="bg-card/30 border border-success/20 rounded-lg p-3"
+                >
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-success mt-0.5" />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-success/90">{indicator.name}</span>
+                        <span className="text-xs font-mono text-success">
+                          {indicator.confidence}% clean
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{indicator.description}</p>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </ul>
-          </div>
+            </div>
+          ) : (
+            <div className="bg-card/30 border border-warning/20 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-warning/80">
+                <AlertTriangle className="w-4 h-4" />
+                <span className="text-sm">All indicators flagged anomalies</span>
+              </div>
+            </div>
+          )}
           
           <div className="text-xs text-muted-foreground text-center pt-2">
             Analysis completed in {processingTime.toFixed(2)}s

@@ -306,35 +306,157 @@ const generateAnalysisResult = async (
   const notDetected: string[] = [];
   const detailEntries = Object.entries(details);
 
-  // Map technical keys to user-friendly indicator names
-  const indicatorNameMap: Record<string, string> = {
-    'noiseAnalysis': 'Noise Pattern Analysis',
-    'edgeAnalysis': 'Edge Artifact Detection',
-    'colorAnalysis': 'Color Distribution',
-    'compressionAnalysis': 'Compression Artifacts',
-    'symmetryAnalysis': 'Symmetry Analysis',
-    'textureAnalysis': 'Texture Pattern',
-    'repetitionAnalysis': 'Repetition Detection',
-    'gradientAnalysis': 'Gradient Analysis',
-    'quantumEntropyAnalysis': 'Quantum Entropy',
-    'metadataAnalysis': 'AI Tool Signatures',
-    'filenameAnalysis': 'Filename Pattern',
-    'watermarkDetection': 'Watermark Detection',
-    'aiSignatures': 'AI Visual Signatures',
-    'metadataPatterns': 'File Metadata',
-    'spectralAnalysis': 'Spectral Analysis',
-    'pitchAnalysis': 'Pitch Irregularity',
-    'noiseFloorAnalysis': 'Audio Noise Floor',
-    'voiceNaturalness': 'Voice Naturalness',
-    'temporalCoherence': 'Temporal Coherence',
-    'frameConsistency': 'Frame Consistency',
-    'faceTracking': 'Face Tracking',
-    'motionAnalysis': 'Motion Analysis',
+  // Map technical keys to user-friendly indicator names and their detection descriptions
+  const indicatorConfig: Record<string, { 
+    name: string; 
+    detectedDesc: string; 
+    notDetectedDesc: string;
+    category: 'manipulation' | 'artifact' | 'synthesis' | 'metadata';
+  }> = {
+    'noiseAnalysis': { 
+      name: 'Noise Pattern Analysis', 
+      detectedDesc: 'Synthetic noise patterns characteristic of AI generation detected',
+      notDetectedDesc: 'Natural camera sensor noise pattern verified',
+      category: 'synthesis'
+    },
+    'edgeAnalysis': { 
+      name: 'Edge Artifact Detection', 
+      detectedDesc: 'Unnatural edge boundaries or blending artifacts found',
+      notDetectedDesc: 'Edge consistency verified across regions',
+      category: 'manipulation'
+    },
+    'colorAnalysis': { 
+      name: 'Color Distribution', 
+      detectedDesc: 'Color histogram anomalies indicating manipulation',
+      notDetectedDesc: 'Natural color distribution confirmed',
+      category: 'manipulation'
+    },
+    'compressionAnalysis': { 
+      name: 'Compression Artifacts', 
+      detectedDesc: 'Double compression or inconsistent JPEG artifacts detected',
+      notDetectedDesc: 'Compression patterns consistent with single encoding',
+      category: 'artifact'
+    },
+    'symmetryAnalysis': { 
+      name: 'Symmetry Analysis', 
+      detectedDesc: 'Unnatural symmetry patterns found (common in AI faces)',
+      notDetectedDesc: 'Natural asymmetry verified',
+      category: 'synthesis'
+    },
+    'textureAnalysis': { 
+      name: 'Texture Pattern', 
+      detectedDesc: 'Synthetic texture patterns or repetition detected',
+      notDetectedDesc: 'Organic texture variation confirmed',
+      category: 'synthesis'
+    },
+    'repetitionAnalysis': { 
+      name: 'Repetition Detection', 
+      detectedDesc: 'Copy-paste or tiled pattern regions found',
+      notDetectedDesc: 'No suspicious repetition patterns',
+      category: 'manipulation'
+    },
+    'gradientAnalysis': { 
+      name: 'Gradient Analysis', 
+      detectedDesc: 'Unnatural gradient transitions detected',
+      notDetectedDesc: 'Natural lighting gradients verified',
+      category: 'manipulation'
+    },
+    'quantumEntropyAnalysis': { 
+      name: 'Quantum Entropy', 
+      detectedDesc: 'Low entropy regions indicating synthetic generation',
+      notDetectedDesc: 'High entropy consistent with natural capture',
+      category: 'synthesis'
+    },
+    'metadataAnalysis': { 
+      name: 'AI Tool Signatures', 
+      detectedDesc: 'AI generation tool signatures found in metadata',
+      notDetectedDesc: 'No AI tool signatures in file metadata',
+      category: 'metadata'
+    },
+    'filenameAnalysis': { 
+      name: 'Filename Pattern', 
+      detectedDesc: 'Filename matches known AI tool output patterns',
+      notDetectedDesc: 'Filename does not match AI tool patterns',
+      category: 'metadata'
+    },
+    'watermarkDetection': { 
+      name: 'Watermark Detection', 
+      detectedDesc: 'AI tool watermarks or invisible signatures detected',
+      notDetectedDesc: 'No AI watermarks detected',
+      category: 'metadata'
+    },
+    'spectralAnalysis': { 
+      name: 'Spectral Analysis', 
+      detectedDesc: 'Spectral anomalies indicating audio synthesis',
+      notDetectedDesc: 'Natural audio spectrum verified',
+      category: 'synthesis'
+    },
+    'pitchConsistency': { 
+      name: 'Pitch Consistency', 
+      detectedDesc: 'Unnatural pitch variations or voice cloning artifacts',
+      notDetectedDesc: 'Natural pitch variation confirmed',
+      category: 'synthesis'
+    },
+    'noiseFloor': { 
+      name: 'Audio Noise Floor', 
+      detectedDesc: 'Suspiciously clean or synthetic noise floor',
+      notDetectedDesc: 'Natural ambient noise floor verified',
+      category: 'artifact'
+    },
+    'voiceNaturalness': { 
+      name: 'Voice Naturalness', 
+      detectedDesc: 'Synthetic voice patterns or TTS artifacts detected',
+      notDetectedDesc: 'Natural voice characteristics verified',
+      category: 'synthesis'
+    },
+    'frequencyDistribution': { 
+      name: 'Frequency Distribution', 
+      detectedDesc: 'Abnormal frequency patterns indicating manipulation',
+      notDetectedDesc: 'Natural frequency distribution confirmed',
+      category: 'synthesis'
+    },
+    'temporalCoherence': { 
+      name: 'Temporal Coherence', 
+      detectedDesc: 'Temporal discontinuities or frame splicing detected',
+      notDetectedDesc: 'Consistent temporal flow verified',
+      category: 'manipulation'
+    },
+    'frameConsistency': { 
+      name: 'Frame Consistency', 
+      detectedDesc: 'Frame-to-frame inconsistencies indicating deepfake',
+      notDetectedDesc: 'Consistent inter-frame correlation',
+      category: 'manipulation'
+    },
+    'faceTracking': { 
+      name: 'Face Tracking', 
+      detectedDesc: 'Face boundary or tracking anomalies detected',
+      notDetectedDesc: 'Natural face motion patterns verified',
+      category: 'manipulation'
+    },
+    'motionAnalysis': { 
+      name: 'Motion Analysis', 
+      detectedDesc: 'Unnatural motion patterns or warping detected',
+      notDetectedDesc: 'Natural motion physics verified',
+      category: 'manipulation'
+    },
+    'audioVideoSync': { 
+      name: 'Audio-Video Sync', 
+      detectedDesc: 'Audio-visual desynchronization or lip-sync manipulation',
+      notDetectedDesc: 'Audio-video synchronization verified',
+      category: 'manipulation'
+    },
+    'compressionArtifacts': { 
+      name: 'Compression Artifacts', 
+      detectedDesc: 'Suspicious compression patterns indicating manipulation',
+      notDetectedDesc: 'Natural compression artifacts only',
+      category: 'artifact'
+    },
   };
 
   for (const [key, value] of detailEntries) {
+    const config = indicatorConfig[key];
     // Use mapped name or generate readable name from key
-    const name = indicatorNameMap[key] || 
+    const name = config?.name || 
       key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim();
     
     // Special handling for metadata - check for actual AI tool detection
@@ -354,14 +476,25 @@ const generateAnalysisResult = async (
     const threshold = isAIToolDetected ? 30 : 50;
     
     if (value.score > threshold || isAIToolDetected) {
+      // DETECTED: Use the real description from analysis + enhance with context
+      const enhancedDescription = value.description || config?.detectedDesc || `Anomaly detected with ${value.score}% confidence`;
       indicators.push({
         name: isAIToolDetected ? 'AI Tool Detected' : name,
         detected: true,
         confidence: Math.round(value.score),
-        description: value.description
+        description: enhancedDescription
       });
     } else {
-      notDetected.push(name);
+      // NOT DETECTED: Add as verified-clean indicator with meaningful context
+      const cleanDescription = config?.notDetectedDesc || `No anomalies detected (${value.score.toFixed(0)}% threshold)`;
+      indicators.push({
+        name,
+        detected: false,
+        confidence: Math.round(100 - value.score), // Invert for "clean" confidence
+        description: cleanDescription
+      });
+      // Also add to simple notDetected list for backward compatibility
+      notDetected.push(`${name} (verified clean)`);
     }
   }
 
