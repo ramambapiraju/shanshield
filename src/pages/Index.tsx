@@ -69,12 +69,23 @@ const Index = () => {
       {/* Header */}
       <header className="relative border-b border-border/50 bg-card/30 backdrop-blur-xl">
         {/* Developer Credit Bar */}
-        <div className="bg-primary/5 border-b border-primary/20 py-1.5">
-          <div className="container mx-auto px-6 flex items-center justify-center gap-3 text-xs">
-            <span className="text-muted-foreground">Developed by</span>
-            <span className="font-display text-primary font-semibold tracking-wide">Shanmuka Sai Varma</span>
-            <span className="text-muted-foreground/50">•</span>
-            <span className="text-primary/80">🏆 ASME IMECE 2025 Innovation Pitchathon Winner</span>
+        <div className="bg-primary/5 border-b border-primary/20 py-2">
+          <div className="container mx-auto px-6 flex flex-col items-center gap-1.5 text-xs">
+            <div className="flex items-center gap-3">
+              <span className="text-muted-foreground">Developed by</span>
+              <span className="font-display text-primary font-semibold tracking-wide">Shanmuka Sai Varma</span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap justify-center">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-full text-yellow-400 font-medium">
+                🏆 WINNER — IIT Delhi E-Raksha Hackathon
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 font-medium">
+                🏆 WINNER — ASME IMECE 2025 Innovation Pitchathon
+              </span>
+            </div>
+            <p className="text-[10px] text-muted-foreground/70">
+              American Society of Mechanical Engineers — International Mechanical Engineering Congress & Exposition
+            </p>
           </div>
         </div>
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
@@ -242,11 +253,16 @@ const Index = () => {
             <p className="text-lg font-display text-foreground tracking-wide">
               Shanmuka Sai Varma
             </p>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full">
-              <span className="text-sm text-primary font-medium">🏆 Winner — ASME IMECE 2025 Innovation Pitchathon</span>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-full">
+                <span className="text-sm text-yellow-400 font-medium">🏆 Winner — IIT Delhi E-Raksha Hackathon</span>
+              </div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
+                <span className="text-sm text-emerald-400 font-medium">🏆 Winner — ASME IMECE 2025 Innovation Pitchathon</span>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground max-w-md mx-auto">
-              American Society of Mechanical Engineers International Mechanical Engineering Congress & Exposition
+            <p className="text-xs text-muted-foreground max-w-lg mx-auto">
+              American Society of Mechanical Engineers — International Mechanical Engineering Congress & Exposition
             </p>
           </div>
         </div>
