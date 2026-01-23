@@ -76,16 +76,13 @@ const Index = () => {
               <span className="font-display text-primary font-semibold tracking-wide">Shanmuka Sai Varma</span>
             </div>
             <div className="flex items-center gap-2 flex-wrap justify-center">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-full text-yellow-400 font-medium">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 font-medium">
                 🏆 WINNER — IIT Delhi E-Raksha Hackathon
               </span>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 font-medium">
-                🏆 WINNER — ASME IMECE 2025 Innovation Pitchathon
+                🏆 WINNER — American Society of Mechanical Engineers IMECE 2025 Innovation Pitchathon
               </span>
             </div>
-            <p className="text-[10px] text-muted-foreground/70">
-              American Society of Mechanical Engineers — International Mechanical Engineering Congress & Exposition
-            </p>
           </div>
         </div>
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
@@ -254,16 +251,13 @@ const Index = () => {
               Shanmuka Sai Varma
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-full">
-                <span className="text-sm text-yellow-400 font-medium">🏆 Winner — IIT Delhi E-Raksha Hackathon</span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
+                <span className="text-sm text-emerald-400 font-medium">🏆 Winner — IIT Delhi E-Raksha Hackathon</span>
               </div>
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
-                <span className="text-sm text-emerald-400 font-medium">🏆 Winner — ASME IMECE 2025 Innovation Pitchathon</span>
+                <span className="text-sm text-emerald-400 font-medium">🏆 Winner — American Society of Mechanical Engineers IMECE 2025 Innovation Pitchathon</span>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground max-w-lg mx-auto">
-              American Society of Mechanical Engineers — International Mechanical Engineering Congress & Exposition
-            </p>
           </div>
         </div>
       </section>
