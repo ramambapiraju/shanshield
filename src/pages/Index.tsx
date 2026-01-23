@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Shield, Play, RotateCcw, Presentation, FileText } from "lucide-react";
+import { Shield, Play, RotateCcw, Presentation, FileText, Brain, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ErakshaBadge from "@/components/ErakshaBadge";
 import MediaUploader from "@/components/analysis/MediaUploader";
@@ -15,22 +15,32 @@ import PresentationMode from "@/components/PresentationMode";
 import TechShowcase from "@/components/TechShowcase";
 import TechnicalSummaryPDF from "@/components/TechnicalSummaryPDF";
 import QuantumEntropyVisualizer from "@/components/QuantumEntropyVisualizer";
+import LiveCallAnalyzer from "@/components/LiveCallAnalyzer";
+import AgentDashboard from "@/components/AgentDashboard";
 import { useAnalysis } from "@/hooks/useAnalysis";
 
 const Index = () => {
-const [showPresentation, setShowPresentation] = useState(false);
+  const [showPresentation, setShowPresentation] = useState(false);
   const [showTechSummary, setShowTechSummary] = useState(false);
-  // Ctrl+P keyboard shortcut to toggle presentation
+  const [showAgentDashboard, setShowAgentDashboard] = useState(false);
+  const [showLiveCall, setShowLiveCall] = useState(false);
+  
+  // Ctrl+P keyboard shortcut to toggle presentation, Ctrl+D for dashboard
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "p") {
         e.preventDefault();
         setShowPresentation((prev) => !prev);
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+        e.preventDefault();
+        setShowAgentDashboard((prev) => !prev);
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+  
   const {
     files,
     isAnalyzing,
@@ -51,6 +61,7 @@ const [showPresentation, setShowPresentation] = useState(false);
       <JudgeModePanel />
       <PresentationMode isOpen={showPresentation} onClose={() => setShowPresentation(false)} />
       <TechnicalSummaryPDF isOpen={showTechSummary} onClose={() => setShowTechSummary(false)} />
+      <AgentDashboard isOpen={showAgentDashboard} onClose={() => setShowAgentDashboard(false)} />
       <div className="fixed inset-0 bg-radial-glow pointer-events-none" />
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
@@ -135,7 +146,19 @@ const [showPresentation, setShowPresentation] = useState(false);
               </Button>
             )}
             
+            {/* Live Call Analyzer */}
+            <LiveCallAnalyzer />
             
+            {/* Agent Dashboard Button */}
+            <Button 
+              onClick={() => setShowAgentDashboard(true)}
+              variant="outline"
+              size="lg"
+              className="w-full border-primary/30 hover:border-primary hover:bg-primary/5"
+            >
+              <Brain className="w-5 h-5 mr-2" />
+              AI AGENT DASHBOARD
+            </Button>
           </div>
 
           {/* CENTER/RIGHT - Analysis & Results */}
