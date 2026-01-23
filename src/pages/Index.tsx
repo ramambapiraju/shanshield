@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Shield, Play, RotateCcw, Presentation, FileText, Brain, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import ErakshaBadge from "@/components/ErakshaBadge";
+import Gemini3Badge from "@/components/Gemini3Badge";
 import MediaUploader from "@/components/analysis/MediaUploader";
 import AnalysisPipeline from "@/components/analysis/AnalysisPipeline";
 import AnalysisResults from "@/components/analysis/AnalysisResults";
@@ -89,7 +89,7 @@ const Index = () => {
               </span>
             </div>
           </div>
-          <ErakshaBadge />
+          <Gemini3Badge />
         </div>
       </header>
 
@@ -259,7 +259,7 @@ const Index = () => {
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span className="font-display tracking-wider">SHANSHIELD v4.2.0 (Experimental)</span>
               <div className="flex items-center gap-3">
-                <span className="uppercase tracking-widest">IIT Delhi ERAKSHA Hackathon 2026</span>
+                <span className="uppercase tracking-widest">Google Gemini 3 Hackathon 2025</span>
                 <Button 
                   onClick={() => setShowTechSummary(true)}
                   variant="ghost"
