@@ -53,12 +53,6 @@ const Gemini3Badge = () => {
               </div>
             ))}
           </div>
-          
-          <div className="text-center pt-1">
-            <span className="text-[9px] text-muted-foreground/70 uppercase tracking-widest">
-              Hackathon 2025 Entry
-            </span>
-          </div>
         </div>
       </div>
     </div>
