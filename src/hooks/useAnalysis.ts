@@ -776,7 +776,17 @@ export const useAnalysis = () => {
     const analysisResult = await generateAnalysisResult(files[0], isFieldMode, realAnalysisResult, timeInSeconds);
     setResult(analysisResult);
     setAnalysisComplete(true);
-  }, [files, isFieldMode, realAnalysisResult, processingTimeMs]);
+    
+    // Dispatch event for AI Agent Dashboard
+    window.dispatchEvent(new CustomEvent('shanshield:analysis-complete', {
+      detail: {
+        result: analysisResult,
+        fileName: files[0].file.name,
+        duration: processingTimeMs,
+        analysisMode: analysisMode
+      }
+    }));
+  }, [files, isFieldMode, realAnalysisResult, processingTimeMs, analysisMode]);
 
   const handleProgress = useCallback((step: string, progress: number) => {
     setCurrentProgress({ step, progress });
