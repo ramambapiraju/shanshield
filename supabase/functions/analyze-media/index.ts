@@ -12,6 +12,8 @@ const corsHeaders = {
  * ║  Real AI-powered Deepfake Detection using Google Gemini 3                 ║
  * ║  Backend: Supabase Edge Functions (Lovable Cloud)                         ║
  * ║  Model: google/gemini-3-flash-preview (Gemini 3 Hackathon)                ║
+ * ║                                                                           ║
+ * ║  MULTI-FRAME VIDEO ANALYSIS: Analyzes 5+ frames throughout the video     ║
  * ╚═══════════════════════════════════════════════════════════════════════════╝
  */
 
@@ -34,7 +36,7 @@ interface MLAnalysisResult {
 /**
  * System prompt for deepfake analysis - Optimized for Gemini 3
  */
-const DEEPFAKE_ANALYSIS_PROMPT = `You are ShanShield, an expert AI system specialized in detecting AI-generated and manipulated media (deepfakes). You are powered by Google Gemini 3 - the most advanced multimodal AI model. Analyze the provided image for signs of AI generation or manipulation with extreme precision.
+const DEEPFAKE_ANALYSIS_PROMPT = `You are ShanShield, an expert AI system specialized in detecting AI-generated and manipulated media (deepfakes). You are powered by Google Gemini 3 - the most advanced multimodal AI model. Analyze the provided image(s) for signs of AI generation or manipulation with extreme precision.
 
 ANALYZE FOR:
 1. **AI Generation Artifacts**: Look for telltale signs of AI image generators like:
@@ -66,13 +68,20 @@ ANALYZE FOR:
    - DALL-E (smooth gradients, distinct style)
    - Face swap tools (boundary issues, lighting mismatches)
    - StyleGAN (characteristic eye/hair artifacts)
-   - Sora/Runway (video generation artifacts)
+   - Sora/Runway/Kling/Pika (video generation artifacts)
    - Voice cloning (ElevenLabs, Resemble.AI)
 
 5. **Quantum Entropy Markers**: Analyze for:
    - Unnaturally low entropy in textures (AI over-smoothing)
    - Periodic patterns that indicate algorithmic generation
    - Statistical anomalies in pixel distributions
+
+6. **TEMPORAL ANALYSIS (for videos with multiple frames)**:
+   - Compare faces across frames for consistency
+   - Look for flickering or morphing artifacts
+   - Check if lighting changes unnaturally between frames
+   - Identify motion blur inconsistencies
+   - Detect frame interpolation artifacts
 
 RESPOND WITH EXACTLY THIS JSON FORMAT:
 {
@@ -85,7 +94,7 @@ RESPOND WITH EXACTLY THIS JSON FORMAT:
 }
 
 VERDICT GUIDELINES:
-- "authentic": High confidence (85%+) the image is a real, unmanipulated photo
+- "authentic": High confidence (85%+) the image/video is a real, unmanipulated recording
 - "likely_authentic": Some minor concerns but probably genuine (60-84%)
 - "suspicious": Notable anomalies suggesting possible manipulation (40-59%)
 - "deepfake": Strong evidence of AI generation or manipulation (0-39% authentic confidence, meaning 60%+ deepfake confidence)
@@ -94,9 +103,11 @@ Be conservative - real photos often have compression artifacts. Only flag as dee
 
 /**
  * Analyze media using Lovable AI Gateway with Gemini Vision
+ * Supports MULTIPLE frames for video analysis
  */
 async function analyzeWithGeminiVision(
   imageBase64: string | null,
+  videoFrames: string[] | undefined,
   mediaType: string,
   fileName: string,
   offlineAnalysis: OfflineAnalysisData
@@ -112,44 +123,87 @@ async function analyzeWithGeminiVision(
     { role: "system", content: DEEPFAKE_ANALYSIS_PROMPT }
   ];
 
-  // Build user message with or without image
-  if (imageBase64) {
-    // Extract the base64 data (remove data:image/...;base64, prefix if present)
-    let base64Data = imageBase64;
+  // Helper to extract base64 data
+  const extractBase64 = (dataUrl: string): { mimeType: string; base64Data: string } => {
+    let base64Data = dataUrl;
     let mimeType = "image/jpeg";
     
-    if (imageBase64.startsWith("data:")) {
-      const matches = imageBase64.match(/^data:([^;]+);base64,(.+)$/);
+    if (dataUrl.startsWith("data:")) {
+      const matches = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
       if (matches) {
         mimeType = matches[1];
         base64Data = matches[2];
       }
     }
+    return { mimeType, base64Data };
+  };
 
-    messages.push({
-      role: "user",
-      content: [
-        {
-          type: "image_url",
-          image_url: {
-            url: `data:${mimeType};base64,${base64Data}`
-          }
-        },
-        {
-          type: "text",
-          text: `Analyze this ${mediaType} file "${fileName}" for deepfake/AI-generation signs.\n\nOffline analysis data for context:\n- Preliminary score: ${offlineAnalysis.score}/100 (higher = more suspicious)\n- Detected signals: ${offlineAnalysis.signals.join(", ") || "None"}\n\nProvide your analysis in the exact JSON format specified.`
+  // Build user message with images
+  const userContent: any[] = [];
+  
+  // For VIDEO with multiple frames - send ALL frames to Gemini
+  if (mediaType === 'video' && videoFrames && videoFrames.length > 0) {
+    console.log(`Processing ${videoFrames.length} video frames for Gemini analysis`);
+    
+    // Add each frame as an image
+    for (let i = 0; i < videoFrames.length; i++) {
+      const { mimeType, base64Data } = extractBase64(videoFrames[i]);
+      userContent.push({
+        type: "image_url",
+        image_url: {
+          url: `data:${mimeType};base64,${base64Data}`
         }
-      ]
+      });
+    }
+    
+    userContent.push({
+      type: "text",
+      text: `Analyze these ${videoFrames.length} frames extracted from video "${fileName}" for deepfake/AI-generation signs.
+
+IMPORTANT: These are ${videoFrames.length} frames from DIFFERENT timestamps throughout the video. Compare them for:
+- Temporal consistency (do faces look the same across frames?)
+- Flickering or morphing artifacts
+- Lighting consistency across frames
+- Motion blur inconsistencies
+- Any signs of frame interpolation or AI generation
+
+Offline forensic analysis data for context:
+- Preliminary score: ${offlineAnalysis.score}/100 (higher = more suspicious)
+- Detected signals: ${offlineAnalysis.signals.join(", ") || "None"}
+- Frame analysis details: ${JSON.stringify(offlineAnalysis.details, null, 2)}
+
+Provide your analysis in the exact JSON format specified.`
+    });
+  } else if (imageBase64) {
+    // Single image analysis
+    const { mimeType, base64Data } = extractBase64(imageBase64);
+    
+    userContent.push({
+      type: "image_url",
+      image_url: {
+        url: `data:${mimeType};base64,${base64Data}`
+      }
+    });
+    
+    userContent.push({
+      type: "text",
+      text: `Analyze this ${mediaType} file "${fileName}" for deepfake/AI-generation signs.\n\nOffline analysis data for context:\n- Preliminary score: ${offlineAnalysis.score}/100 (higher = more suspicious)\n- Detected signals: ${offlineAnalysis.signals.join(", ") || "None"}\n\nProvide your analysis in the exact JSON format specified.`
     });
   } else {
     // No image provided - analyze based on offline data only
-    messages.push({
-      role: "user",
-      content: `Analyze this ${mediaType} file "${fileName}" for deepfake potential based on the offline analysis data:\n\n- Preliminary score: ${offlineAnalysis.score}/100 (higher = more suspicious)\n- Detected signals: ${offlineAnalysis.signals.join(", ") || "None"}\n- Analysis details: ${JSON.stringify(offlineAnalysis.details, null, 2)}\n\nBased on this forensic data, provide your assessment in the exact JSON format specified. Since no visual is available, weight the offline analysis heavily.`
+    userContent.push({
+      type: "text",
+      text: `Analyze this ${mediaType} file "${fileName}" for deepfake potential based on the offline analysis data:\n\n- Preliminary score: ${offlineAnalysis.score}/100 (higher = more suspicious)\n- Detected signals: ${offlineAnalysis.signals.join(", ") || "None"}\n- Analysis details: ${JSON.stringify(offlineAnalysis.details, null, 2)}\n\nBased on this forensic data, provide your assessment in the exact JSON format specified. Since no visual is available, weight the offline analysis heavily.`
     });
   }
 
-  console.log("Calling Lovable AI Gateway with Gemini 3 Flash Preview...");
+  messages.push({
+    role: "user",
+    content: userContent
+  });
+
+  const frameInfo = videoFrames && videoFrames.length > 0 ? ` (${videoFrames.length} frames)` : '';
+  console.log(`Calling Lovable AI Gateway with Gemini 3 Flash Preview${frameInfo}...`);
   
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -161,7 +215,7 @@ async function analyzeWithGeminiVision(
       model: "google/gemini-3-flash-preview",
       messages,
       temperature: 0.2, // Lower temperature for more precise analysis
-      max_tokens: 1500,
+      max_tokens: 2000, // Increased for multi-frame analysis
     }),
   });
 
@@ -237,17 +291,19 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64, mediaType, fileName, offlineAnalysis } = await req.json();
+    const { imageBase64, videoFrames, mediaType, fileName, offlineAnalysis } = await req.json();
     
     console.log(`\n=== ShanShield Cloud ML Analysis Request ===`);
     console.log(`Media Type: ${mediaType}`);
     console.log(`File: ${fileName}`);
     console.log(`Has Image: ${!!imageBase64}`);
+    console.log(`Video Frames: ${videoFrames?.length || 0}`);
     console.log(`Image Size: ${imageBase64 ? Math.round(imageBase64.length / 1024) : 0} KB`);
 
-    // Run real ML analysis using Gemini Vision
+    // Run real ML analysis using Gemini Vision (with multi-frame support)
     const mlResult = await analyzeWithGeminiVision(
       imageBase64,
+      videoFrames,
       mediaType || 'image',
       fileName || 'unknown',
       offlineAnalysis || { score: 50, signals: [], details: {} }

@@ -20,8 +20,8 @@ export interface VideoAnalysisFindings {
   metadata?: MetadataAnalysisResult;
 }
 
-// Extract frames from video
-const extractFrames = (video: HTMLVideoElement, numFrames: number = 10): Promise<ImageData[]> => {
+// Extract frames from video - FULL RESOLUTION for real forensic analysis
+const extractFrames = (video: HTMLVideoElement, numFrames: number = 30): Promise<ImageData[]> => {
   return new Promise((resolve) => {
     const frames: ImageData[] = [];
     const canvas = document.createElement('canvas');
@@ -29,8 +29,9 @@ const extractFrames = (video: HTMLVideoElement, numFrames: number = 10): Promise
     const duration = video.duration;
     const interval = duration / (numFrames + 1);
     
-    canvas.width = Math.min(256, video.videoWidth);
-    canvas.height = Math.min(256, video.videoHeight);
+    // Use higher resolution for accuracy (512x512 minimum for forensic analysis)
+    canvas.width = Math.min(512, video.videoWidth);
+    canvas.height = Math.min(512, video.videoHeight);
     
     let currentFrame = 0;
     
@@ -53,6 +54,60 @@ const extractFrames = (video: HTMLVideoElement, numFrames: number = 10): Promise
     };
     
     captureFrame();
+  });
+};
+
+// Extract multiple frames as base64 for Gemini Cloud Analysis
+export const extractMultipleFramesBase64 = async (file: File, numFrames: number = 5): Promise<string[]> => {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.preload = 'auto';
+    video.muted = true;
+    
+    const timeout = setTimeout(() => {
+      URL.revokeObjectURL(video.src);
+      reject(new Error('Video frame extraction timed out'));
+    }, 30000);
+    
+    video.onloadedmetadata = async () => {
+      const frames: string[] = [];
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d')!;
+      const duration = video.duration;
+      
+      // Use 720p for cloud analysis (balance quality/size)
+      canvas.width = Math.min(720, video.videoWidth);
+      canvas.height = Math.min(720, video.videoHeight);
+      
+      const interval = duration / (numFrames + 1);
+      
+      for (let i = 1; i <= numFrames; i++) {
+        try {
+          video.currentTime = interval * i;
+          await new Promise<void>((res) => {
+            video.onseeked = () => res();
+          });
+          
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const base64 = canvas.toDataURL('image/jpeg', 0.8);
+          frames.push(base64);
+        } catch (e) {
+          console.warn(`Failed to extract frame ${i}:`, e);
+        }
+      }
+      
+      clearTimeout(timeout);
+      URL.revokeObjectURL(video.src);
+      resolve(frames);
+    };
+    
+    video.onerror = () => {
+      clearTimeout(timeout);
+      URL.revokeObjectURL(video.src);
+      reject(new Error('Failed to load video'));
+    };
+    
+    video.src = URL.createObjectURL(file);
   });
 };
 
@@ -515,7 +570,8 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
     
     video.onloadedmetadata = async () => {
       const duration = video.duration;
-      const numFrames = Math.min(15, Math.max(5, Math.floor(duration * 2)));
+      // Extract MORE frames for thorough analysis (min 10, max 40, scale with duration)
+      const numFrames = Math.min(40, Math.max(10, Math.floor(duration * 3)));
       
       try {
         const frames = await extractFrames(video, numFrames);

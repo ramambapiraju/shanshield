@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { extractMultipleFramesBase64 } from "./videoAnalyzer";
 
 export interface CloudAnalysisResult {
   verdict: 'deepfake' | 'suspicious' | 'likely_authentic' | 'authentic';
@@ -66,6 +67,22 @@ async function compressImage(file: File): Promise<string> {
     
     img.src = URL.createObjectURL(file);
   });
+}
+
+/**
+ * Extract MULTIPLE frames from video for thorough Gemini analysis
+ * Extracts 5 frames evenly distributed throughout the video
+ */
+async function extractMultipleVideoFrames(file: File): Promise<string[]> {
+  try {
+    // Use the shared utility for extracting multiple frames
+    const frames = await extractMultipleFramesBase64(file, 5);
+    console.log(`Extracted ${frames.length} frames from video for cloud analysis`);
+    return frames;
+  } catch (e) {
+    console.warn('Could not extract multiple video frames:', e);
+    return [];
+  }
 }
 
 /**
@@ -145,11 +162,19 @@ export async function analyzeWithCloud(
         reader.readAsDataURL(file);
       });
     }
-  } else if (mediaType === 'video') {
+  }
+  
+  // For VIDEO: Extract MULTIPLE frames for thorough analysis
+  let videoFrames: string[] = [];
+  if (mediaType === 'video') {
     try {
-      imageBase64 = await extractVideoFrame(file);
+      videoFrames = await extractMultipleVideoFrames(file);
+      // Use first frame as primary image for backwards compatibility
+      if (videoFrames.length > 0) {
+        imageBase64 = videoFrames[0];
+      }
     } catch (e) {
-      console.warn('Could not extract video frame:', e);
+      console.warn('Could not extract video frames:', e);
     }
   }
   
@@ -158,16 +183,19 @@ export async function analyzeWithCloud(
     console.warn(`Image base64 is large: ${Math.round(imageBase64.length / 1024)}KB - analysis may be slow`);
   }
   
-  console.log(`Calling edge function with ${imageBase64 ? Math.round(imageBase64.length / 1024) + 'KB image' : 'no image'}`);
+  const frameCountLog = videoFrames.length > 0 ? ` + ${videoFrames.length} video frames` : '';
+  console.log(`Calling edge function with ${imageBase64 ? Math.round(imageBase64.length / 1024) + 'KB image' : 'no image'}${frameCountLog}`);
   
-  // Call the edge function with timeout
+  // Call the edge function with timeout (longer for video with multiple frames)
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+  const timeoutMs = mediaType === 'video' && videoFrames.length > 0 ? 90000 : 60000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   
   try {
     const { data, error } = await supabase.functions.invoke('analyze-media', {
       body: {
         imageBase64,
+        videoFrames: videoFrames.length > 0 ? videoFrames : undefined,
         mediaType,
         fileName: file.name,
         offlineAnalysis

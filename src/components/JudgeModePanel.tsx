@@ -105,12 +105,29 @@ function analyzeNoisePatterns(pixels: Uint8ClampedArray, width: number, height: 
 }
 
 function applySobelEdgeDetection(pixels: Uint8ClampedArray, width: number, height: number) {
-  // Sobel operator for edge detection
-  // Returns edge strength score (higher = more defined edges)
+  // Real Sobel operator implementation for edge detection
   const Gx = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
   const Gy = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
-  // ... apply convolution and return edge magnitude
-  return 0.72; // Placeholder - actual implementation applies convolution
+  
+  let edgeSum = 0, count = 0;
+  
+  // Apply Sobel convolution across image
+  for (let y = 1; y < height - 1; y += 2) {
+    for (let x = 1; x < width - 1; x += 2) {
+      let gx = 0, gy = 0;
+      for (let ky = -1; ky <= 1; ky++) {
+        for (let kx = -1; kx <= 1; kx++) {
+          const idx = ((y + ky) * width + (x + kx)) * 4;
+          const gray = (pixels[idx] + pixels[idx+1] + pixels[idx+2]) / 3;
+          gx += gray * Gx[ky + 1][kx + 1];
+          gy += gray * Gy[ky + 1][kx + 1];
+        }
+      }
+      edgeSum += Math.sqrt(gx * gx + gy * gy);
+      count++;
+    }
+  }
+  return Math.min((edgeSum / count) / 100, 1); // Real normalized edge score
 }`
     },
     {
@@ -203,10 +220,29 @@ function analyzeSpectralContent(frequencyData: Float32Array) {
 }
 
 function detectPitchAnomalies(samples: Float32Array, sampleRate: number) {
-  // Autocorrelation-based pitch detection
-  // Look for unnaturally stable pitch (sign of synthesis)
-  // ... implementation using autocorrelation
-  return 0.65; // Placeholder
+  // Real autocorrelation-based pitch detection
+  const windowSize = Math.floor(sampleRate * 0.03); // 30ms window
+  const minPeriod = Math.floor(sampleRate / 500);  // Max 500Hz
+  const maxPeriod = Math.floor(sampleRate / 80);   // Min 80Hz
+  const pitches: number[] = [];
+  
+  for (let start = 0; start < samples.length - windowSize * 2; start += windowSize) {
+    let maxCorr = 0, bestPeriod = 0;
+    for (let period = minPeriod; period < maxPeriod; period++) {
+      let correlation = 0;
+      for (let i = 0; i < windowSize; i++) {
+        correlation += samples[start + i] * samples[start + i + period];
+      }
+      if (correlation > maxCorr) { maxCorr = correlation; bestPeriod = period; }
+    }
+    if (bestPeriod > 0) pitches.push(sampleRate / bestPeriod);
+  }
+  
+  if (pitches.length < 2) return 0.5;
+  const mean = pitches.reduce((a, b) => a + b, 0) / pitches.length;
+  const variance = pitches.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / pitches.length;
+  const cv = Math.sqrt(variance) / mean;
+  return cv < 0.1 ? 0.8 : Math.min(0.3 + cv, 1); // Low variance = suspicious
 }`
     },
     {
@@ -304,9 +340,35 @@ function analyzeFrameConsistency(frames: ImageData[]) {
 }
 
 function analyzeMotionPatterns(frames: ImageData[]) {
-  // Analyze motion vectors for unnatural patterns
-  // ... implementation using frame differencing
-  return 0.68; // Placeholder
+  // Real motion vector analysis using frame differencing
+  const motionMagnitudes: number[] = [];
+  
+  for (let i = 1; i < frames.length; i++) {
+    const prev = frames[i - 1].data;
+    const curr = frames[i].data;
+    const width = frames[i].width;
+    let totalMotion = 0, samples = 0;
+    
+    for (let y = 2; y < frames[i].height - 2; y += 4) {
+      for (let x = 2; x < width - 2; x += 4) {
+        const idx = (y * width + x) * 4;
+        const prevGray = (prev[idx] + prev[idx+1] + prev[idx+2]) / 3;
+        const currGray = (curr[idx] + curr[idx+1] + curr[idx+2]) / 3;
+        totalMotion += Math.abs(currGray - prevGray);
+        samples++;
+      }
+    }
+    motionMagnitudes.push(totalMotion / samples);
+  }
+  
+  // Detect unnatural acceleration patterns
+  let unnaturalTransitions = 0;
+  for (let i = 2; i < motionMagnitudes.length; i++) {
+    const accel = Math.abs(motionMagnitudes[i] - 2*motionMagnitudes[i-1] + motionMagnitudes[i-2]);
+    if (accel > 15) unnaturalTransitions++;
+  }
+  
+  return Math.min((unnaturalTransitions / motionMagnitudes.length) * 2, 1);
 }`
     },
     {
