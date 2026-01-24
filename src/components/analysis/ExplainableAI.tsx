@@ -100,42 +100,53 @@ const ExplainableAI = ({
               </Button>
             </div>
             
-            {/* Simulated Heatmap Visualization */}
+            {/* Real Data-Driven Heatmap Visualization */}
             <div className="relative aspect-video bg-background/50 rounded-lg overflow-hidden border border-border/20">
-              {/* Grid overlay */}
-              <div className="absolute inset-0 grid grid-cols-8 grid-rows-6 opacity-20">
-                {Array.from({ length: 48 }).map((_, i) => (
-                  <div key={i} className="border border-primary/30" />
-                ))}
-              </div>
+              {/* Real heatmap regions from analysis data */}
+              {heatmapRegions.length > 0 ? (
+                <>
+                  {/* Grid overlay based on actual regions */}
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="w-full h-full grid grid-cols-8 grid-rows-6">
+                      {Array.from({ length: 48 }).map((_, i) => (
+                        <div key={i} className="border border-muted-foreground/20" />
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Heatmap regions */}
-              {heatmapRegions.map((region, index) => (
-                <div
-                  key={index}
-                  className="absolute rounded-lg border-2 border-dashed flex items-center justify-center transition-all hover:scale-105"
-                  style={{
-                    left: `${region.x}%`,
-                    top: `${region.y}%`,
-                    width: `${region.width}%`,
-                    height: `${region.height}%`,
-                    borderColor: region.intensity > 70 
-                      ? 'hsl(var(--destructive))' 
-                      : region.intensity > 40 
-                      ? 'hsl(var(--warning))' 
-                      : 'hsl(var(--success))',
-                    background: region.intensity > 70 
-                      ? 'rgba(239, 68, 68, 0.2)' 
-                      : region.intensity > 40 
-                      ? 'rgba(251, 191, 36, 0.2)' 
-                      : 'rgba(34, 197, 94, 0.1)'
-                  }}
-                >
-                  <span className="text-[10px] font-mono text-foreground bg-background/80 px-1 rounded">
-                    {region.label}
-                  </span>
+                  {/* Real heatmap regions from forensic analysis */}
+                  {heatmapRegions.map((region, index) => (
+                    <div
+                      key={index}
+                      className="absolute rounded-lg border-2 border-dashed flex items-center justify-center transition-all hover:scale-105"
+                      style={{
+                        left: `${region.x}%`,
+                        top: `${region.y}%`,
+                        width: `${region.width}%`,
+                        height: `${region.height}%`,
+                        borderColor: region.intensity > 70 
+                          ? 'hsl(var(--destructive))' 
+                          : region.intensity > 40 
+                          ? 'hsl(var(--warning))' 
+                          : 'hsl(var(--success))',
+                        background: region.intensity > 70 
+                          ? 'rgba(239, 68, 68, 0.2)' 
+                          : region.intensity > 40 
+                          ? 'rgba(251, 191, 36, 0.2)' 
+                          : 'rgba(34, 197, 94, 0.1)'
+                      }}
+                    >
+                      <span className="text-[10px] font-mono text-foreground bg-background/80 px-1 rounded">
+                        {region.label} ({region.intensity}%)
+                      </span>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm">
+                  No region data available
                 </div>
-              ))}
+              )}
 
               {/* Scan line animation */}
               <div className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent animate-scan" />
@@ -254,39 +265,44 @@ const ExplainableAI = ({
               </span>
             </div>
 
-            {/* Real Spectrogram/Frequency Visualization based on analysis data */}
+            {/* Real Spectrogram/Frequency Visualization - data-driven only */}
             <div className="relative h-24 bg-background/50 rounded-lg overflow-hidden border border-border/20">
-              {/* Real frequency bars based on audioSegments scores */}
+              {/* Real frequency bars derived strictly from audioSegments data */}
               <div className="absolute inset-0 flex items-end px-1">
-                {Array.from({ length: 60 }).map((_, i) => {
-                  // Map bar position to audioSegment data for real visualization
-                  const segmentIndex = Math.floor((i / 60) * audioSegments.length);
-                  const segment = audioSegments[segmentIndex];
-                  
-                  // Calculate height based on real segment data
-                  // Use score from label if available, otherwise use type-based default
-                  const scoreMatch = segment?.label?.match(/(\d+)%/);
-                  const baseScore = scoreMatch ? parseInt(scoreMatch[1]) : 
-                    segment?.type === 'suspicious' ? 75 : 
-                    segment?.type === 'irregular' ? 50 : 30;
-                  
-                  // Add slight variation for visual appeal while keeping data-driven heights
-                  const variation = Math.sin(i * 0.3) * 10 + Math.cos(i * 0.7) * 5;
-                  const height = Math.max(10, Math.min(90, baseScore + variation));
-                  
-                  return (
-                    <div
-                      key={i}
-                      className={cn(
-                        "flex-1 mx-px rounded-t transition-all",
-                        segment?.type === 'suspicious' && "bg-destructive/60",
-                        segment?.type === 'irregular' && "bg-warning/60",
-                        (!segment || segment?.type === 'normal') && "bg-primary/40"
-                      )}
-                      style={{ height: `${height}%` }}
-                    />
-                  );
-                })}
+                {audioSegments.length > 0 ? (
+                  audioSegments.map((segment, i) => {
+                    // Extract real score from segment label if available
+                    const scoreMatch = segment.label?.match(/(\d+)%/);
+                    const realScore = scoreMatch ? parseInt(scoreMatch[1]) : 
+                      segment.type === 'suspicious' ? 80 : 
+                      segment.type === 'irregular' ? 55 : 35;
+                    
+                    const barWidth = Math.max(100 / Math.max(audioSegments.length, 1), 2);
+                    
+                    return (
+                      <div
+                        key={i}
+                        className={cn(
+                          "rounded-t transition-all",
+                          segment.type === 'suspicious' && "bg-destructive/70",
+                          segment.type === 'irregular' && "bg-warning/70",
+                          segment.type === 'normal' && "bg-primary/50"
+                        )}
+                        style={{ 
+                          height: `${Math.max(10, realScore)}%`,
+                          width: `${barWidth}%`,
+                          marginRight: '1px'
+                        }}
+                        title={`${segment.label}: ${realScore}%`}
+                      />
+                    );
+                  })
+                ) : (
+                  // Show "no data" state instead of fake bars
+                  <div className="flex-1 flex items-center justify-center text-muted-foreground text-xs">
+                    No frequency data available
+                  </div>
+                )}
               </div>
 
               {/* Segment overlays */}

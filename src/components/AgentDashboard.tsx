@@ -434,26 +434,11 @@ const AgentDashboard = ({ isOpen, onClose }: AgentDashboardProps) => {
   // REAL-TIME MONITORING
   // ============================================================================
 
+  // Real agent stats are updated ONLY when analysis events occur - no simulated variations
   const updateAgentStats = useCallback(() => {
     if (!isMonitoring) return;
     
-    setAgentStats(prev => {
-      const updated = { ...prev };
-      Object.keys(updated).forEach(key => {
-        // Simulate real agent activity with slight variations
-        const baseScore = updated[key].score || 80;
-        const variation = (Math.random() - 0.5) * 10;
-        updated[key] = {
-          ...updated[key],
-          score: Math.max(0, Math.min(100, baseScore + variation)),
-          lastRun: new Date(),
-          active: true
-        };
-      });
-      saveToStorage(STORAGE_KEYS.STATS, updated);
-      return updated;
-    });
-    
+    // Just update sync time - actual agent scores come from real analysis events
     setLastSync(new Date());
   }, [isMonitoring]);
 
@@ -551,13 +536,18 @@ const AgentDashboard = ({ isOpen, onClose }: AgentDashboardProps) => {
         analysisMode: analysisMode || 'offline'
       });
       
-      // Update agent stats based on result
+      // Update agent stats with REAL scores from analysis - no random variations
+      const realAgentScores: Record<string, number> = event.detail.agentScores || {};
+      
       setAgentStats(prev => {
         const updated = { ...prev };
+        // Use real agent scores if available, otherwise derive from result confidence
         Object.keys(updated).forEach(key => {
+          const realScore = realAgentScores[key];
           updated[key] = {
             ...updated[key],
-            score: Math.max(50, Math.min(100, result.confidence + (Math.random() - 0.5) * 20)),
+            // Use real agent score if available, otherwise use the overall confidence
+            score: realScore !== undefined ? realScore : result.confidence,
             lastRun: new Date(),
             analysisCount: updated[key].analysisCount + 1
           };
