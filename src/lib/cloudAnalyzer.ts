@@ -19,6 +19,9 @@ export interface OfflineAnalysisData {
   score: number;
   signals: string[];
   details: Record<string, { score: number; description: string }>;
+  spectrogramBase64?: string; // Full-duration audio spectrogram
+  totalFramesAnalyzed?: number; // Video frames analyzed offline
+  totalSamplesAnalyzed?: number; // Audio samples analyzed offline
 }
 
 // Maximum image dimension for cloud analysis
@@ -138,7 +141,7 @@ async function extractVideoFrame(file: File): Promise<string> {
 }
 
 /**
- * Perform cloud-based ML analysis using the edge function
+ * Perform cloud-based ML analysis using the edge function with your Gemini API
  */
 export async function analyzeWithCloud(
   file: File,
@@ -147,7 +150,7 @@ export async function analyzeWithCloud(
 ): Promise<CloudAnalysisResult> {
   let imageBase64: string | null = null;
   
-  console.log(`Cloud analysis starting for ${mediaType}: ${file.name} (${file.size} bytes)`);
+  console.log(`☁️ Cloud ML analysis starting for ${mediaType}: ${file.name} (${file.size} bytes)`);
   
   // Convert media to base64 for vision analysis (with compression)
   if (mediaType === 'image') {
@@ -155,7 +158,6 @@ export async function analyzeWithCloud(
       imageBase64 = await compressImage(file);
     } catch (e) {
       console.warn('Image compression failed, trying raw:', e);
-      // Fallback to raw file if compression fails
       imageBase64 = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
@@ -165,31 +167,39 @@ export async function analyzeWithCloud(
     }
   }
   
-  // For VIDEO: Extract MULTIPLE frames for thorough analysis
+  // For VIDEO: Extract frames for Gemini temporal analysis
   let videoFrames: string[] = [];
   if (mediaType === 'video') {
     try {
       videoFrames = await extractMultipleVideoFrames(file);
-      // Use first frame as primary image for backwards compatibility
       if (videoFrames.length > 0) {
         imageBase64 = videoFrames[0];
       }
+      console.log(`📹 Extracted ${videoFrames.length} frames for Cloud ML (offline analyzed ${offlineAnalysis.totalFramesAnalyzed || 0} frames)`);
     } catch (e) {
       console.warn('Could not extract video frames:', e);
     }
   }
   
+  // For AUDIO: Use the spectrogram from offline analysis
+  let spectrogramBase64: string | undefined;
+  if (mediaType === 'audio' && offlineAnalysis.spectrogramBase64) {
+    spectrogramBase64 = offlineAnalysis.spectrogramBase64;
+    console.log(`🎵 Using full-duration spectrogram for Cloud ML (${offlineAnalysis.totalSamplesAnalyzed || 0} samples analyzed offline)`);
+  }
+  
   // Warn if base64 is still too large
   if (imageBase64 && imageBase64.length > MAX_BASE64_SIZE) {
-    console.warn(`Image base64 is large: ${Math.round(imageBase64.length / 1024)}KB - analysis may be slow`);
+    console.warn(`Image base64 is large: ${Math.round(imageBase64.length / 1024)}KB`);
   }
   
   const frameCountLog = videoFrames.length > 0 ? ` + ${videoFrames.length} video frames` : '';
-  console.log(`Calling edge function with ${imageBase64 ? Math.round(imageBase64.length / 1024) + 'KB image' : 'no image'}${frameCountLog}`);
+  const spectrogramLog = spectrogramBase64 ? ' + spectrogram' : '';
+  console.log(`📡 Calling Gemini API with ${imageBase64 ? Math.round(imageBase64.length / 1024) + 'KB image' : 'no image'}${frameCountLog}${spectrogramLog}`);
   
-  // Call the edge function with timeout (longer for video with multiple frames)
+  // Call the edge function with timeout
   const controller = new AbortController();
-  const timeoutMs = mediaType === 'video' && videoFrames.length > 0 ? 90000 : 60000;
+  const timeoutMs = mediaType === 'video' ? 120000 : mediaType === 'audio' ? 90000 : 60000;
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   
   try {
@@ -197,9 +207,16 @@ export async function analyzeWithCloud(
       body: {
         imageBase64,
         videoFrames: videoFrames.length > 0 ? videoFrames : undefined,
+        spectrogramBase64,
         mediaType,
         fileName: file.name,
-        offlineAnalysis
+        offlineAnalysis: {
+          score: offlineAnalysis.score,
+          signals: offlineAnalysis.signals,
+          details: offlineAnalysis.details,
+          totalFramesAnalyzed: offlineAnalysis.totalFramesAnalyzed,
+          totalSamplesAnalyzed: offlineAnalysis.totalSamplesAnalyzed
+        }
       }
     });
     

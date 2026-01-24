@@ -43,6 +43,8 @@ export interface AudioAnalysisFindings {
   sampleRate: number;
   quantumEntropy?: AudioQuantumEntropyResult;
   metadata?: MetadataAnalysisResult;
+  spectrogramBase64?: string; // Full-duration spectrogram for Cloud ML
+  totalSamplesAnalyzed?: number;
 }
 
 // Load audio file and decode
@@ -676,13 +678,89 @@ const computeAudioEigenvalues = (matrix: number[][]): number[] => {
   return eigenvalues;
 };
 
-// Main audio analysis function
+// Generate full-duration spectrogram as base64 image for Cloud ML analysis
+const generateSpectrogramBase64 = (audioBuffer: AudioBuffer): string => {
+  const samples = audioBuffer.getChannelData(0);
+  const sampleRate = audioBuffer.sampleRate;
+  const fftSize = 1024;
+  const hopSize = 256;
+  
+  // Calculate spectrogram dimensions
+  const numFrames = Math.floor((samples.length - fftSize) / hopSize) + 1;
+  const numBins = fftSize / 2;
+  
+  // Limit canvas size for performance (max 2048px wide)
+  const maxWidth = 2048;
+  const width = Math.min(numFrames, maxWidth);
+  const height = Math.min(numBins, 256); // 256 frequency bins shown
+  
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d')!;
+  
+  // Create image data
+  const imageData = ctx.createImageData(width, height);
+  const data = imageData.data;
+  
+  // Sample frames evenly if we have more than maxWidth
+  const frameStep = numFrames > maxWidth ? numFrames / maxWidth : 1;
+  
+  for (let x = 0; x < width; x++) {
+    const frameIndex = Math.floor(x * frameStep);
+    const start = frameIndex * hopSize;
+    
+    if (start + fftSize > samples.length) continue;
+    
+    // Get samples for this frame
+    const frame = samples.slice(start, start + fftSize);
+    
+    // Apply Hanning window
+    const windowed = new Float32Array(fftSize);
+    for (let i = 0; i < fftSize; i++) {
+      windowed[i] = frame[i] * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / (fftSize - 1)));
+    }
+    
+    // Compute FFT magnitudes
+    const magnitudes = computeFFT(windowed, fftSize);
+    
+    // Draw this column (frequency bins)
+    for (let y = 0; y < height; y++) {
+      const binIndex = Math.floor((y / height) * numBins);
+      const magnitude = magnitudes[binIndex] || 0;
+      
+      // Convert to dB and normalize (log scale)
+      const db = 20 * Math.log10(Math.max(magnitude, 1e-10));
+      const normalized = Math.max(0, Math.min(1, (db + 60) / 60)); // -60dB to 0dB range
+      
+      // Color mapping (black to yellow/orange for audio spectrograms)
+      const intensity = Math.floor(normalized * 255);
+      const pixelIndex = ((height - 1 - y) * width + x) * 4; // Flip Y axis
+      
+      data[pixelIndex] = intensity;     // R
+      data[pixelIndex + 1] = Math.floor(intensity * 0.7); // G
+      data[pixelIndex + 2] = 0;         // B
+      data[pixelIndex + 3] = 255;       // A
+    }
+  }
+  
+  ctx.putImageData(imageData, 0, 0);
+  
+  console.log(`✅ Generated spectrogram: ${width}x${height} covering ${audioBuffer.duration.toFixed(1)}s (${samples.length} samples)`);
+  
+  return canvas.toDataURL('image/png', 0.9);
+};
+
+// Main audio analysis function - analyzes ALL samples
 export const analyzeAudio = async (file: File): Promise<AudioAnalysisFindings> => {
   // Analyze metadata first (catches filenames like "elevenlabs_", "suno_")
   const metadataResult = await analyzeMetadata(file);
   
   try {
     const audioBuffer = await loadAudioBuffer(file);
+    const totalSamples = audioBuffer.getChannelData(0).length;
+    
+    console.log(`🎵 Starting FULL audio analysis: ${totalSamples} samples (${audioBuffer.duration.toFixed(2)}s @ ${audioBuffer.sampleRate}Hz)`);
     
     const spectralAnalysis = analyzeSpectrum(audioBuffer);
     const pitchConsistency = analyzePitch(audioBuffer);
@@ -693,6 +771,11 @@ export const analyzeAudio = async (file: File): Promise<AudioAnalysisFindings> =
     
     // Quantum Entropy Analysis
     const quantumEntropy = analyzeAudioQuantumEntropy(audioBuffer);
+    
+    // Generate full-duration spectrogram for Cloud ML
+    const spectrogramBase64 = generateSpectrogramBase64(audioBuffer);
+    
+    console.log(`✅ Audio analysis complete: ${totalSamples} samples analyzed`);
     
     const metadataAnalysis = {
       score: metadataResult.score,
@@ -762,7 +845,9 @@ export const analyzeAudio = async (file: File): Promise<AudioAnalysisFindings> =
       duration: audioBuffer.duration,
       sampleRate: audioBuffer.sampleRate,
       quantumEntropy,
-      metadata: metadataResult
+      metadata: metadataResult,
+      spectrogramBase64,
+      totalSamplesAnalyzed: totalSamples
     };
   } catch (err) {
     console.error('Audio analysis error:', err);

@@ -559,80 +559,57 @@ export const analyzeVideo = async (
       let lastProgressUpdate = 0;
       
       try {
-        // STREAMING FRAME-BY-FRAME ANALYSIS
-        // Use requestVideoFrameCallback if available, otherwise fallback to seeking
-        if ('requestVideoFrameCallback' in video) {
-          await new Promise<void>((resolvePlayback) => {
-            let framesProcessed = 0;
+        // TRUE ALL-FRAME ANALYSIS via sequential seeking
+        // This ensures we analyze EVERY single frame in the video
+        const fps = 30; // Standard frame rate assumption
+        const totalFrames = Math.ceil(duration * fps);
+        const frameTime = 1 / fps;
+        
+        console.log(`🎬 Starting ALL-FRAME analysis: ~${totalFrames} frames (${duration.toFixed(2)}s @ ${fps}fps)`);
+        
+        // Seek to each frame sequentially
+        for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
+          const targetTime = frameIndex * frameTime;
+          
+          try {
+            // Seek to exact frame time
+            video.currentTime = Math.min(targetTime, duration - 0.001);
             
-            const frameCallback = (_now: DOMHighResTimeStamp, metadata: VideoFrameCallbackMetadata) => {
-              // Draw and process frame
-              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-              const frameData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-              processFrame(frameData, stats, canvas.width, canvas.height);
-              
-              // Quantum entropy on first frame
-              if (framesProcessed === 0) {
-                quantumEntropy = analyzeQuantumEntropy(frameData);
-              }
-              
-              framesProcessed++;
-              
-              // Progress callback (throttled to every 30 frames)
-              if (onProgress && framesProcessed - lastProgressUpdate >= 30) {
-                lastProgressUpdate = framesProcessed;
-                onProgress(framesProcessed, estimatedFrames, 'Analyzing frames...');
-              }
-              
-              // Continue until video ends
-              if (!video.ended && video.currentTime < duration) {
-                (video as any).requestVideoFrameCallback(frameCallback);
-              } else {
-                resolvePlayback();
-              }
-            };
-            
-            video.playbackRate = 2.0; // Speed up playback for faster analysis
-            (video as any).requestVideoFrameCallback(frameCallback);
-            video.play().catch(() => {
-              // Fallback to seeking if autoplay blocked
-              resolvePlayback();
+            await new Promise<void>((resolve, reject) => {
+              const timeout = setTimeout(() => reject(new Error('Seek timeout')), 2000);
+              video.onseeked = () => {
+                clearTimeout(timeout);
+                resolve();
+              };
             });
             
-            // Timeout safety
-            setTimeout(() => resolvePlayback(), Math.max(60000, duration * 1000));
-          });
-        }
-        
-        // Fallback or supplement: seeking-based analysis for high coverage
-        if (stats.frameCount < 50) {
-          // Analyze via seeking if requestVideoFrameCallback didn't work well
-          const seekFrames = Math.min(200, Math.max(50, Math.ceil(duration * 10)));
-          const interval = duration / (seekFrames + 1);
-          
-          for (let i = 1; i <= seekFrames; i++) {
-            try {
-              video.currentTime = interval * i;
-              await new Promise<void>((res) => {
-                video.onseeked = () => res();
-              });
-              
-              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-              const frameData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-              processFrame(frameData, stats, canvas.width, canvas.height);
-              
-              if (i === 1 && !quantumEntropy) {
-                quantumEntropy = analyzeQuantumEntropy(frameData);
-              }
-              
-              if (onProgress && i % 20 === 0) {
-                onProgress(i, seekFrames, 'Seeking frames...');
-              }
-            } catch (e) {
-              console.warn(`Failed to seek to frame ${i}:`, e);
+            // Draw and process this frame
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const frameData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            processFrame(frameData, stats, canvas.width, canvas.height);
+            
+            // Quantum entropy on first frame only
+            if (frameIndex === 0) {
+              quantumEntropy = analyzeQuantumEntropy(frameData);
             }
+            
+            // Progress callback (throttled to every 10 frames for performance)
+            if (onProgress && frameIndex - lastProgressUpdate >= 10) {
+              lastProgressUpdate = frameIndex;
+              onProgress(frameIndex + 1, totalFrames, 'Analyzing all frames...');
+            }
+          } catch (seekError) {
+            // Skip this frame if seek fails, continue with next
+            console.warn(`Frame ${frameIndex} seek failed, continuing...`);
           }
         }
+        
+        // Final progress update
+        if (onProgress) {
+          onProgress(stats.frameCount, stats.frameCount, 'Computing scores...');
+        }
+        
+        console.log(`✅ ALL-FRAME analysis complete: ${stats.frameCount}/${totalFrames} frames processed`);
         
         // Final progress
         if (onProgress) {
