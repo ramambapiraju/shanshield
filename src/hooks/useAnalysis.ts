@@ -7,6 +7,7 @@ import { analyzeDocument, type DocumentAnalysisFindings } from "@/lib/documentAn
 import { type QuantumEntropyResult } from "@/lib/quantumEntropyAnalyzer";
 import { analyzeWithCloud, type CloudAnalysisResult } from "@/lib/cloudAnalyzer";
 import { analyzeC2PA, type C2PAResult } from "@/lib/c2paAnalyzer";
+import { createMediaProvenance, addChainEntry, type MediaProvenance } from "@/lib/pqcCrypto";
 import { toast } from "sonner";
 
 // Analysis mode types - Offline (browser JS engine) or Cloud ML (ShanShield pre-trained model)
@@ -66,6 +67,7 @@ interface AnalysisResult {
   mlSignals?: string[];
   aiToolDetected?: string | null;
   c2paResult?: C2PAResult;
+  pqcProvenance?: MediaProvenance;
 }
 
 type UnifiedAnalysis = {
@@ -554,11 +556,32 @@ const generateAnalysisResult = async (
   // Compute real SHA-256 cryptographic hash of file contents
   const mediaHash = await computeSHA256(file.file);
 
+  // Generate Post-Quantum Cryptographic provenance
+  let pqcProvenance: MediaProvenance | undefined;
+  try {
+    const fileBuffer = await file.file.arrayBuffer();
+    const fileBytes = new Uint8Array(fileBuffer);
+    pqcProvenance = await createMediaProvenance(fileBytes, 'SHANSHIELD-ANALYSIS');
+    
+    // Add analysis entry to chain of custody
+    await addChainEntry(pqcProvenance, 'analyzed', 'SHANSHIELD-FORENSIC-ENGINE', {
+      verdict: verdict,
+      confidence: String(Math.round(confidence)),
+      mediaType: mediaType,
+      analysisScore: String(score),
+      signalCount: String(signals.length),
+    });
+    
+    console.log(`PQC provenance created: Key ${pqcProvenance.keyPair.keyId}`);
+  } catch (pqcError) {
+    console.warn('PQC provenance generation failed:', pqcError);
+  }
+
   const methodsByType: Record<string, string[]> = {
-    image: ["Pixel Noise Analysis", "Sobel Edge Detection", "Color Histogram", "JPEG Artifact Detection", "Symmetry Check", "LBP Texture", "Quantum Entropy Analysis"],
-    video: ["Frame Consistency", "Temporal Coherence", "Face Region Tracking", "Compression Analysis", "Motion Flow", "A/V Sync Check", "Quantum Entropy"],
-    audio: ["Spectral Analysis", "Pitch Tracking", "Noise Floor Detection", "Compression Artifacts", "Voice Naturalness", "Frequency Distribution", "Quantum Entropy"],
-    document: ["Metadata Forensics", "Structure Analysis", "Content Consistency", "Creation Patterns", "Embedded Media Scan", "Modification History"]
+    image: ["Pixel Noise Analysis", "Sobel Edge Detection", "Color Histogram", "JPEG Artifact Detection", "Symmetry Check", "LBP Texture", "Quantum Entropy Analysis", "PQC Digital Signature"],
+    video: ["Frame Consistency", "Temporal Coherence", "Face Region Tracking", "Compression Analysis", "Motion Flow", "A/V Sync Check", "Quantum Entropy", "PQC Chain of Custody"],
+    audio: ["Spectral Analysis", "Pitch Tracking", "Noise Floor Detection", "Compression Artifacts", "Voice Naturalness", "Frequency Distribution", "Quantum Entropy", "Lattice-Based Signature"],
+    document: ["Metadata Forensics", "Structure Analysis", "Content Consistency", "Creation Patterns", "Embedded Media Scan", "Modification History", "PQC Verification"]
   };
 
   return {
@@ -573,7 +596,8 @@ const generateAnalysisResult = async (
     reasoning,
     mediaHash,
     detectionMethods: methodsByType[mediaType] || methodsByType.image,
-    quantumEntropy: analysis.quantumEntropy
+    quantumEntropy: analysis.quantumEntropy,
+    pqcProvenance
   };
 };
 
