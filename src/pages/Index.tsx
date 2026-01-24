@@ -9,6 +9,7 @@ import ExplainableAI from "@/components/analysis/ExplainableAI";
 import ForensicReport from "@/components/analysis/ForensicReport";
 import AnalysisModeToggle from "@/components/analysis/AnalysisModeToggle";
 import C2PAVerification from "@/components/analysis/C2PAVerification";
+import PQCVerification from "@/components/analysis/PQCVerification";
 
 import JudgeModePanel from "@/components/JudgeModePanel";
 import PresentationMode from "@/components/PresentationMode";
@@ -199,6 +200,9 @@ const Index = () => {
                 
                 {/* C2PA Verification */}
                 <C2PAVerification result={result.c2paResult || null} />
+                
+                {/* Post-Quantum Cryptography Verification */}
+                <PQCVerification provenance={result.pqcProvenance || null} />
                 
                 <AnalysisResults
                   verdict={result.verdict}
