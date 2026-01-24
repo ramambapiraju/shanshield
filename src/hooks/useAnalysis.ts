@@ -777,13 +777,61 @@ export const useAnalysis = () => {
     setResult(analysisResult);
     setAnalysisComplete(true);
     
-    // Dispatch event for AI Agent Dashboard
+    // Dispatch event for AI Agent Dashboard with REAL agent scores
+    // Extract real scores from the analysis details for each agent
+    const agentScores: Record<string, number> = {};
+    if (realAnalysisResult?.details) {
+      // Map analysis detail keys to agent names
+      const detailToAgent: Record<string, string> = {
+        'noiseAnalysis': 'visual',
+        'edgeAnalysis': 'visual',
+        'colorAnalysis': 'visual',
+        'textureAnalysis': 'visual',
+        'spectralAnalysis': 'audio',
+        'pitchConsistency': 'audio',
+        'noiseFloor': 'audio',
+        'frequencyDistribution': 'audio',
+        'temporalCoherence': 'temporal',
+        'frameConsistency': 'temporal',
+        'motionAnalysis': 'temporal',
+        'metadataAnalysis': 'metadata',
+        'filenameAnalysis': 'aiSignature',
+        'watermarkDetection': 'aiSignature',
+        'quantumEntropyAnalysis': 'quantum',
+      };
+      
+      // Aggregate scores per agent
+      const agentTotals: Record<string, { sum: number; count: number }> = {};
+      
+      for (const [key, value] of Object.entries(realAnalysisResult.details)) {
+        const agentName = detailToAgent[key];
+        if (agentName && typeof value === 'object' && 'score' in value) {
+          if (!agentTotals[agentName]) {
+            agentTotals[agentName] = { sum: 0, count: 0 };
+          }
+          // Invert score for authentic media (high score = suspicious, we want high = healthy)
+          const healthScore = 100 - value.score;
+          agentTotals[agentName].sum += healthScore;
+          agentTotals[agentName].count += 1;
+        }
+      }
+      
+      // Calculate average for each agent
+      for (const [agent, totals] of Object.entries(agentTotals)) {
+        agentScores[agent] = Math.round(totals.sum / totals.count);
+      }
+      
+      // Arbiter is the final confidence
+      agentScores['arbiter'] = analysisResult.confidence;
+    }
+    
     window.dispatchEvent(new CustomEvent('shanshield:analysis-complete', {
       detail: {
         result: analysisResult,
         fileName: files[0].file.name,
         duration: processingTimeMs,
-        analysisMode: analysisMode
+        analysisMode: analysisMode,
+        agentScores: agentScores
       }
     }));
   }, [files, isFieldMode, realAnalysisResult, processingTimeMs, analysisMode]);

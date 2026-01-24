@@ -935,8 +935,10 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
             <div className="relative h-16 bg-background rounded-lg overflow-hidden border border-border/50 flex items-center justify-center">
               <div className="flex items-end justify-center gap-1 h-12">
                 {Array.from({ length: 20 }).map((_, i) => {
-                  const barHeight = Math.min(100, audioLevel + Math.random() * 20);
-                  const isActive = barHeight > (i * 5);
+                  // Real audio level visualization - no random jitter
+                  const threshold = (i / 20) * 100;
+                  const isActive = audioLevel > threshold;
+                  const barHeight = isActive ? Math.max(10, audioLevel - threshold + 10) : 4;
                   return (
                     <div
                       key={i}
@@ -945,7 +947,7 @@ const MediaUploader = ({ onFilesSelected, isAnalyzing }: MediaUploaderProps) => 
                         isActive ? "bg-purple-400" : "bg-muted/30"
                       )}
                       style={{ 
-                        height: `${isActive ? Math.max(4, barHeight - i * 3) : 4}%`,
+                        height: `${barHeight}%`,
                         opacity: isActive ? 1 : 0.3
                       }}
                     />
