@@ -171,12 +171,13 @@ async function analyzeWithGemini(
   fileName: string,
   offlineAnalysis: OfflineAnalysisData
 ): Promise<MLAnalysisResult> {
-  const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
   
-  const useDirectGemini = !!GEMINI_API_KEY;
+  // ALWAYS prefer Lovable Gateway (no quota issues) over direct Gemini API
+  const useLovableGateway = !!LOVABLE_API_KEY;
   
-  console.log(`Using ${useDirectGemini ? 'Direct Gemini API' : 'Lovable Gateway'}`);
+  console.log(`Using ${useLovableGateway ? 'Lovable AI Gateway' : 'Direct Gemini API (fallback)'}`);
 
   // Helper to extract base64 data
   const extractBase64 = (dataUrl: string): { mimeType: string; base64Data: string } => {
@@ -281,16 +282,11 @@ Provide your assessment in JSON format.`
   }
 
   let responseContent: string;
+  let modelUsed: string;
 
-  if (useDirectGemini && GEMINI_API_KEY) {
-    // Use direct Gemini API
-    console.log("Calling Gemini API directly...");
-    const geminiResponse = await callGeminiDirect(GEMINI_API_KEY, parts);
-    responseContent = geminiResponse.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    console.log("Gemini API response received");
-  } else if (LOVABLE_API_KEY) {
-    // Fallback to Lovable Gateway
-    console.log("Calling Lovable AI Gateway...");
+  // ALWAYS prefer Lovable Gateway (pre-configured, no quota issues)
+  if (useLovableGateway && LOVABLE_API_KEY) {
+    console.log("Calling Lovable AI Gateway (gemini-3-flash-preview)...");
     
     // Convert parts to OpenAI format for gateway
     const userContent: any[] = [];
@@ -311,9 +307,17 @@ Provide your assessment in JSON format.`
     ]);
     
     responseContent = gatewayResponse.choices?.[0]?.message?.content || "";
+    modelUsed = "google/gemini-3-flash-preview";
     console.log("Lovable Gateway response received");
+  } else if (GEMINI_API_KEY) {
+    // Fallback to direct Gemini API only if Lovable Gateway unavailable
+    console.log("Calling Gemini API directly (fallback)...");
+    const geminiResponse = await callGeminiDirect(GEMINI_API_KEY, parts);
+    responseContent = geminiResponse.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    modelUsed = "gemini-2.0-flash";
+    console.log("Gemini API response received");
   } else {
-    throw new Error("No API key configured (GEMINI_API_KEY or LOVABLE_API_KEY)");
+    throw new Error("No API key configured (LOVABLE_API_KEY or GEMINI_API_KEY)");
   }
 
   // Parse response
@@ -336,7 +340,7 @@ Provide your assessment in JSON format.`
       reasoning: parsed.reasoning || 'Analysis completed',
       aiToolDetected: parsed.aiToolDetected || null,
       manipulationTypes: parsed.manipulationTypes || [],
-      geminiVersion: useDirectGemini ? 'gemini-2.0-flash' : 'gemini-3-flash-preview',
+      geminiVersion: modelUsed,
     };
   } catch (parseError) {
     console.error("Failed to parse response:", responseContent);
