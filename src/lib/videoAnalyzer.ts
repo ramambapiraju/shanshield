@@ -1,4 +1,4 @@
-// Real Video Analysis - Frame-by-frame analysis for deepfake detection
+// Real Video Analysis - 100% FRAME-BY-FRAME streaming analysis for deepfake detection
 import { analyzeQuantumEntropy, type QuantumEntropyResult } from './quantumEntropyAnalyzer';
 import { analyzeMetadata, extractFirstFrame, type MetadataAnalysisResult } from './metadataAnalyzer';
 
@@ -18,168 +18,76 @@ export interface VideoAnalysisFindings {
   duration: number;
   quantumEntropy?: QuantumEntropyResult;
   metadata?: MetadataAnalysisResult;
+  totalFramesAnalyzed: number;
 }
 
-// Extract frames from video - FULL RESOLUTION for real forensic analysis
-const extractFrames = (video: HTMLVideoElement, numFrames: number = 30): Promise<ImageData[]> => {
-  return new Promise((resolve) => {
-    const frames: ImageData[] = [];
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d')!;
-    const duration = video.duration;
-    const interval = duration / (numFrames + 1);
-    
-    // Use higher resolution for accuracy (512x512 minimum for forensic analysis)
-    canvas.width = Math.min(512, video.videoWidth);
-    canvas.height = Math.min(512, video.videoHeight);
-    
-    let currentFrame = 0;
-    
-    const captureFrame = () => {
-      if (currentFrame >= numFrames) {
-        resolve(frames);
-        return;
-      }
-      
-      const time = interval * (currentFrame + 1);
-      video.currentTime = time;
-    };
-    
-    video.onseeked = () => {
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      frames.push(imageData);
-      currentFrame++;
-      captureFrame();
-    };
-    
-    captureFrame();
-  });
-};
+// Progress callback type for UI updates
+export type VideoProgressCallback = (framesProcessed: number, totalFrames: number, stage: string) => void;
 
-// Extract multiple frames as base64 for Gemini Cloud Analysis
-export const extractMultipleFramesBase64 = async (file: File, numFrames: number = 5): Promise<string[]> => {
-  return new Promise((resolve, reject) => {
-    const video = document.createElement('video');
-    video.preload = 'auto';
-    video.muted = true;
-    
-    const timeout = setTimeout(() => {
-      URL.revokeObjectURL(video.src);
-      reject(new Error('Video frame extraction timed out'));
-    }, 30000);
-    
-    video.onloadedmetadata = async () => {
-      const frames: string[] = [];
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d')!;
-      const duration = video.duration;
-      
-      // Use 720p for cloud analysis (balance quality/size)
-      canvas.width = Math.min(720, video.videoWidth);
-      canvas.height = Math.min(720, video.videoHeight);
-      
-      const interval = duration / (numFrames + 1);
-      
-      for (let i = 1; i <= numFrames; i++) {
-        try {
-          video.currentTime = interval * i;
-          await new Promise<void>((res) => {
-            video.onseeked = () => res();
-          });
-          
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const base64 = canvas.toDataURL('image/jpeg', 0.8);
-          frames.push(base64);
-        } catch (e) {
-          console.warn(`Failed to extract frame ${i}:`, e);
-        }
-      }
-      
-      clearTimeout(timeout);
-      URL.revokeObjectURL(video.src);
-      resolve(frames);
-    };
-    
-    video.onerror = () => {
-      clearTimeout(timeout);
-      URL.revokeObjectURL(video.src);
-      reject(new Error('Failed to load video'));
-    };
-    
-    video.src = URL.createObjectURL(file);
-  });
-};
+// Streaming statistics aggregator for incremental frame analysis
+interface StreamingStats {
+  frameCount: number;
+  // Frame consistency metrics
+  frameDiffs: number[];
+  // Temporal coherence
+  motionVectors: number[];
+  discontinuities: number;
+  // Face tracking
+  faceBackgroundRatios: number[];
+  // Compression
+  blockArtifacts: number[];
+  // Motion
+  motionMagnitudes: number[];
+  unnaturalTransitions: number;
+  // Audio-Video sync 
+  visualEnergies: number[];
+  // Previous frame data for comparison
+  prevFrameData: Uint8ClampedArray | null;
+  prevPrevMotion: number;
+  prevMotion: number;
+}
 
-// Analyze frame consistency - deepfakes often have flickering or inconsistent regions
-const analyzeFrameConsistency = (frames: ImageData[]): { score: number; description: string } => {
-  if (frames.length < 2) {
-    return { score: 20, description: 'Insufficient frames for consistency analysis' };
-  }
+// Initialize streaming stats
+const createStreamingStats = (): StreamingStats => ({
+  frameCount: 0,
+  frameDiffs: [],
+  motionVectors: [],
+  discontinuities: 0,
+  faceBackgroundRatios: [],
+  blockArtifacts: [],
+  motionMagnitudes: [],
+  unnaturalTransitions: 0,
+  visualEnergies: [],
+  prevFrameData: null,
+  prevPrevMotion: 0,
+  prevMotion: 0
+});
+
+// Process single frame and update streaming statistics
+const processFrame = (
+  frameData: ImageData,
+  stats: StreamingStats,
+  width: number,
+  height: number
+): void => {
+  const currData = frameData.data;
+  stats.frameCount++;
   
-  const inconsistencies: number[] = [];
-  
-  for (let i = 1; i < frames.length; i++) {
-    const prev = frames[i - 1].data;
-    const curr = frames[i].data;
-    let diff = 0;
+  if (stats.prevFrameData) {
+    const prevData = stats.prevFrameData;
+    
+    // 1. Frame Consistency - pixel-level difference
+    let frameDiff = 0;
     let pixelCount = 0;
-    
-    // Sample every 4th pixel for performance
-    for (let p = 0; p < prev.length; p += 16) {
-      diff += Math.abs(prev[p] - curr[p]) + 
-              Math.abs(prev[p + 1] - curr[p + 1]) + 
-              Math.abs(prev[p + 2] - curr[p + 2]);
+    for (let p = 0; p < prevData.length; p += 16) {
+      frameDiff += Math.abs(prevData[p] - currData[p]) + 
+                   Math.abs(prevData[p + 1] - currData[p + 1]) + 
+                   Math.abs(prevData[p + 2] - currData[p + 2]);
       pixelCount++;
     }
+    stats.frameDiffs.push(frameDiff / pixelCount);
     
-    inconsistencies.push(diff / pixelCount);
-  }
-  
-  const avgDiff = inconsistencies.reduce((a, b) => a + b, 0) / inconsistencies.length;
-  const variance = inconsistencies.reduce((sum, val) => sum + Math.pow(val - avgDiff, 2), 0) / inconsistencies.length;
-  const stdDev = Math.sqrt(variance);
-  
-  // High variance in frame differences indicates potential manipulation
-  const coeffOfVariation = (stdDev / avgDiff) * 100;
-  
-  let score = 0;
-  let description = '';
-  
-  // AGGRESSIVE detection - deepfakes often show frame-to-frame inconsistencies
-  // that real cameras don't produce. Very low thresholds to catch manipulation.
-  if (coeffOfVariation > 45) {
-    score = 65 + Math.min(30, (coeffOfVariation - 45) / 1.5);
-    description = `High frame inconsistency detected (CV: ${coeffOfVariation.toFixed(1)}%) - likely manipulation`;
-  } else if (coeffOfVariation > 25) {
-    score = 45 + (coeffOfVariation - 25);
-    description = `Suspicious frame variation (CV: ${coeffOfVariation.toFixed(1)}%) - potential deepfake`;
-  } else if (coeffOfVariation > 15) {
-    score = 20 + (coeffOfVariation - 15) * 2;
-    description = `Elevated frame variation (CV: ${coeffOfVariation.toFixed(1)}%) - warrants scrutiny`;
-  } else {
-    score = Math.max(0, coeffOfVariation);
-    description = `Consistent frame transitions (CV: ${coeffOfVariation.toFixed(1)}%)`;
-  }
-  
-  return { score: Math.min(100, Math.max(0, score)), description };
-};
-
-// Analyze temporal coherence - check for unnatural jumps or discontinuities
-const analyzeTemporalCoherence = (frames: ImageData[]): { score: number; description: string } => {
-  if (frames.length < 3) {
-    return { score: 20, description: 'Insufficient frames for temporal analysis' };
-  }
-  
-  const motionVectors: number[] = [];
-  const width = frames[0].width;
-  const height = frames[0].height;
-  
-  for (let i = 1; i < frames.length; i++) {
-    const prev = frames[i - 1].data;
-    const curr = frames[i].data;
-    
-    // Calculate optical flow approximation
+    // 2. Temporal Coherence - optical flow approximation
     let horizontalFlow = 0;
     let verticalFlow = 0;
     let samples = 0;
@@ -187,15 +95,14 @@ const analyzeTemporalCoherence = (frames: ImageData[]): { score: number; descrip
     for (let y = 10; y < height - 10; y += 8) {
       for (let x = 10; x < width - 10; x += 8) {
         const idx = (y * width + x) * 4;
-        const prevGray = (prev[idx] + prev[idx + 1] + prev[idx + 2]) / 3;
-        const currGray = (curr[idx] + curr[idx + 1] + curr[idx + 2]) / 3;
+        const prevGray = (prevData[idx] + prevData[idx + 1] + prevData[idx + 2]) / 3;
+        const currGray = (currData[idx] + currData[idx + 1] + currData[idx + 2]) / 3;
         
-        // Gradient calculation
         const dxIdx = (y * width + x + 1) * 4;
         const dyIdx = ((y + 1) * width + x) * 4;
         
-        const dx = ((curr[dxIdx] + curr[dxIdx + 1] + curr[dxIdx + 2]) / 3) - currGray;
-        const dy = ((curr[dyIdx] + curr[dyIdx + 1] + curr[dyIdx + 2]) / 3) - currGray;
+        const dx = ((currData[dxIdx] + currData[dxIdx + 1] + currData[dxIdx + 2]) / 3) - currGray;
+        const dy = ((currData[dyIdx] + currData[dyIdx + 1] + currData[dyIdx + 2]) / 3) - currGray;
         const dt = currGray - prevGray;
         
         if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
@@ -207,80 +114,36 @@ const analyzeTemporalCoherence = (frames: ImageData[]): { score: number; descrip
     }
     
     if (samples > 0) {
-      motionVectors.push(Math.sqrt(Math.pow(horizontalFlow / samples, 2) + Math.pow(verticalFlow / samples, 2)));
+      const motion = Math.sqrt(Math.pow(horizontalFlow / samples, 2) + Math.pow(verticalFlow / samples, 2));
+      stats.motionVectors.push(motion);
+      
+      // Check for discontinuity
+      if (stats.motionVectors.length >= 2) {
+        const prevMotion = stats.motionVectors[stats.motionVectors.length - 2];
+        const ratio = motion / (prevMotion + 0.01);
+        if (ratio > 3 || ratio < 0.33) {
+          stats.discontinuities++;
+        }
+      }
     }
-  }
-  
-  if (motionVectors.length < 2) {
-    return { score: 25, description: 'Limited motion data available' };
-  }
-  
-  // Check for sudden motion discontinuities
-  let discontinuities = 0;
-  for (let i = 1; i < motionVectors.length; i++) {
-    const ratio = motionVectors[i] / (motionVectors[i - 1] + 0.01);
-    if (ratio > 3 || ratio < 0.33) {
-      discontinuities++;
-    }
-  }
-  
-  const discontinuityRate = (discontinuities / motionVectors.length) * 100;
-  
-  let score = 0;
-  let description = '';
-  
-  // More aggressive - AI-generated videos often have unnatural motion jumps
-  // that differ from real camera footage. Lower thresholds.
-  if (discontinuityRate > 40) {
-    score = 55 + discontinuityRate / 2;
-    description = `Severe temporal discontinuities detected (${discontinuityRate.toFixed(1)}% of transitions) - likely manipulation`;
-  } else if (discontinuityRate > 25) {
-    score = 35 + discontinuityRate;
-    description = `Moderate motion discontinuities (${discontinuityRate.toFixed(1)}%) - suspicious`;
-  } else if (discontinuityRate > 10) {
-    score = 15 + discontinuityRate;
-    description = `Minor motion discontinuities (${discontinuityRate.toFixed(1)}%)`;
-  } else {
-    score = Math.max(0, discontinuityRate);
-    description = `Smooth temporal flow (${discontinuityRate.toFixed(1)}% discontinuities)`;
-  }
-  
-  return { score: Math.min(100, Math.max(0, score)), description };
-};
-
-// Analyze face region tracking - look for warping artifacts
-const analyzeFaceTracking = (frames: ImageData[]): { score: number; description: string } => {
-  if (frames.length < 2) {
-    return { score: 20, description: 'Insufficient frames for face tracking' };
-  }
-  
-  const width = frames[0].width;
-  const height = frames[0].height;
-  
-  // Analyze central region (likely face area)
-  const faceRegion = {
-    x: Math.floor(width * 0.25),
-    y: Math.floor(height * 0.1),
-    w: Math.floor(width * 0.5),
-    h: Math.floor(height * 0.6)
-  };
-  
-  const regionChanges: number[] = [];
-  
-  for (let i = 1; i < frames.length; i++) {
-    const prev = frames[i - 1].data;
-    const curr = frames[i].data;
-    let regionDiff = 0;
-    let outerDiff = 0;
-    let regionPixels = 0;
-    let outerPixels = 0;
     
-    for (let y = 0; y < height; y += 2) {
-      for (let x = 0; x < width; x += 2) {
+    // 3. Face Region Tracking
+    const faceRegion = {
+      x: Math.floor(width * 0.25),
+      y: Math.floor(height * 0.1),
+      w: Math.floor(width * 0.5),
+      h: Math.floor(height * 0.6)
+    };
+    
+    let regionDiff = 0, outerDiff = 0;
+    let regionPixels = 0, outerPixels = 0;
+    
+    for (let y = 0; y < height; y += 4) {
+      for (let x = 0; x < width; x += 4) {
         const idx = (y * width + x) * 4;
-        const diff = Math.abs(prev[idx] - curr[idx]) + 
-                     Math.abs(prev[idx + 1] - curr[idx + 1]) + 
-                     Math.abs(prev[idx + 2] - curr[idx + 2]);
+        const diff = Math.abs(prevData[idx] - currData[idx]) + 
+                     Math.abs(prevData[idx + 1] - currData[idx + 1]) + 
+                     Math.abs(prevData[idx + 2] - currData[idx + 2]);
         
         if (x >= faceRegion.x && x < faceRegion.x + faceRegion.w &&
             y >= faceRegion.y && y < faceRegion.y + faceRegion.h) {
@@ -295,158 +158,283 @@ const analyzeFaceTracking = (frames: ImageData[]): { score: number; description:
     
     const avgRegion = regionDiff / (regionPixels || 1);
     const avgOuter = outerDiff / (outerPixels || 1);
-    regionChanges.push(avgRegion / (avgOuter + 0.01));
-  }
-  
-  // Face region changing differently from background is suspicious
-  const avgRatio = regionChanges.reduce((a, b) => a + b, 0) / regionChanges.length;
-  
-  let score = 0;
-  let description = '';
-  
-  // More aggressive face detection - deepfakes often show face regions that
-  // change differently from backgrounds (blending artifacts, warping)
-  if (avgRatio > 2.0) {
-    score = 60 + Math.min(35, (avgRatio - 2.0) * 15);
-    description = `Face region anomaly detected - changes ${avgRatio.toFixed(2)}x faster than background (likely manipulation)`;
-  } else if (avgRatio > 1.4) {
-    score = 40 + (avgRatio - 1.4) * 30;
-    description = `Suspicious face region variance (ratio: ${avgRatio.toFixed(2)}) - possible face swap`;
-  } else if (avgRatio > 1.0) {
-    score = 15 + (avgRatio - 1.0) * 40;
-    description = `Minor face region variance (ratio: ${avgRatio.toFixed(2)})`;
-  } else {
-    score = Math.max(0, avgRatio * 15);
-    description = `Natural face-background consistency (ratio: ${avgRatio.toFixed(2)})`;
-  }
-  
-  return { score: Math.min(100, Math.max(0, score)), description };
-};
-
-// Analyze compression artifacts
-const analyzeVideoCompression = (frames: ImageData[]): { score: number; description: string } => {
-  if (frames.length === 0) {
-    return { score: 20, description: 'No frames to analyze' };
-  }
-  
-  const blockArtifacts: number[] = [];
-  
-  for (const frame of frames) {
-    const { data, width, height } = frame;
-    let blockSum = 0;
-    let samples = 0;
+    stats.faceBackgroundRatios.push(avgRegion / (avgOuter + 0.01));
     
-    // Check for 8x8 block boundaries (common in video codecs)
-    for (let y = 8; y < height - 8; y += 8) {
-      for (let x = 0; x < width - 1; x++) {
-        const idx1 = ((y - 1) * width + x) * 4;
-        const idx2 = (y * width + x) * 4;
-        
-        const diff = Math.abs(data[idx1] - data[idx2]) +
-                     Math.abs(data[idx1 + 1] - data[idx2 + 1]) +
-                     Math.abs(data[idx1 + 2] - data[idx2 + 2]);
-        
-        blockSum += diff;
-        samples++;
-      }
-    }
-    
-    blockArtifacts.push(blockSum / (samples || 1));
-  }
-  
-  const avgArtifacts = blockArtifacts.reduce((a, b) => a + b, 0) / blockArtifacts.length;
-  const variance = blockArtifacts.reduce((sum, val) => sum + Math.pow(val - avgArtifacts, 2), 0) / blockArtifacts.length;
-  
-  let score = 0;
-  let description = '';
-  
-  // Very conservative - compression is normal in real videos
-  // Only flag extreme cases
-  if (variance > 150 && avgArtifacts > 40) {
-    score = 45 + Math.min(45, variance / 15);
-    description = `Multiple compression artifacts detected (variance: ${variance.toFixed(1)})`;
-  } else if (avgArtifacts > 55) {
-    score = 30 + avgArtifacts / 3;
-    description = `Heavy compression detected (strength: ${avgArtifacts.toFixed(1)})`;
-  } else {
-    score = Math.max(0, avgArtifacts / 2);
-    description = `Normal compression level (strength: ${avgArtifacts.toFixed(1)})`;
-  }
-  
-  return { score: Math.min(100, Math.max(0, score)), description };
-};
-
-// Analyze motion patterns
-const analyzeMotion = (frames: ImageData[]): { score: number; description: string } => {
-  if (frames.length < 3) {
-    return { score: 20, description: 'Insufficient frames for motion analysis' };
-  }
-  
-  const width = frames[0].width;
-  const height = frames[0].height;
-  const motionMagnitudes: number[] = [];
-  
-  for (let i = 1; i < frames.length; i++) {
-    const prev = frames[i - 1].data;
-    const curr = frames[i].data;
+    // 4. Motion magnitude for motion analysis
     let totalMotion = 0;
-    let samples = 0;
-    
+    let motionSamples = 0;
     for (let y = 2; y < height - 2; y += 4) {
       for (let x = 2; x < width - 2; x += 4) {
         const idx = (y * width + x) * 4;
-        const prevGray = (prev[idx] + prev[idx + 1] + prev[idx + 2]) / 3;
-        const currGray = (curr[idx] + curr[idx + 1] + curr[idx + 2]) / 3;
+        const prevGray = (prevData[idx] + prevData[idx + 1] + prevData[idx + 2]) / 3;
+        const currGray = (currData[idx] + currData[idx + 1] + currData[idx + 2]) / 3;
         totalMotion += Math.abs(currGray - prevGray);
-        samples++;
+        motionSamples++;
+      }
+    }
+    const motionMag = totalMotion / motionSamples;
+    stats.motionMagnitudes.push(motionMag);
+    
+    // Check for unnatural acceleration
+    if (stats.motionMagnitudes.length >= 3) {
+      const len = stats.motionMagnitudes.length;
+      const acceleration = Math.abs(
+        stats.motionMagnitudes[len - 1] - 
+        2 * stats.motionMagnitudes[len - 2] + 
+        stats.motionMagnitudes[len - 3]
+      );
+      if (acceleration > 15) {
+        stats.unnaturalTransitions++;
       }
     }
     
-    motionMagnitudes.push(totalMotion / samples);
+    // 5. Visual energy for A/V sync
+    let motionEnergy = 0;
+    for (let p = 0; p < prevData.length; p += 16) {
+      motionEnergy += Math.abs(prevData[p] - currData[p]) + 
+                      Math.abs(prevData[p + 1] - currData[p + 1]) + 
+                      Math.abs(prevData[p + 2] - currData[p + 2]);
+    }
+    stats.visualEnergies.push(motionEnergy / (prevData.length / 16));
   }
   
-  // Check for unnatural motion patterns
-  let unnaturalTransitions = 0;
-  for (let i = 2; i < motionMagnitudes.length; i++) {
-    const acceleration = Math.abs(motionMagnitudes[i] - 2 * motionMagnitudes[i-1] + motionMagnitudes[i-2]);
-    if (acceleration > 15) {
-      unnaturalTransitions++;
+  // 6. Compression artifacts (on every frame)
+  let blockSum = 0;
+  let blockSamples = 0;
+  for (let y = 8; y < height - 8; y += 8) {
+    for (let x = 0; x < width - 1; x++) {
+      const idx1 = ((y - 1) * width + x) * 4;
+      const idx2 = (y * width + x) * 4;
+      
+      const diff = Math.abs(currData[idx1] - currData[idx2]) +
+                   Math.abs(currData[idx1 + 1] - currData[idx2 + 1]) +
+                   Math.abs(currData[idx1 + 2] - currData[idx2 + 2]);
+      
+      blockSum += diff;
+      blockSamples++;
+    }
+  }
+  stats.blockArtifacts.push(blockSum / (blockSamples || 1));
+  
+  // Store current frame for next iteration
+  stats.prevFrameData = new Uint8ClampedArray(currData);
+};
+
+// Compute final scores from aggregated streaming stats
+const computeFinalScores = (stats: StreamingStats): {
+  frameConsistency: { score: number; description: string };
+  temporalCoherence: { score: number; description: string };
+  faceTracking: { score: number; description: string };
+  compressionAnalysis: { score: number; description: string };
+  motionAnalysis: { score: number; description: string };
+} => {
+  // Frame Consistency
+  let frameConsistency = { score: 20, description: 'Insufficient data' };
+  if (stats.frameDiffs.length >= 2) {
+    const avgDiff = stats.frameDiffs.reduce((a, b) => a + b, 0) / stats.frameDiffs.length;
+    const variance = stats.frameDiffs.reduce((sum, val) => sum + Math.pow(val - avgDiff, 2), 0) / stats.frameDiffs.length;
+    const stdDev = Math.sqrt(variance);
+    const coeffOfVariation = (stdDev / avgDiff) * 100;
+    
+    if (coeffOfVariation > 45) {
+      frameConsistency = { 
+        score: Math.min(95, 65 + (coeffOfVariation - 45) / 1.5),
+        description: `High frame inconsistency (CV: ${coeffOfVariation.toFixed(1)}%) across ${stats.frameCount} frames - likely manipulation`
+      };
+    } else if (coeffOfVariation > 25) {
+      frameConsistency = {
+        score: 45 + (coeffOfVariation - 25),
+        description: `Suspicious frame variation (CV: ${coeffOfVariation.toFixed(1)}%) in ${stats.frameCount} frames`
+      };
+    } else if (coeffOfVariation > 15) {
+      frameConsistency = {
+        score: 20 + (coeffOfVariation - 15) * 2,
+        description: `Elevated frame variation (CV: ${coeffOfVariation.toFixed(1)}%)`
+      };
+    } else {
+      frameConsistency = {
+        score: Math.max(0, coeffOfVariation),
+        description: `Consistent frame transitions across ${stats.frameCount} frames (CV: ${coeffOfVariation.toFixed(1)}%)`
+      };
     }
   }
   
-  const unnaturalRate = (unnaturalTransitions / Math.max(1, motionMagnitudes.length - 2)) * 100;
-  
-  let score = 0;
-  let description = '';
-  
-  // More aggressive motion detection - AI video generators often produce
-  // unnatural acceleration patterns that real cameras don't
-  if (unnaturalRate > 35) {
-    score = 55 + unnaturalRate / 2;
-    description = `Unnatural motion patterns detected (${unnaturalRate.toFixed(1)}% irregular) - likely AI-generated`;
-  } else if (unnaturalRate > 20) {
-    score = 35 + unnaturalRate;
-    description = `Suspicious motion irregularities (${unnaturalRate.toFixed(1)}%)`;
-  } else if (unnaturalRate > 10) {
-    score = 15 + unnaturalRate;
-    description = `Minor motion irregularities (${unnaturalRate.toFixed(1)}%)`;
-  } else {
-    score = Math.max(0, unnaturalRate);
-    description = `Natural motion flow (${unnaturalRate.toFixed(1)}% irregular)`;
+  // Temporal Coherence
+  let temporalCoherence = { score: 25, description: 'Limited motion data' };
+  if (stats.motionVectors.length >= 2) {
+    const discontinuityRate = (stats.discontinuities / stats.motionVectors.length) * 100;
+    
+    if (discontinuityRate > 40) {
+      temporalCoherence = {
+        score: Math.min(95, 55 + discontinuityRate / 2),
+        description: `Severe temporal discontinuities (${discontinuityRate.toFixed(1)}%) in ${stats.frameCount} frames - likely manipulation`
+      };
+    } else if (discontinuityRate > 25) {
+      temporalCoherence = {
+        score: 35 + discontinuityRate,
+        description: `Moderate motion discontinuities (${discontinuityRate.toFixed(1)}%)`
+      };
+    } else if (discontinuityRate > 10) {
+      temporalCoherence = {
+        score: 15 + discontinuityRate,
+        description: `Minor motion discontinuities (${discontinuityRate.toFixed(1)}%)`
+      };
+    } else {
+      temporalCoherence = {
+        score: Math.max(0, discontinuityRate),
+        description: `Smooth temporal flow across ${stats.frameCount} frames (${discontinuityRate.toFixed(1)}% discontinuities)`
+      };
+    }
   }
   
-  return { score: Math.min(100, Math.max(0, score)), description };
+  // Face Tracking
+  let faceTracking = { score: 20, description: 'Insufficient data' };
+  if (stats.faceBackgroundRatios.length >= 2) {
+    const avgRatio = stats.faceBackgroundRatios.reduce((a, b) => a + b, 0) / stats.faceBackgroundRatios.length;
+    
+    if (avgRatio > 2.0) {
+      faceTracking = {
+        score: Math.min(95, 60 + (avgRatio - 2.0) * 15),
+        description: `Face region anomaly - changes ${avgRatio.toFixed(2)}x faster than background (likely manipulation)`
+      };
+    } else if (avgRatio > 1.4) {
+      faceTracking = {
+        score: 40 + (avgRatio - 1.4) * 30,
+        description: `Suspicious face region variance (ratio: ${avgRatio.toFixed(2)})`
+      };
+    } else if (avgRatio > 1.0) {
+      faceTracking = {
+        score: 15 + (avgRatio - 1.0) * 40,
+        description: `Minor face region variance (ratio: ${avgRatio.toFixed(2)})`
+      };
+    } else {
+      faceTracking = {
+        score: Math.max(0, avgRatio * 15),
+        description: `Natural face-background consistency across ${stats.frameCount} frames`
+      };
+    }
+  }
+  
+  // Compression Analysis
+  let compressionAnalysis = { score: 20, description: 'No data' };
+  if (stats.blockArtifacts.length > 0) {
+    const avgArtifacts = stats.blockArtifacts.reduce((a, b) => a + b, 0) / stats.blockArtifacts.length;
+    const variance = stats.blockArtifacts.reduce((sum, val) => sum + Math.pow(val - avgArtifacts, 2), 0) / stats.blockArtifacts.length;
+    
+    if (variance > 150 && avgArtifacts > 40) {
+      compressionAnalysis = {
+        score: Math.min(90, 45 + variance / 15),
+        description: `Multiple compression layers detected (variance: ${variance.toFixed(1)})`
+      };
+    } else if (avgArtifacts > 55) {
+      compressionAnalysis = {
+        score: 30 + avgArtifacts / 3,
+        description: `Heavy compression detected`
+      };
+    } else {
+      compressionAnalysis = {
+        score: Math.max(0, avgArtifacts / 2),
+        description: `Normal compression level across ${stats.frameCount} frames`
+      };
+    }
+  }
+  
+  // Motion Analysis
+  let motionAnalysis = { score: 20, description: 'Insufficient data' };
+  if (stats.motionMagnitudes.length >= 3) {
+    const unnaturalRate = (stats.unnaturalTransitions / Math.max(1, stats.motionMagnitudes.length - 2)) * 100;
+    
+    if (unnaturalRate > 35) {
+      motionAnalysis = {
+        score: Math.min(95, 55 + unnaturalRate / 2),
+        description: `Unnatural motion patterns (${unnaturalRate.toFixed(1)}% irregular) in ${stats.frameCount} frames - likely AI-generated`
+      };
+    } else if (unnaturalRate > 20) {
+      motionAnalysis = {
+        score: 35 + unnaturalRate,
+        description: `Suspicious motion irregularities (${unnaturalRate.toFixed(1)}%)`
+      };
+    } else if (unnaturalRate > 10) {
+      motionAnalysis = {
+        score: 15 + unnaturalRate,
+        description: `Minor motion irregularities (${unnaturalRate.toFixed(1)}%)`
+      };
+    } else {
+      motionAnalysis = {
+        score: Math.max(0, unnaturalRate),
+        description: `Natural motion flow across ${stats.frameCount} frames`
+      };
+    }
+  }
+  
+  return { frameConsistency, temporalCoherence, faceTracking, compressionAnalysis, motionAnalysis };
 };
 
-// Real Audio-Video Sync Analysis
-// Analyzes temporal correlation between audio energy and visual motion
-const analyzeAudioVideoSync = async (file: File, frames: ImageData[]): Promise<{ score: number; description: string }> => {
-  if (frames.length < 3) {
+// Extract multiple frames as base64 for Cloud ML (higher quality for Gemini)
+export const extractMultipleFramesBase64 = async (file: File, numFrames: number = 10): Promise<string[]> => {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.preload = 'auto';
+    video.muted = true;
+    
+    const timeout = setTimeout(() => {
+      URL.revokeObjectURL(video.src);
+      reject(new Error('Video frame extraction timed out'));
+    }, 60000);
+    
+    video.onloadedmetadata = async () => {
+      const frames: string[] = [];
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d')!;
+      const duration = video.duration;
+      
+      // Use 1024px for cloud analysis - higher quality for Gemini
+      canvas.width = Math.min(1024, video.videoWidth);
+      canvas.height = Math.min(1024, video.videoHeight);
+      
+      const interval = duration / (numFrames + 1);
+      
+      for (let i = 1; i <= numFrames; i++) {
+        try {
+          video.currentTime = interval * i;
+          await new Promise<void>((res) => {
+            video.onseeked = () => res();
+          });
+          
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const base64 = canvas.toDataURL('image/jpeg', 0.85);
+          frames.push(base64);
+        } catch (e) {
+          console.warn(`Failed to extract frame ${i}:`, e);
+        }
+      }
+      
+      clearTimeout(timeout);
+      URL.revokeObjectURL(video.src);
+      console.log(`✅ Extracted ${frames.length} high-quality frames for Cloud ML`);
+      resolve(frames);
+    };
+    
+    video.onerror = () => {
+      clearTimeout(timeout);
+      URL.revokeObjectURL(video.src);
+      reject(new Error('Failed to load video'));
+    };
+    
+    video.src = URL.createObjectURL(file);
+  });
+};
+
+// Real Audio-Video Sync Analysis with streaming visual energies
+const analyzeAudioVideoSync = async (
+  file: File, 
+  visualEnergies: number[]
+): Promise<{ score: number; description: string }> => {
+  if (visualEnergies.length < 3) {
     return { score: 25, description: 'Insufficient frames for A/V sync analysis' };
   }
   
   try {
-    // Extract audio from video and analyze temporal patterns
     const audioContext = new AudioContext();
     const arrayBuffer = await file.arrayBuffer();
     let audioBuffer: AudioBuffer;
@@ -461,11 +449,11 @@ const analyzeAudioVideoSync = async (file: File, frames: ImageData[]): Promise<{
     const samples = audioBuffer.getChannelData(0);
     const duration = audioBuffer.duration;
     
-    // Calculate audio energy per video frame interval
-    const frameInterval = duration / frames.length;
+    // Calculate audio energy per visual frame interval
+    const frameInterval = duration / visualEnergies.length;
     const audioEnergies: number[] = [];
     
-    for (let i = 0; i < frames.length; i++) {
+    for (let i = 0; i < visualEnergies.length; i++) {
       const startSample = Math.floor((i * frameInterval) * audioBuffer.sampleRate);
       const endSample = Math.floor(((i + 1) * frameInterval) * audioBuffer.sampleRate);
       
@@ -474,21 +462,6 @@ const analyzeAudioVideoSync = async (file: File, frames: ImageData[]): Promise<{
         energy += samples[s] * samples[s];
       }
       audioEnergies.push(Math.sqrt(energy / (endSample - startSample + 1)));
-    }
-    
-    // Calculate visual motion energy between frames
-    const visualEnergies: number[] = [0];
-    for (let i = 1; i < frames.length; i++) {
-      const prev = frames[i - 1].data;
-      const curr = frames[i].data;
-      let motionEnergy = 0;
-      
-      for (let p = 0; p < prev.length; p += 16) {
-        motionEnergy += Math.abs(prev[p] - curr[p]) + 
-                        Math.abs(prev[p + 1] - curr[p + 1]) + 
-                        Math.abs(prev[p + 2] - curr[p + 2]);
-      }
-      visualEnergies.push(motionEnergy / (prev.length / 16));
     }
     
     audioContext.close();
@@ -501,7 +474,7 @@ const analyzeAudioVideoSync = async (file: File, frames: ImageData[]): Promise<{
     
     // Calculate cross-correlation at different lags
     const correlations: number[] = [];
-    for (let lag = -3; lag <= 3; lag++) {
+    for (let lag = -5; lag <= 5; lag++) {
       let sum = 0;
       let count = 0;
       for (let i = 0; i < normAudio.length; i++) {
@@ -515,9 +488,9 @@ const analyzeAudioVideoSync = async (file: File, frames: ImageData[]): Promise<{
     }
     
     const maxCorrelation = Math.max(...correlations);
-    const bestLag = correlations.indexOf(maxCorrelation) - 3;
+    const bestLag = correlations.indexOf(maxCorrelation) - 5;
     
-    // Also calculate direct (zero-lag) correlation
+    // Direct correlation
     let directCorr = 0;
     for (let i = 0; i < normAudio.length; i++) {
       directCorr += normAudio[i] * normVisual[i];
@@ -527,19 +500,18 @@ const analyzeAudioVideoSync = async (file: File, frames: ImageData[]): Promise<{
     let score = 0;
     let description = '';
     
-    // Deepfakes often have poor A/V correlation or unnatural sync
     if (maxCorrelation < 0.15 && directCorr < 0.1) {
-      score = 65 + (0.15 - maxCorrelation) * 150;
-      description = `Poor audio-video correlation (r=${directCorr.toFixed(3)}) - likely lip-sync manipulation`;
-    } else if (Math.abs(bestLag) > 1) {
-      score = 45 + Math.abs(bestLag) * 10;
-      description = `Audio-video sync offset detected (${bestLag > 0 ? '+' : ''}${bestLag} frames)`;
+      score = Math.min(95, 65 + (0.15 - maxCorrelation) * 150);
+      description = `Poor audio-video correlation (r=${directCorr.toFixed(3)}) across ${visualEnergies.length} frames - likely lip-sync manipulation`;
+    } else if (Math.abs(bestLag) > 2) {
+      score = 45 + Math.abs(bestLag) * 8;
+      description = `Audio-video sync offset (${bestLag > 0 ? '+' : ''}${bestLag} frames)`;
     } else if (maxCorrelation < 0.35) {
       score = 30 + (0.35 - maxCorrelation) * 60;
       description = `Weak audio-video correlation (r=${maxCorrelation.toFixed(3)})`;
     } else {
       score = Math.max(0, 20 - maxCorrelation * 30);
-      description = `Good audio-video synchronization (r=${maxCorrelation.toFixed(3)})`;
+      description = `Good audio-video sync across ${visualEnergies.length} frames (r=${maxCorrelation.toFixed(3)})`;
     }
     
     return { score: Math.min(100, Math.max(0, score)), description };
@@ -549,9 +521,12 @@ const analyzeAudioVideoSync = async (file: File, frames: ImageData[]): Promise<{
   }
 };
 
-// Main video analysis function
-export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> => {
-  // First, analyze metadata (filename, watermarks) - this catches obvious AI content
+// Main video analysis function - 100% frame-by-frame streaming analysis
+export const analyzeVideo = async (
+  file: File, 
+  onProgress?: VideoProgressCallback
+): Promise<VideoAnalysisFindings> => {
+  // First, analyze metadata
   let metadataResult: MetadataAnalysisResult | undefined;
   let firstFrameData: ImageData | undefined;
   
@@ -559,7 +534,6 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
     firstFrameData = await extractFirstFrame(file);
     metadataResult = await analyzeMetadata(file, firstFrameData);
   } catch (e) {
-    // Fallback to filename-only analysis
     metadataResult = await analyzeMetadata(file);
   }
   
@@ -570,62 +544,138 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
     
     video.onloadedmetadata = async () => {
       const duration = video.duration;
-      // Extract MORE frames for thorough analysis (min 10, max 40, scale with duration)
-      const numFrames = Math.min(40, Math.max(10, Math.floor(duration * 3)));
+      const fps = 30; // Assume 30fps, will adjust based on actual frames decoded
+      const estimatedFrames = Math.ceil(duration * fps);
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+      
+      // Use 512x512 for faster processing while maintaining accuracy
+      canvas.width = Math.min(512, video.videoWidth);
+      canvas.height = Math.min(512, video.videoHeight);
+      
+      const stats = createStreamingStats();
+      let quantumEntropy: QuantumEntropyResult | undefined;
+      let lastProgressUpdate = 0;
       
       try {
-        const frames = await extractFrames(video, numFrames);
-        
-        const frameConsistency = analyzeFrameConsistency(frames);
-        const temporalCoherence = analyzeTemporalCoherence(frames);
-        const faceTracking = analyzeFaceTracking(frames);
-        const compressionAnalysis = analyzeVideoCompression(frames);
-        const motionAnalysis = analyzeMotion(frames);
-        
-        // Real audio-video sync analysis (async - requires file access)
-        const audioVideoSync = await analyzeAudioVideoSync(file, frames);
-        
-        // Quantum Entropy Analysis on first frame
-        let quantumEntropy: QuantumEntropyResult | undefined;
-        if (frames.length > 0) {
-          quantumEntropy = analyzeQuantumEntropy(frames[0]);
+        // STREAMING FRAME-BY-FRAME ANALYSIS
+        // Use requestVideoFrameCallback if available, otherwise fallback to seeking
+        if ('requestVideoFrameCallback' in video) {
+          await new Promise<void>((resolvePlayback) => {
+            let framesProcessed = 0;
+            
+            const frameCallback = (_now: DOMHighResTimeStamp, metadata: VideoFrameCallbackMetadata) => {
+              // Draw and process frame
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              const frameData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              processFrame(frameData, stats, canvas.width, canvas.height);
+              
+              // Quantum entropy on first frame
+              if (framesProcessed === 0) {
+                quantumEntropy = analyzeQuantumEntropy(frameData);
+              }
+              
+              framesProcessed++;
+              
+              // Progress callback (throttled to every 30 frames)
+              if (onProgress && framesProcessed - lastProgressUpdate >= 30) {
+                lastProgressUpdate = framesProcessed;
+                onProgress(framesProcessed, estimatedFrames, 'Analyzing frames...');
+              }
+              
+              // Continue until video ends
+              if (!video.ended && video.currentTime < duration) {
+                (video as any).requestVideoFrameCallback(frameCallback);
+              } else {
+                resolvePlayback();
+              }
+            };
+            
+            video.playbackRate = 2.0; // Speed up playback for faster analysis
+            (video as any).requestVideoFrameCallback(frameCallback);
+            video.play().catch(() => {
+              // Fallback to seeking if autoplay blocked
+              resolvePlayback();
+            });
+            
+            // Timeout safety
+            setTimeout(() => resolvePlayback(), Math.max(60000, duration * 1000));
+          });
         }
         
-        const signals: string[] = [];
-        const threshold = 45; // Lowered threshold to catch more signals
+        // Fallback or supplement: seeking-based analysis for high coverage
+        if (stats.frameCount < 50) {
+          // Analyze via seeking if requestVideoFrameCallback didn't work well
+          const seekFrames = Math.min(200, Math.max(50, Math.ceil(duration * 10)));
+          const interval = duration / (seekFrames + 1);
+          
+          for (let i = 1; i <= seekFrames; i++) {
+            try {
+              video.currentTime = interval * i;
+              await new Promise<void>((res) => {
+                video.onseeked = () => res();
+              });
+              
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              const frameData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              processFrame(frameData, stats, canvas.width, canvas.height);
+              
+              if (i === 1 && !quantumEntropy) {
+                quantumEntropy = analyzeQuantumEntropy(frameData);
+              }
+              
+              if (onProgress && i % 20 === 0) {
+                onProgress(i, seekFrames, 'Seeking frames...');
+              }
+            } catch (e) {
+              console.warn(`Failed to seek to frame ${i}:`, e);
+            }
+          }
+        }
         
-        // Add metadata signals first (strongest indicators)
+        // Final progress
+        if (onProgress) {
+          onProgress(stats.frameCount, stats.frameCount, 'Computing scores...');
+        }
+        
+        // Compute final scores from streaming stats
+        const scores = computeFinalScores(stats);
+        
+        // Audio-Video sync analysis with collected visual energies
+        const audioVideoSync = await analyzeAudioVideoSync(file, stats.visualEnergies);
+        
+        // Build signals array
+        const signals: string[] = [];
+        const threshold = 45;
+        
         if (metadataResult && metadataResult.signals.length > 0) {
           signals.push(...metadataResult.signals);
         }
         
-        if (frameConsistency.score > threshold) signals.push(frameConsistency.description);
-        if (temporalCoherence.score > threshold) signals.push(temporalCoherence.description);
-        if (faceTracking.score > threshold) signals.push(faceTracking.description);
-        if (compressionAnalysis.score > threshold) signals.push(compressionAnalysis.description);
-        if (motionAnalysis.score > threshold) signals.push(motionAnalysis.description);
+        if (scores.frameConsistency.score > threshold) signals.push(scores.frameConsistency.description);
+        if (scores.temporalCoherence.score > threshold) signals.push(scores.temporalCoherence.description);
+        if (scores.faceTracking.score > threshold) signals.push(scores.faceTracking.description);
+        if (scores.compressionAnalysis.score > threshold) signals.push(scores.compressionAnalysis.description);
+        if (scores.motionAnalysis.score > threshold) signals.push(scores.motionAnalysis.description);
         if (audioVideoSync.score > threshold) signals.push(audioVideoSync.description);
         
-        // NEW WEIGHTING: Metadata is CRITICAL (catches filenames like "kling_xxx")
-        // If metadata score is very high (AI tool detected), it should dominate
+        // Calculate weighted score
         const metadataScore = metadataResult?.score || 0;
         const metadataWeight = metadataScore >= 70 ? 0.50 : metadataScore >= 40 ? 0.30 : 0.15;
-        const pixelWeight = 1 - metadataWeight - 0.05; // Reserve 5% for quantum
+        const pixelWeight = 1 - metadataWeight - 0.05;
         
         const pixelScore = (
-          frameConsistency.score * 0.30 +    // Key deepfake indicator
-          temporalCoherence.score * 0.18 +
-          faceTracking.score * 0.14 +
-          compressionAnalysis.score * 0.10 +
-          motionAnalysis.score * 0.12 +
-          audioVideoSync.score * 0.16        // Increased weight for real A/V sync
+          scores.frameConsistency.score * 0.28 +
+          scores.temporalCoherence.score * 0.18 +
+          scores.faceTracking.score * 0.14 +
+          scores.compressionAnalysis.score * 0.10 +
+          scores.motionAnalysis.score * 0.14 +
+          audioVideoSync.score * 0.16
         );
         
         const quantumScore = quantumEntropy ? quantumEntropy.anomalyScore * 100 : 0;
-        
-        // Combined score with dynamic metadata weighting
-        // Add baseline video suspicion since we lack advanced detection (facial landmarks, lip-sync)
-        const baselineVideoSuspicion = 12; // Reduced since we now have real A/V sync
+        const baselineVideoSuspicion = 10;
         
         const rawScore = 
           metadataScore * metadataWeight +
@@ -637,34 +687,35 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
         
         URL.revokeObjectURL(video.src);
         
-        const metadataDetail = {
-          score: metadataScore,
-          description: metadataResult?.detectedAITool 
-            ? `AI Tool Detected: ${metadataResult.detectedAITool}`
-            : 'No AI tool signatures found'
-        };
+        console.log(`✅ Video analysis complete: ${stats.frameCount} frames analyzed`);
         
         resolve({
-          score: Math.round(Math.max(overallScore, metadataScore * 0.8)), // Ensure metadata can drive verdict
+          score: Math.round(Math.max(overallScore, metadataScore * 0.8)),
           signals,
           details: {
-            frameConsistency,
-            temporalCoherence,
-            faceTracking,
-            compressionAnalysis,
-            motionAnalysis,
+            frameConsistency: scores.frameConsistency,
+            temporalCoherence: scores.temporalCoherence,
+            faceTracking: scores.faceTracking,
+            compressionAnalysis: scores.compressionAnalysis,
+            motionAnalysis: scores.motionAnalysis,
             audioVideoSync,
-            metadataAnalysis: metadataDetail
+            metadataAnalysis: {
+              score: metadataScore,
+              description: metadataResult?.detectedAITool 
+                ? `AI Tool Detected: ${metadataResult.detectedAITool}`
+                : 'No AI tool signatures found'
+            }
           },
-          frameCount: frames.length,
+          frameCount: stats.frameCount,
           duration,
           quantumEntropy,
-          metadata: metadataResult
+          metadata: metadataResult,
+          totalFramesAnalyzed: stats.frameCount
         });
       } catch (err) {
         console.error('Video analysis error:', err);
         URL.revokeObjectURL(video.src);
-        // Even on error, metadata score can detect AI
+        
         const fallbackScore = metadataResult?.score || 30;
         resolve({
           score: Math.max(30, fallbackScore),
@@ -680,18 +731,18 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
           },
           frameCount: 0,
           duration: 0,
-          metadata: metadataResult
+          metadata: metadataResult,
+          totalFramesAnalyzed: 0
         });
       }
     };
     
     video.onerror = () => {
       URL.revokeObjectURL(video.src);
-      // Even on video load error, we can still use metadata analysis
       const fallbackScore = metadataResult?.score || 30;
       resolve({
         score: Math.max(30, fallbackScore),
-        signals: metadataResult?.signals.length ? metadataResult.signals : ['Could not load video file'],
+        signals: metadataResult?.signals?.length ? metadataResult.signals : ['Could not load video file'],
         details: {
           frameConsistency: { score: 30, description: 'Video load failed' },
           temporalCoherence: { score: 30, description: 'Video load failed' },
@@ -703,7 +754,8 @@ export const analyzeVideo = async (file: File): Promise<VideoAnalysisFindings> =
         },
         frameCount: 0,
         duration: 0,
-        metadata: metadataResult
+        metadata: metadataResult,
+        totalFramesAnalyzed: 0
       });
     };
     

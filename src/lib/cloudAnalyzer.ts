@@ -70,14 +70,15 @@ async function compressImage(file: File): Promise<string> {
 }
 
 /**
- * Extract MULTIPLE frames from video for thorough Gemini analysis
- * Extracts 5 frames evenly distributed throughout the video
+ * Extract MANY frames from video for thorough Gemini analysis
+ * Extracts 15 frames evenly distributed throughout the video for comprehensive temporal analysis
  */
 async function extractMultipleVideoFrames(file: File): Promise<string[]> {
   try {
-    // Use the shared utility for extracting multiple frames
-    const frames = await extractMultipleFramesBase64(file, 5);
-    console.log(`Extracted ${frames.length} frames from video for cloud analysis`);
+    // Extract 15 frames for comprehensive cloud ML analysis
+    // This provides better temporal coverage for deepfake detection
+    const frames = await extractMultipleFramesBase64(file, 15);
+    console.log(`✅ Extracted ${frames.length} high-quality frames for Cloud ML analysis`);
     return frames;
   } catch (e) {
     console.warn('Could not extract multiple video frames:', e);
