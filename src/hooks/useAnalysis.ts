@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import type { VerdictType } from "@/components/analysis/AnalysisResults";
 import { analyzeImage, type AnalysisFindings } from "@/lib/imageAnalyzer";
-import { analyzeVideo, type VideoAnalysisFindings } from "@/lib/videoAnalyzer";
+import { analyzeVideo, type VideoAnalysisFindings, type VideoProgressCallback } from "@/lib/videoAnalyzer";
 import { analyzeAudio, type AudioAnalysisFindings } from "@/lib/audioAnalyzer";
 import { analyzeDocument, type DocumentAnalysisFindings } from "@/lib/documentAnalyzer";
 import { type QuantumEntropyResult } from "@/lib/quantumEntropyAnalyzer";
@@ -595,14 +595,22 @@ export const useAnalysis = () => {
     try {
       let analysis: UnifiedAnalysis;
       
-      // Step 1: Always run offline analysis first
+      // Step 1: Always run offline analysis first with progress tracking
       setCurrentProgress({ step: 'Running offline analysis...', progress: 10 });
       if (file.type === 'image') {
         const result = await analyzeImage(file.file);
         analysis = toUnifiedAnalysis(result, 'image', result.quantumEntropy);
       } else if (file.type === 'video') {
-        const result = await analyzeVideo(file.file);
+        // Video analysis with frame-by-frame progress
+        const result = await analyzeVideo(file.file, (framesProcessed, totalFrames, stage) => {
+          const progress = 10 + Math.floor((framesProcessed / Math.max(totalFrames, 1)) * 40);
+          setCurrentProgress({ 
+            step: `${stage} (${framesProcessed}/${totalFrames} frames)`, 
+            progress: Math.min(50, progress) 
+          });
+        });
         analysis = toUnifiedAnalysis(result, 'video', result.quantumEntropy);
+        console.log(`✅ Offline video analysis: ${result.totalFramesAnalyzed || result.frameCount} frames analyzed`);
       } else if (file.type === 'audio') {
         const result = await analyzeAudio(file.file);
         analysis = toUnifiedAnalysis(result, 'audio', result.quantumEntropy as unknown as QuantumEntropyResult | undefined);
