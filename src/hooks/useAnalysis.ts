@@ -74,6 +74,10 @@ type UnifiedAnalysis = {
   details: Record<string, { score: number; description: string }>;
   mediaType: 'image' | 'video' | 'audio' | 'document';
   quantumEntropy?: QuantumEntropyResult;
+  // For Cloud ML - pass full analysis data
+  spectrogramBase64?: string;
+  totalFramesAnalyzed?: number;
+  totalSamplesAnalyzed?: number;
 };
 
 // Helper: Map raw ML signal text to a readable indicator name
@@ -218,13 +222,31 @@ const toUnifiedAnalysis = (
   mediaType: 'image' | 'video' | 'audio' | 'document',
   quantumEntropy?: QuantumEntropyResult
 ): UnifiedAnalysis => {
-  return {
+  const unified: UnifiedAnalysis = {
     score: result.score,
     signals: result.signals,
     details: result.details as Record<string, { score: number; description: string }>,
     mediaType,
     quantumEntropy
   };
+  
+  // Add video-specific data
+  if (mediaType === 'video' && 'totalFramesAnalyzed' in result) {
+    unified.totalFramesAnalyzed = (result as VideoAnalysisFindings).totalFramesAnalyzed;
+  }
+  
+  // Add audio-specific data (spectrogram for Cloud ML)
+  if (mediaType === 'audio') {
+    const audioResult = result as AudioAnalysisFindings;
+    if (audioResult.spectrogramBase64) {
+      unified.spectrogramBase64 = audioResult.spectrogramBase64;
+    }
+    if (audioResult.totalSamplesAnalyzed) {
+      unified.totalSamplesAnalyzed = audioResult.totalSamplesAnalyzed;
+    }
+  }
+  
+  return unified;
 };
 
 // Compute real SHA-256 hash of file contents using Web Crypto API
@@ -652,7 +674,10 @@ export const useAnalysis = () => {
               {
                 score: analysis.score,
                 signals: analysis.signals,
-                details: analysis.details
+                details: analysis.details,
+                spectrogramBase64: analysis.spectrogramBase64,
+                totalFramesAnalyzed: analysis.totalFramesAnalyzed,
+                totalSamplesAnalyzed: analysis.totalSamplesAnalyzed
               }
             );
             setCurrentProgress({ step: 'Cloud ML Complete', progress: 90 });
