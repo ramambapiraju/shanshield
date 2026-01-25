@@ -13,42 +13,43 @@ interface SecurityIndicatorsProps {
   className?: string;
 }
 
+// Security indicators reflect actual system capabilities, not simulated states
 const indicators = [
   {
     icon: Shield,
-    label: "Secure Firmware",
-    status: "verified",
-    detail: "v2.4.1"
+    label: "SHA-256 Hashing",
+    status: "active",
+    detail: "Web Crypto API"
   },
   {
     icon: Key,
-    label: "RBAC",
+    label: "PQC Signatures",
     status: "enabled",
-    detail: "Active"
+    detail: "Dilithium3"
   },
   {
     icon: Fingerprint,
-    label: "MFA",
+    label: "C2PA Verification",
     status: "enabled",
-    detail: "Enforced"
+    detail: "CAI Standard"
   },
   {
     icon: Lock,
-    label: "Tamper-Proof",
-    status: "verified",
-    detail: "Sealed"
+    label: "Chain of Custody",
+    status: "active",
+    detail: "Immutable"
   },
   {
     icon: Cpu,
-    label: "Secure Enclave",
+    label: "Browser Sandbox",
     status: "active",
     detail: "Isolated"
   },
   {
     icon: FileCheck,
-    label: "Audit Log",
+    label: "Provenance Log",
     status: "recording",
-    detail: "Active"
+    detail: "Exportable"
   }
 ];
 

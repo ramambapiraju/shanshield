@@ -157,7 +157,15 @@ const AnalysisResults = ({
             )} 
           />
         </div>
-      </div>
+        </div>
+
+        {/* Legal Notice */}
+        <div className="relative mt-3 pt-3 border-t border-border/30">
+          <p className="text-[9px] text-muted-foreground/60 text-center">
+            This analysis is indicative only and does not constitute legal evidence. 
+            Independent forensic verification required for judicial use.
+          </p>
+        </div>
 
       {/* Cognitive Assistance */}
       <div className="bg-card/70 border border-primary/30 rounded-lg p-4">

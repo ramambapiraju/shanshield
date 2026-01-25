@@ -627,14 +627,20 @@ const analyzeAudioQuantumEntropy = (audioBuffer: AudioBuffer): AudioQuantumEntro
   };
 };
 
-// Compute eigenvalues for audio density matrix
+// Compute eigenvalues for audio density matrix using deterministic initialization
 const computeAudioEigenvalues = (matrix: number[][]): number[] => {
   const n = matrix.length;
   const eigenvalues: number[] = [];
   
+  // Deterministic seeded pseudo-random for reproducible results
+  // Uses linear congruential generator with fixed seed based on matrix properties
+  const seed = matrix.reduce((s, row) => s + row.reduce((a, b) => a + Math.abs(b), 0), 0);
+  const lcg = (s: number) => ((s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  
   // Power iteration to find eigenvalues
   for (let iter = 0; iter < Math.min(n, 10); iter++) {
-    let vector = new Array(n).fill(0).map(() => Math.random());
+    // Deterministic initialization based on seed and iteration
+    let vector = new Array(n).fill(0).map((_, i) => lcg(seed + iter * 1000 + i));
     let norm = Math.sqrt(vector.reduce((s, v) => s + v * v, 0));
     vector = vector.map(v => v / norm);
     

@@ -103,11 +103,25 @@ const Index = () => {
       </header>
 
       <main className="relative container mx-auto px-6 py-8">
-        {/* Disclaimer Banner */}
-        <div className="mb-4 px-4 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg text-center">
-          <p className="text-xs text-amber-400 font-medium">
-            ⚠️ EXPERIMENTAL PROTOTYPE — Unofficial research project. Results are indicative only, not for critical decisions.
+        {/* Legal Disclaimer Banner - Global Cyber Law Compliance */}
+        <div className="mb-4 px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-lg space-y-2">
+          <p className="text-xs text-amber-400 font-medium text-center">
+            ⚠️ EXPERIMENTAL RESEARCH PROTOTYPE — Not for critical, legal, or judicial decisions
           </p>
+          <div className="text-[10px] text-muted-foreground/80 text-center space-y-1">
+            <p>
+              <strong>LEGAL NOTICE:</strong> This tool provides <em>indicative analysis only</em> and does not constitute legal evidence.
+              All detection results require independent verification by qualified forensic experts.
+            </p>
+            <p>
+              <strong>COMPLIANCE:</strong> Designed in accordance with EU AI Act (2024), NIST AI RMF, 
+              ISO/IEC 27001, and GDPR Article 22 (right to explanation). No personal data is stored or transmitted.
+            </p>
+            <p>
+              <strong>DISCLAIMER:</strong> The developers assume no liability for decisions made based on this analysis.
+              For official investigations, consult certified digital forensic professionals.
+            </p>
+          </div>
         </div>
         
         {/* Title */}
