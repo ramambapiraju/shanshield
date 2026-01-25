@@ -290,7 +290,7 @@ const TechShowcase = () => {
             </h2>
           </div>
           <p className="text-xs text-muted-foreground max-w-xl mx-auto">
-            All analysis is performed client-side using real algorithms — no external APIs or simulated data
+            Browser-native analysis uses real JavaScript algorithms. Cloud ML mode uses Gemini 3 for enhanced detection.
           </p>
         </div>
 

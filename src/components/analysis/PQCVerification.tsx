@@ -315,6 +315,16 @@ const PQCVerification: React.FC<PQCVerificationProps> = ({
               Export JSON
             </Button>
           </div>
+
+          {/* Legal Compliance Notice */}
+          <div className="mt-4 p-3 rounded-lg bg-muted/30 border border-border/30">
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              <strong>COMPLIANCE:</strong> This PQC implementation follows NIST FIPS 204 (CRYSTALS-Dilithium) 
+              draft standards for post-quantum digital signatures. Chain of custody logs are designed for 
+              forensic auditability per ISO/IEC 27037 (Digital Evidence Handling) guidelines. 
+              This is a research implementation — for production use, consult cryptographic security experts.
+            </p>
+          </div>
         </div>
       </CollapsibleContent>
     </Collapsible>
